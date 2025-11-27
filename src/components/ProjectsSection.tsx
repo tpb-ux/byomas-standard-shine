@@ -42,7 +42,7 @@ const ProjectsSection = () => {
                   />
                 </div>
                 <CardContent className="p-6">
-                  <div className="mb-4 inline-flex rounded-full bg-primary/10 p-3">
+                  <div className="mb-4 inline-flex bg-primary/10 p-3">
                     <Icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="mb-3 text-xl font-semibold text-foreground">

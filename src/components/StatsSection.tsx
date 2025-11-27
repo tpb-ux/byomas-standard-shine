@@ -45,7 +45,7 @@ const StatsSection = () => {
             return (
               <Card key={index} className="border-none shadow-soft">
                 <CardContent className="p-8 text-center">
-                  <div className={`mx-auto mb-6 inline-flex rounded-full ${stat.bgColor} p-4`}>
+                  <div className={`mx-auto mb-6 inline-flex ${stat.bgColor} p-4`}>
                     <Icon className={`h-8 w-8 ${stat.color}`} />
                   </div>
                   <div className="mb-2">
