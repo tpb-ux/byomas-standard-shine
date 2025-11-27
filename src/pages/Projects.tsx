@@ -4,88 +4,45 @@ import Footer from "@/components/Footer";
 import ProjectFilters from "@/components/ProjectFilters";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectMap from "@/components/ProjectMap";
+import ProjectSearch from "@/components/ProjectSearch";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Grid, Map } from "lucide-react";
-import project1 from "@/assets/project-1.jpg";
-import project2 from "@/assets/project-2.jpg";
+import { projectsData } from "@/data/projectsData";
 
 const Projects = () => {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const projects = [
-    {
-      id: "1",
-      title: "Reflorestamento Amazônia",
-      type: "Florestamento",
-      location: "Amazonas, Brasil",
-      status: "certified",
-      credits: "1.2M tCO2e",
-      image: project1,
-    },
-    {
-      id: "2",
-      title: "Conservação Mata Atlântica",
-      type: "Conservação",
-      location: "São Paulo, Brasil",
-      status: "active",
-      credits: "850K tCO2e",
-      image: project2,
-    },
-    {
-      id: "3",
-      title: "Energia Solar Rural",
-      type: "Energia Renovável",
-      location: "Bahia, Brasil",
-      status: "certified",
-      credits: "600K tCO2e",
-      image: project1,
-    },
-    {
-      id: "4",
-      title: "Agricultura Regenerativa",
-      type: "Agricultura Sustentável",
-      location: "Mato Grosso, Brasil",
-      status: "review",
-      credits: "400K tCO2e",
-      image: project2,
-    },
-    {
-      id: "5",
-      title: "Proteção de Mangues",
-      type: "Conservação",
-      location: "Pará, Brasil",
-      status: "active",
-      credits: "950K tCO2e",
-      image: project1,
-    },
-    {
-      id: "6",
-      title: "Bioenergia Comunitária",
-      type: "Energia Renovável",
-      location: "Ceará, Brasil",
-      status: "certified",
-      credits: "700K tCO2e",
-      image: project2,
-    },
-  ];
-
-  const filteredProjects = projects.filter((project) => {
+  const filteredProjects = projectsData.filter((project) => {
+    // Search filter
+    const searchMatch = !searchQuery || 
+      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.type.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Type filter
     const typeMatch = selectedType === "all" || 
-      (selectedType === "reforestation" && project.type === "Florestamento") ||
+      (selectedType === "reforestation" && project.type === "Reflorestamento") ||
       (selectedType === "conservation" && project.type === "Conservação") ||
       (selectedType === "renewable" && project.type === "Energia Renovável") ||
       (selectedType === "agriculture" && project.type === "Agricultura Sustentável");
     
+    // Location filter
     const locationMatch = selectedLocation === "all" || 
-      (selectedLocation === "brazil" && project.location.includes("Brasil"));
+      (selectedLocation === "brazil" && project.location.country === "Brasil");
     
-    const statusMatch = selectedStatus === "all" || project.status === selectedStatus;
+    // Status filter
+    const statusMatch = selectedStatus === "all" || 
+      (selectedStatus === "certified" && project.status === "Certificado") ||
+      (selectedStatus === "active" && project.status === "Em andamento") ||
+      (selectedStatus === "review" && project.status === "Em análise");
     
-    return typeMatch && locationMatch && statusMatch;
+    return searchMatch && typeMatch && locationMatch && statusMatch;
   });
 
   return (
@@ -106,27 +63,31 @@ const Projects = () => {
       <section className="py-20">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  {filteredProjects.length} Projetos Encontrados
-                </h2>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("grid")}
-                >
-                  <Grid className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "map" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setViewMode("map")}
-                >
-                  <Map className="h-4 w-4" />
-                </Button>
+            <div className="mb-8 flex flex-col gap-6">
+              <ProjectSearch onSearch={setSearchQuery} />
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    {filteredProjects.length} Projetos Encontrados
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <Grid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "map" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("map")}
+                  >
+                    <Map className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </ScrollReveal>

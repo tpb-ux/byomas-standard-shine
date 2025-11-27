@@ -21,8 +21,8 @@ const Navbar = () => {
           <a href="/sobre" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
             SOBRE
           </a>
-          <a href="/#noticias" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
-            NOTÍCIAS
+          <a href="/blog" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
+            BLOG
           </a>
           <a href="/contato" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
             CONTATO
