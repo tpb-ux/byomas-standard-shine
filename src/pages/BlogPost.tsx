@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, User } from "lucide-react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Calendar, Clock, User, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -76,6 +76,12 @@ const BlogPost = () => {
                 <Clock className="h-4 w-4" />
                 <span>{post.readTime}</span>
               </div>
+              {post.views && (
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4" />
+                  <span>{post.views.toLocaleString('pt-BR')} visualizações</span>
+                </div>
+              )}
             </div>
           </ScrollReveal>
         </div>
@@ -126,6 +132,22 @@ const BlogPost = () => {
                 </div>
               </div>
             </div>
+
+            {/* Tags Section */}
+            <ScrollReveal>
+              <div className="mt-12 pt-8 border-t border-border">
+                <h3 className="text-lg font-semibold text-foreground mb-4">Tags do Artigo</h3>
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map((tag) => (
+                    <Link key={tag} to={`/blog?tag=${encodeURIComponent(tag)}`}>
+                      <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
+                        {tag}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </ScrollReveal>
           </ScrollReveal>
         </div>
       </section>

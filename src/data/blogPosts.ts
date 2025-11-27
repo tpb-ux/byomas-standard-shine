@@ -12,6 +12,9 @@ export interface BlogPost {
   date: string;
   readTime: string;
   image: string;
+  tags: string[];
+  views?: number;
+  featured?: boolean;
 }
 
 export const blogPosts: BlogPost[] = [
@@ -56,6 +59,9 @@ export const blogPosts: BlogPost[] = [
     date: "2024-11-15",
     readTime: "8 min",
     image: "/placeholder.svg",
+    tags: ["mercado", "brasil", "tendências", "investimento", "regulação"],
+    views: 2847,
+    featured: true,
   },
   {
     id: "2",
@@ -108,6 +114,9 @@ export const blogPosts: BlogPost[] = [
     date: "2024-11-10",
     readTime: "10 min",
     image: "/placeholder.svg",
+    tags: ["metodologia", "certificação", "VCS", "qualidade", "internacional"],
+    views: 1923,
+    featured: true,
   },
   {
     id: "3",
@@ -173,6 +182,9 @@ export const blogPosts: BlogPost[] = [
     date: "2024-11-05",
     readTime: "12 min",
     image: "/placeholder.svg",
+    tags: ["estudo de caso", "amazônia", "reflorestamento", "comunidades", "biodiversidade"],
+    views: 3156,
+    featured: false,
   },
   {
     id: "4",
@@ -227,5 +239,8 @@ export const blogPosts: BlogPost[] = [
     date: "2024-10-28",
     readTime: "9 min",
     image: "/placeholder.svg",
+    tags: ["sustentabilidade", "net-zero", "corporativo", "ESG", "empresas"],
+    views: 2341,
+    featured: false,
   },
 ];
