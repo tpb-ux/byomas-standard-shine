@@ -5,6 +5,7 @@ import ProjectsSection from "@/components/ProjectsSection";
 import ImpactSection from "@/components/ImpactSection";
 import GreenTickSection from "@/components/GreenTickSection";
 import RegulationCTASection from "@/components/RegulationCTASection";
+import WhyGreenTickSection from "@/components/WhyGreenTickSection";
 import StatsSection from "@/components/StatsSection";
 import InfoSection from "@/components/InfoSection";
 import PartnersSection from "@/components/PartnersSection";
@@ -32,6 +33,9 @@ const Index = () => {
       </ScrollReveal>
       <ScrollReveal>
         <RegulationCTASection />
+      </ScrollReveal>
+      <ScrollReveal>
+        <WhyGreenTickSection />
       </ScrollReveal>
       <ScrollReveal>
         <StatsSection />
