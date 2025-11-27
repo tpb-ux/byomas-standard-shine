@@ -5,18 +5,37 @@ import ProjectsSection from "@/components/ProjectsSection";
 import ImpactSection from "@/components/ImpactSection";
 import StatsSection from "@/components/StatsSection";
 import InfoSection from "@/components/InfoSection";
+import PartnersSection from "@/components/PartnersSection";
 import Footer from "@/components/Footer";
+import ScrollReveal from "@/components/ScrollReveal";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
       <Hero />
-      <NewsSection />
-      <ProjectsSection />
-      <ImpactSection />
-      <StatsSection />
-      <InfoSection />
+      <ScrollReveal>
+        <div id="noticias">
+          <NewsSection />
+        </div>
+      </ScrollReveal>
+      <ScrollReveal>
+        <ProjectsSection />
+      </ScrollReveal>
+      <ScrollReveal>
+        <ImpactSection />
+      </ScrollReveal>
+      <ScrollReveal>
+        <StatsSection />
+      </ScrollReveal>
+      <ScrollReveal>
+        <div id="programas">
+          <InfoSection />
+        </div>
+      </ScrollReveal>
+      <ScrollReveal>
+        <PartnersSection />
+      </ScrollReveal>
       <Footer />
     </div>
   );

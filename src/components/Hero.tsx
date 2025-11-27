@@ -15,7 +15,7 @@ const Hero = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-3xl">
             <h1 className="mb-6 text-5xl font-bold leading-tight text-primary-foreground md:text-6xl lg:text-7xl">
-              A VERRA ESTABELECE OS PADRÕES MAIS IMPORTANTES DO MUNDO PARA AÇÃO CLIMÁTICA.
+              A BYOMAS ESTABELECE OS PADRÕES MAIS IMPORTANTES DO MUNDO PARA AÇÃO CLIMÁTICA.
             </h1>
             <Button 
               size="lg"

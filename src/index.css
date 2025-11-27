@@ -36,7 +36,7 @@ All colors MUST be HSL.
     --input: 150 15% 88%;
     --ring: 150 50% 25%;
 
-    --radius: 0.5rem;
+    --radius: 0;
 
     /* Custom design tokens */
     --forest-dark: 150 45% 20%;
