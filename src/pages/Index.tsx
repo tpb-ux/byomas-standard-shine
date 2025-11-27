@@ -3,6 +3,7 @@ import Hero from "@/components/Hero";
 import NewsSection from "@/components/NewsSection";
 import ProjectsSection from "@/components/ProjectsSection";
 import ImpactSection from "@/components/ImpactSection";
+import GreenTickSection from "@/components/GreenTickSection";
 import StatsSection from "@/components/StatsSection";
 import InfoSection from "@/components/InfoSection";
 import PartnersSection from "@/components/PartnersSection";
@@ -24,6 +25,9 @@ const Index = () => {
       </ScrollReveal>
       <ScrollReveal>
         <ImpactSection />
+      </ScrollReveal>
+      <ScrollReveal>
+        <GreenTickSection />
       </ScrollReveal>
       <ScrollReveal>
         <StatsSection />
