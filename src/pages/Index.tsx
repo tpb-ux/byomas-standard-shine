@@ -11,6 +11,7 @@ import InfoSection from "@/components/InfoSection";
 import PartnersSection from "@/components/PartnersSection";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
+import EmissionsCalculator from "@/components/EmissionsCalculator";
 
 const Index = () => {
   return (
@@ -36,6 +37,9 @@ const Index = () => {
       </ScrollReveal>
       <ScrollReveal>
         <WhyGreenTickSection />
+      </ScrollReveal>
+      <ScrollReveal>
+        <EmissionsCalculator />
       </ScrollReveal>
       <ScrollReveal>
         <StatsSection />
