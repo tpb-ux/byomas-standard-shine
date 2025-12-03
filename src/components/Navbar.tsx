@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
-
 const Navbar = () => {
-  return (
-    <nav className="fixed top-0 z-50 w-full bg-forest-dark/95 backdrop-blur-sm">
+  return <nav className="fixed top-0 z-50 w-full bg-forest-dark/95 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <div className="flex items-center space-x-2">
           <div className="flex h-8 w-8 items-center justify-center bg-primary-foreground">
             <span className="text-sm font-bold text-primary">BS</span>
           </div>
-          <a href="/" className="text-xl font-bold text-primary-foreground">BYOMAS STANDARD</a>
+          <a href="/" className="text-xl font-bold text-primary-foreground">BYOMA RESEARCH</a>
         </div>
         
         <div className="hidden space-x-8 md:flex">
@@ -33,8 +31,6 @@ const Navbar = () => {
           PT
         </Button>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
