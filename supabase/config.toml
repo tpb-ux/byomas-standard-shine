@@ -1,7 +1,7 @@
 project_id = "scjknnhoiuaregewuxws"
 
 [functions.fetch-news]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-article]
-verify_jwt = true
+verify_jwt = false
