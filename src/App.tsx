@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -45,16 +46,52 @@ const App = () => (
             {/* Auth route */}
             <Route path="/auth" element={<Auth />} />
             
-            {/* Admin routes with AppLayout */}
-            <Route path="/admin" element={<AppLayout><AdminDashboard /></AppLayout>} />
-            <Route path="/admin/articles" element={<AppLayout><AdminArticles /></AppLayout>} />
-            <Route path="/admin/articles/new" element={<AppLayout><AdminArticleEditor /></AppLayout>} />
-            <Route path="/admin/articles/:id" element={<AppLayout><AdminArticleEditor /></AppLayout>} />
-            <Route path="/admin/curator" element={<AppLayout><AdminCurator /></AppLayout>} />
-            <Route path="/admin/categories" element={<AppLayout><AdminCategories /></AppLayout>} />
-            <Route path="/admin/sources" element={<AppLayout><AdminSources /></AppLayout>} />
-            <Route path="/admin/seo" element={<AppLayout><AdminSEOAnalytics /></AppLayout>} />
-            <Route path="/admin/settings" element={<AppLayout><AdminSettings /></AppLayout>} />
+            {/* Admin routes - Protected */}
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="editor">
+                <AppLayout><AdminDashboard /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/articles" element={
+              <ProtectedRoute requiredRole="editor">
+                <AppLayout><AdminArticles /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/articles/new" element={
+              <ProtectedRoute requiredRole="editor">
+                <AppLayout><AdminArticleEditor /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/articles/:id" element={
+              <ProtectedRoute requiredRole="editor">
+                <AppLayout><AdminArticleEditor /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/curator" element={
+              <ProtectedRoute requiredRole="editor">
+                <AppLayout><AdminCurator /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/categories" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminCategories /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/sources" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminSources /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/seo" element={
+              <ProtectedRoute requiredRole="editor">
+                <AppLayout><AdminSEOAnalytics /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <ProtectedRoute requiredRole="admin">
+                <AppLayout><AdminSettings /></AppLayout>
+              </ProtectedRoute>
+            } />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
