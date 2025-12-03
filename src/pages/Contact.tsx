@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import ScrollReveal from "@/components/ScrollReveal";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, MessageSquare, Linkedin } from "lucide-react";
 
 const Contact = () => {
   return (
@@ -14,7 +14,7 @@ const Contact = () => {
           <ScrollReveal>
             <h1 className="text-5xl md:text-6xl font-bold mb-6">ENTRE EM CONTATO</h1>
             <p className="text-xl max-w-3xl text-primary-foreground/90">
-              Estamos aqui para ajudar com suas dúvidas sobre certificação e padrões ambientais
+              Quer contribuir, sugerir pautas ou saber mais sobre o Byoma Research? Fale conosco
             </p>
           </ScrollReveal>
         </div>
@@ -29,34 +29,37 @@ const Contact = () => {
                   <Mail className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Email</h3>
-                <p className="text-muted-foreground">contato@byomas.com</p>
+                <p className="text-muted-foreground">contato@byomaresearch.com</p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={0.2}>
               <div className="text-center p-6">
                 <div className="inline-flex bg-primary/10 p-4 mb-4">
-                  <Phone className="h-8 w-8 text-primary" />
+                  <MessageSquare className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Telefone</h3>
-                <p className="text-muted-foreground">+55 (11) 3000-0000</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Sugestões de Pauta</h3>
+                <p className="text-muted-foreground">Envie suas ideias de temas para cobertura</p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={0.3}>
               <div className="text-center p-6">
                 <div className="inline-flex bg-primary/10 p-4 mb-4">
-                  <MapPin className="h-8 w-8 text-primary" />
+                  <Linkedin className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Endereço</h3>
-                <p className="text-muted-foreground">São Paulo, Brasil</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">LinkedIn</h3>
+                <p className="text-muted-foreground">Siga-nos para atualizações diárias</p>
               </div>
             </ScrollReveal>
           </div>
 
           <ScrollReveal delay={0.4}>
             <div className="max-w-3xl mx-auto bg-card border border-border p-8 shadow-card">
-              <h2 className="text-3xl font-bold text-foreground mb-6">Envie sua Mensagem</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Envie sua Mensagem</h2>
+              <p className="text-muted-foreground mb-6">
+                Interessado em parcerias, contribuições ou tem alguma dúvida? Preencha o formulário abaixo.
+              </p>
               <ContactForm />
             </div>
           </ScrollReveal>

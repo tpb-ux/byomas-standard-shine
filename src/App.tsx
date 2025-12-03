@@ -9,8 +9,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Projects from "./pages/Projects";
-import ProjectDetails from "./pages/ProjectDetails";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Auth from "./pages/Auth";
@@ -38,8 +36,6 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/contato" element={<Contact />} />
-            <Route path="/projetos" element={<Projects />} />
-            <Route path="/projetos/:id" element={<ProjectDetails />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             
