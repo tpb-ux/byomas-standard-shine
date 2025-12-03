@@ -1,26 +1,22 @@
 import { Button } from "@/components/ui/button";
+
 const Navbar = () => {
-  return <nav className="fixed top-0 z-50 w-full bg-forest-dark/95 backdrop-blur-sm">
+  return (
+    <nav className="fixed top-0 z-50 w-full bg-forest-dark/95 backdrop-blur-sm">
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <div className="flex items-center space-x-2">
           <div className="flex h-8 w-8 items-center justify-center bg-primary-foreground">
-            <span className="text-sm font-bold text-primary">BS</span>
+            <span className="text-sm font-bold text-primary">BR</span>
           </div>
           <a href="/" className="text-xl font-bold text-primary-foreground">BYOMA RESEARCH</a>
         </div>
         
         <div className="hidden space-x-8 md:flex">
-          <a href="/#programas" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
-            PROGRAMAS
-          </a>
-          <a href="/projetos" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
-            PROJETOS
+          <a href="/blog" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
+            BLOG
           </a>
           <a href="/sobre" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
             SOBRE
-          </a>
-          <a href="/blog" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
-            BLOG
           </a>
           <a href="/contato" className="text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground">
             CONTATO
@@ -31,6 +27,8 @@ const Navbar = () => {
           PT
         </Button>
       </div>
-    </nav>;
+    </nav>
+  );
 };
+
 export default Navbar;
