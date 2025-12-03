@@ -1,34 +1,58 @@
 import { useState, useMemo } from "react";
-import { Zap, Fuel, Plane, Car, Leaf, TreeDeciduous, ArrowRight } from "lucide-react";
+import { Zap, Fuel, Plane, Car, Leaf, TreeDeciduous, ArrowRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 // Fatores de emissão (kg CO₂)
 const FACTORS = {
-  electricity: 0.0817, // kg CO₂/kWh (média Brasil)
-  gasoline: 2.31, // kg CO₂/litro
-  diesel: 2.68, // kg CO₂/litro
-  domesticFlight: 0.133, // kg CO₂/km por passageiro
-  internationalFlight: 0.195, // kg CO₂/km por passageiro
-  carKm: 0.21, // kg CO₂/km (carro médio)
+  electricity: 0.0817,
+  gasoline: 2.31,
+  diesel: 2.68,
+  domesticFlight: 0.133,
+  internationalFlight: 0.195,
+  carKm: 0.21,
 };
 
 const COLORS = ['hsl(var(--primary))', 'hsl(195, 65%, 45%)', 'hsl(40, 85%, 55%)', 'hsl(210, 75%, 35%)'];
 
+// Benchmarks por setor (em toneladas CO₂/ano por porte da empresa)
+const SECTOR_BENCHMARKS: Record<string, { name: string; small: number; medium: number; large: number }> = {
+  technology: { name: "Tecnologia", small: 15, medium: 80, large: 500 },
+  retail: { name: "Varejo", small: 25, medium: 150, large: 800 },
+  manufacturing: { name: "Indústria", small: 100, medium: 600, large: 3500 },
+  services: { name: "Serviços", small: 20, medium: 100, large: 450 },
+  logistics: { name: "Logística/Transporte", small: 60, medium: 350, large: 2000 },
+  agriculture: { name: "Agronegócio", small: 120, medium: 700, large: 4000 },
+  construction: { name: "Construção Civil", small: 45, medium: 280, large: 1500 },
+  hospitality: { name: "Hotelaria/Turismo", small: 35, medium: 180, large: 900 },
+};
+
+const COMPANY_SIZES = [
+  { id: "small", label: "Pequena (até 50 funcionários)" },
+  { id: "medium", label: "Média (50-200 funcionários)" },
+  { id: "large", label: "Grande (200+ funcionários)" },
+];
+
 const EmissionsCalculator = () => {
-  // Estados para cada input
+  // Estados para inputs de emissão
   const [electricity, setElectricity] = useState(500);
   const [gasoline, setGasoline] = useState(100);
   const [diesel, setDiesel] = useState(0);
   const [domesticFlights, setDomesticFlights] = useState(2000);
   const [internationalFlights, setInternationalFlights] = useState(5000);
   const [carKm, setCarKm] = useState(1000);
+
+  // Estados para benchmark
+  const [sector, setSector] = useState("services");
+  const [companySize, setCompanySize] = useState<"small" | "medium" | "large">("small");
 
   // Cálculo das emissões por categoria (em kg CO₂/ano)
   const emissions = useMemo(() => ({
@@ -44,7 +68,7 @@ const EmissionsCalculator = () => {
     return totalKg / 1000;
   }, [emissions]);
 
-  // Dados para o gráfico
+  // Dados para o gráfico de pizza
   const chartData = [
     { name: 'Energia', value: emissions.electricity, color: COLORS[0] },
     { name: 'Combustíveis', value: emissions.fuel, color: COLORS[1] },
@@ -54,6 +78,63 @@ const EmissionsCalculator = () => {
 
   // Equivalência em árvores (1 árvore absorve ~22kg CO₂/ano)
   const treesEquivalent = Math.round(totalTonnes * 1000 / 22);
+
+  // Cálculo do benchmark
+  const benchmark = useMemo(() => {
+    const sectorData = SECTOR_BENCHMARKS[sector];
+    const sectorAverage = sectorData[companySize];
+    const idealTarget = sectorAverage * 0.7;
+    const percentDiff = ((totalTonnes - sectorAverage) / sectorAverage) * 100;
+    
+    let status: 'low' | 'average' | 'high';
+    if (percentDiff > 20) {
+      status = 'high';
+    } else if (percentDiff > 0) {
+      status = 'average';
+    } else {
+      status = 'low';
+    }
+
+    return {
+      sectorName: sectorData.name,
+      sectorAverage,
+      idealTarget,
+      percentDiff,
+      status,
+    };
+  }, [sector, companySize, totalTonnes]);
+
+  // Dados para o gráfico de barras comparativo
+  const comparisonData = [
+    { name: 'Sua Empresa', value: totalTonnes, fill: 'hsl(var(--primary))' },
+    { name: 'Média do Setor', value: benchmark.sectorAverage, fill: 'hsl(210, 15%, 60%)' },
+    { name: 'Meta ESG', value: benchmark.idealTarget, fill: 'hsl(150, 60%, 40%)' },
+  ];
+
+  const getStatusMessage = () => {
+    switch (benchmark.status) {
+      case 'high':
+        return {
+          icon: <TrendingUp className="h-4 w-4" />,
+          text: `Suas emissões estão ${Math.abs(benchmark.percentDiff).toFixed(0)}% acima da média do setor. Considere ações de compensação.`,
+          color: 'text-red-600 dark:text-red-400',
+        };
+      case 'average':
+        return {
+          icon: <Minus className="h-4 w-4" />,
+          text: `Suas emissões estão ${Math.abs(benchmark.percentDiff).toFixed(0)}% acima da média. Há espaço para melhorias.`,
+          color: 'text-yellow-600 dark:text-yellow-400',
+        };
+      case 'low':
+        return {
+          icon: <TrendingDown className="h-4 w-4" />,
+          text: `Parabéns! Suas emissões estão ${Math.abs(benchmark.percentDiff).toFixed(0)}% abaixo da média do setor.`,
+          color: 'text-green-600 dark:text-green-400',
+        };
+    }
+  };
+
+  const statusMessage = getStatusMessage();
 
   return (
     <section className="bg-muted py-20 md:py-28">
@@ -68,14 +149,52 @@ const EmissionsCalculator = () => {
             Calcule as Emissões da Sua Empresa
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Estime quanto CO₂ sua empresa emite anualmente e descubra como compensar 
-            suas emissões de forma certificada.
+            Estime quanto CO₂ sua empresa emite anualmente e compare com benchmarks do setor.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {/* Formulário */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Seleção de Setor e Porte */}
+            <Card className="shadow-sm border-border">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Compare com seu setor
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Setor de atuação</Label>
+                  <Select value={sector} onValueChange={setSector}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o setor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(SECTOR_BENCHMARKS).map(([key, data]) => (
+                        <SelectItem key={key} value={key}>{data.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Porte da empresa</Label>
+                  <Select value={companySize} onValueChange={(v) => setCompanySize(v as "small" | "medium" | "large")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o porte" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COMPANY_SIZES.map((size) => (
+                        <SelectItem key={size.id} value={size.id}>{size.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Inputs de Emissão */}
             <Card className="shadow-sm border-border">
               <CardContent className="p-6 md:p-8">
                 <Tabs defaultValue="electricity" className="w-full">
@@ -230,32 +349,72 @@ const EmissionsCalculator = () => {
 
           {/* Resultados */}
           <div className="space-y-6">
+            {/* Total de Emissões */}
             <Card className="shadow-sm border-none bg-primary text-primary-foreground">
-              <CardHeader>
-                <CardTitle className="text-center">Suas Emissões Anuais</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-center text-lg">Suas Emissões Anuais</CardTitle>
               </CardHeader>
-              <CardContent className="text-center pb-8">
+              <CardContent className="text-center pb-6">
                 <div className="text-5xl md:text-6xl font-bold mb-2">
                   {totalTonnes.toFixed(1)}
                 </div>
-                <div className="text-primary-foreground/80 text-lg">
+                <div className="text-primary-foreground/80 text-lg mb-3">
                   toneladas de CO₂/ano
+                </div>
+                <Badge 
+                  className={`${
+                    benchmark.status === 'low' 
+                      ? 'bg-green-500 hover:bg-green-600' 
+                      : benchmark.status === 'average' 
+                        ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-950' 
+                        : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  {benchmark.status === 'low' && '🌱 Abaixo da média'}
+                  {benchmark.status === 'average' && '📊 Na média'}
+                  {benchmark.status === 'high' && '⚠️ Acima da média'}
+                </Badge>
+              </CardContent>
+            </Card>
+
+            {/* Comparação com Setor */}
+            <Card className="shadow-sm border-border">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Comparação com o Setor</CardTitle>
+                <p className="text-sm text-muted-foreground">{benchmark.sectorName}</p>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <ResponsiveContainer width="100%" height={140}>
+                  <BarChart layout="vertical" data={comparisonData} margin={{ left: 0, right: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" tickFormatter={(v) => `${v}t`} fontSize={12} />
+                    <YAxis dataKey="name" type="category" width={90} fontSize={11} />
+                    <Tooltip formatter={(value: number) => `${value.toFixed(1)} t/ano`} />
+                    <Bar dataKey="value" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className={`flex items-center gap-2 mt-3 text-sm ${statusMessage.color}`}>
+                  {statusMessage.icon}
+                  <span>{statusMessage.text}</span>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Gráfico */}
+            {/* Gráfico de Distribuição */}
             {chartData.length > 0 && (
               <Card className="shadow-sm border-border">
-                <CardContent className="p-6">
-                  <ResponsiveContainer width="100%" height={200}>
+                <CardHeader className="pb-0">
+                  <CardTitle className="text-base">Distribuição por Categoria</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <ResponsiveContainer width="100%" height={180}>
                     <PieChart>
                       <Pie
                         data={chartData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={40}
-                        outerRadius={80}
+                        innerRadius={35}
+                        outerRadius={70}
                         dataKey="value"
                       >
                         {chartData.map((entry, index) => (
@@ -263,21 +422,21 @@ const EmissionsCalculator = () => {
                         ))}
                       </Pie>
                       <Tooltip formatter={(value: number) => `${(value/1000).toFixed(2)} t`} />
-                      <Legend />
+                      <Legend wrapperStyle={{ fontSize: '12px' }} />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
             )}
 
-            {/* Equivalência */}
+            {/* Equivalência em Árvores */}
             <Card className="shadow-sm border-border">
-              <CardContent className="p-6 flex items-center gap-4">
+              <CardContent className="p-5 flex items-center gap-4">
                 <div className="bg-primary/10 p-3 rounded-full">
-                  <TreeDeciduous className="h-8 w-8 text-primary" />
+                  <TreeDeciduous className="h-7 w-7 text-primary" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{treesEquivalent}</div>
+                  <div className="text-2xl font-bold text-foreground">{treesEquivalent.toLocaleString()}</div>
                   <div className="text-sm text-muted-foreground">
                     árvores necessárias para compensar
                   </div>
