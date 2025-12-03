@@ -205,20 +205,7 @@ const Blog = () => {
             ) : filteredArticles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredArticles.map((article) => (
-                  <BlogCard
-                    key={article.id}
-                    slug={article.slug}
-                    title={article.title}
-                    excerpt={article.excerpt || ""}
-                    category={article.category?.name || "Sem categoria"}
-                    author={{
-                      name: article.author?.name || "Byoma Research",
-                      avatar: article.author?.avatar || "/placeholder.svg",
-                    }}
-                    date={article.published_at || new Date().toISOString()}
-                    readTime={`${article.reading_time || 5} min`}
-                    image={article.featured_image || "/placeholder.svg"}
-                  />
+                  <BlogCard key={article.id} article={article} />
                 ))}
               </div>
             ) : (
