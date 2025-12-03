@@ -1,32 +1,19 @@
 import { Badge } from "@/components/ui/badge";
-import { BlogPost } from "@/data/blogPosts";
 
 interface BlogTagsProps {
-  posts: BlogPost[];
+  tags: string[];
   selectedTags: string[];
   onTagClick: (tag: string) => void;
 }
 
-const BlogTags = ({ posts, selectedTags, onTagClick }: BlogTagsProps) => {
-  // Extract all unique tags with counts
-  const tagCounts = posts.reduce((acc, post) => {
-    post.tags.forEach((tag) => {
-      acc[tag] = (acc[tag] || 0) + 1;
-    });
-    return acc;
-  }, {} as Record<string, number>);
-
-  const sortedTags = Object.entries(tagCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 15); // Show top 15 tags
-
-  if (sortedTags.length === 0) return null;
+const BlogTags = ({ tags, selectedTags, onTagClick }: BlogTagsProps) => {
+  if (tags.length === 0) return null;
 
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-foreground">Tags Populares</h3>
       <div className="flex flex-wrap gap-2">
-        {sortedTags.map(([tag, count]) => {
+        {tags.map((tag) => {
           const isSelected = selectedTags.includes(tag);
           return (
             <Badge
@@ -35,7 +22,7 @@ const BlogTags = ({ posts, selectedTags, onTagClick }: BlogTagsProps) => {
               className="cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => onTagClick(tag)}
             >
-              {tag} ({count})
+              {tag}
             </Badge>
           );
         })}
