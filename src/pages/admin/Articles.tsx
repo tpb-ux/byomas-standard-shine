@@ -103,7 +103,7 @@ export default function AdminArticles() {
         .order("created_at", { ascending: false });
 
       if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
+        query = query.eq("status", statusFilter as "draft" | "published" | "scheduled" | "archived");
       }
 
       const { data, error } = await query;
