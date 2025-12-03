@@ -1,14 +1,14 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BlogCard from "@/components/BlogCard";
 import BlogSearch from "@/components/BlogSearch";
 import BlogSort, { SortOption } from "@/components/BlogSort";
-import BlogTags from "@/components/BlogTags";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
-import { blogPosts } from "@/data/blogPosts";
-import { useBlogSearch } from "@/hooks/useBlogSearch";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useBlogArticles } from "@/hooks/useBlogArticles";
 
 const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState("Todas");
@@ -16,15 +16,76 @@ const Blog = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>("recent");
 
-  const categories = ["Todas", ...new Set(blogPosts.map((post) => post.category))];
+  const { data: articles, isLoading, error } = useBlogArticles();
 
-  const filteredPosts = useBlogSearch({
-    posts: blogPosts,
-    searchQuery,
-    category: selectedCategory,
-    selectedTags,
-    sortBy,
-  });
+  const categories = useMemo(() => {
+    if (!articles) return ["Todas"];
+    const cats = new Set(articles.map((a) => a.category?.name).filter(Boolean));
+    return ["Todas", ...Array.from(cats)] as string[];
+  }, [articles]);
+
+  const allTags = useMemo(() => {
+    if (!articles) return [];
+    const tagSet = new Set<string>();
+    articles.forEach((a) => a.tags.forEach((t) => tagSet.add(t.name)));
+    return Array.from(tagSet);
+  }, [articles]);
+
+  const filteredArticles = useMemo(() => {
+    if (!articles) return [];
+
+    let filtered = [...articles];
+
+    // Filter by category
+    if (selectedCategory !== "Todas") {
+      filtered = filtered.filter((a) => a.category?.name === selectedCategory);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (a) =>
+          a.title.toLowerCase().includes(query) ||
+          a.excerpt?.toLowerCase().includes(query) ||
+          a.content.toLowerCase().includes(query) ||
+          a.tags.some((t) => t.name.toLowerCase().includes(query))
+      );
+    }
+
+    // Filter by selected tags
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter((a) =>
+        selectedTags.every((tag) => a.tags.some((t) => t.name === tag))
+      );
+    }
+
+    // Sort
+    switch (sortBy) {
+      case "recent":
+        filtered.sort(
+          (a, b) =>
+            new Date(b.published_at || 0).getTime() -
+            new Date(a.published_at || 0).getTime()
+        );
+        break;
+      case "oldest":
+        filtered.sort(
+          (a, b) =>
+            new Date(a.published_at || 0).getTime() -
+            new Date(b.published_at || 0).getTime()
+        );
+        break;
+      case "popular":
+        filtered.sort((a, b) => (b.views || 0) - (a.views || 0));
+        break;
+      case "alphabetical":
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+    }
+
+    return filtered;
+  }, [articles, selectedCategory, searchQuery, selectedTags, sortBy]);
 
   const handleTagClick = (tag: string) => {
     setSelectedTags((prev) =>
@@ -35,17 +96,17 @@ const Blog = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-6">
           <ScrollReveal>
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Blog Byomas
+                Byoma Research
               </h1>
               <p className="text-xl text-muted-foreground">
-                Insights sobre sustentabilidade, mercado de carbono e ação climática
+                Insights sobre sustentabilidade, mercado de carbono, tokenização e finanças regenerativas
               </p>
             </div>
           </ScrollReveal>
@@ -78,17 +139,26 @@ const Blog = () => {
             </div>
 
             {/* Tags */}
-            <BlogTags
-              posts={blogPosts}
-              selectedTags={selectedTags}
-              onTagClick={handleTagClick}
-            />
+            {allTags.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center">
+                {allTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "secondary"}
+                    className="cursor-pointer hover:bg-primary/80"
+                    onClick={() => handleTagClick(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
 
             {/* Active Filters Summary */}
             {(searchQuery || selectedTags.length > 0 || selectedCategory !== "Todas") && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>
-                  {filteredPosts.length} artigo{filteredPosts.length !== 1 ? "s" : ""} encontrado{filteredPosts.length !== 1 ? "s" : ""}
+                  {filteredArticles.length} artigo{filteredArticles.length !== 1 ? "s" : ""} encontrado{filteredArticles.length !== 1 ? "s" : ""}
                 </span>
                 <Button
                   variant="ghost"
@@ -108,29 +178,67 @@ const Blog = () => {
       </section>
 
       {/* Blog Grid */}
-      <section className="py-16">
+      <section className="py-16 flex-1">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            {filteredPosts.length > 0 ? (
+            {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredPosts.map((post) => (
-                  <BlogCard key={post.id} {...post} />
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="space-y-4">
+                    <Skeleton className="aspect-video w-full" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-lg text-destructive mb-4">
+                  Erro ao carregar artigos. Tente novamente.
+                </p>
+                <Button onClick={() => window.location.reload()}>
+                  Recarregar
+                </Button>
+              </div>
+            ) : filteredArticles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredArticles.map((article) => (
+                  <BlogCard
+                    key={article.id}
+                    slug={article.slug}
+                    title={article.title}
+                    excerpt={article.excerpt || ""}
+                    category={article.category?.name || "Sem categoria"}
+                    author={{
+                      name: article.author?.name || "Byoma Research",
+                      avatar: article.author?.avatar || "/placeholder.svg",
+                    }}
+                    date={article.published_at || new Date().toISOString()}
+                    readTime={`${article.reading_time || 5} min`}
+                    image={article.featured_image || "/placeholder.svg"}
+                  />
                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
                 <p className="text-lg text-muted-foreground mb-4">
-                  Nenhum artigo encontrado com os filtros selecionados.
+                  {articles?.length === 0
+                    ? "Nenhum artigo publicado ainda."
+                    : "Nenhum artigo encontrado com os filtros selecionados."}
                 </p>
-                <Button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedTags([]);
-                    setSelectedCategory("Todas");
-                  }}
-                >
-                  Ver todos os artigos
-                </Button>
+                {articles && articles.length > 0 && (
+                  <Button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedTags([]);
+                      setSelectedCategory("Todas");
+                    }}
+                  >
+                    Ver todos os artigos
+                  </Button>
+                )}
               </div>
             )}
           </ScrollReveal>
