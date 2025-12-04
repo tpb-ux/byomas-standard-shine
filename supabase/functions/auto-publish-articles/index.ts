@@ -18,6 +18,25 @@ interface GeneratedArticle {
   featuredImageAlt: string;
 }
 
+interface AutomationSettings {
+  articles_per_execution: number;
+  daily_target: number;
+  image_fallback_enabled: boolean;
+  trending_boost_enabled: boolean;
+}
+
+// Default fallback images (Unsplash with free license)
+const DEFAULT_FALLBACK_IMAGES = [
+  "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=1200&h=630&fit=crop",
+  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=630&fit=crop",
+];
+
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -26,6 +45,103 @@ function generateSlug(title: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .substring(0, 100);
+}
+
+async function getSettings(supabase: any): Promise<AutomationSettings> {
+  const { data } = await supabase
+    .from("automation_settings")
+    .select("key, value");
+
+  const settings: AutomationSettings = {
+    articles_per_execution: 3,
+    daily_target: 15,
+    image_fallback_enabled: true,
+    trending_boost_enabled: true,
+  };
+
+  if (data) {
+    for (const item of data) {
+      const value = typeof item.value === "string" ? item.value : JSON.stringify(item.value);
+      switch (item.key) {
+        case "articles_per_execution":
+          settings.articles_per_execution = parseInt(value, 10) || 3;
+          break;
+        case "daily_target":
+          settings.daily_target = parseInt(value, 10) || 15;
+          break;
+        case "image_fallback_enabled":
+          settings.image_fallback_enabled = value === "true" || value === true;
+          break;
+        case "trending_boost_enabled":
+          settings.trending_boost_enabled = value === "true" || value === true;
+          break;
+      }
+    }
+  }
+
+  return settings;
+}
+
+async function getFallbackImage(supabase: any, keyword: string): Promise<string> {
+  try {
+    // Try to get a category-specific fallback image
+    const categoryMap: Record<string, string> = {
+      "carbono": "carbon",
+      "carbon": "carbon",
+      "floresta": "forest",
+      "forest": "forest",
+      "energia": "energy",
+      "energy": "energy",
+      "solar": "energy",
+      "eólica": "wind",
+      "wind": "wind",
+      "cidade": "urban",
+      "urban": "urban",
+      "finance": "finance",
+      "financ": "finance",
+      "investimento": "finance",
+    };
+
+    let category = "general";
+    const lowerKeyword = keyword.toLowerCase();
+    for (const [term, cat] of Object.entries(categoryMap)) {
+      if (lowerKeyword.includes(term)) {
+        category = cat;
+        break;
+      }
+    }
+
+    // Try to get from database
+    const { data: fallbackImages } = await supabase
+      .from("fallback_images")
+      .select("url")
+      .eq("category", category)
+      .order("usage_count", { ascending: true })
+      .limit(1);
+
+    if (fallbackImages && fallbackImages.length > 0) {
+      // Update usage count
+      await supabase.rpc("increment_usage", { image_url: fallbackImages[0].url }).catch(() => {});
+      return fallbackImages[0].url;
+    }
+
+    // Try general category
+    const { data: generalImages } = await supabase
+      .from("fallback_images")
+      .select("url")
+      .eq("category", "general")
+      .order("usage_count", { ascending: true })
+      .limit(1);
+
+    if (generalImages && generalImages.length > 0) {
+      return generalImages[0].url;
+    }
+  } catch (error) {
+    console.log("Error fetching fallback from DB, using defaults:", error);
+  }
+
+  // Return random default fallback
+  return DEFAULT_FALLBACK_IMAGES[Math.floor(Math.random() * DEFAULT_FALLBACK_IMAGES.length)];
 }
 
 async function generateImage(keyword: string, title: string, apiKey: string): Promise<{ base64: string; contentType: string } | null> {
@@ -122,6 +238,34 @@ async function uploadImageToStorage(
     console.error("Error uploading image:", error);
     return null;
   }
+}
+
+async function getArticleImage(
+  supabase: any,
+  keyword: string,
+  title: string,
+  slug: string,
+  apiKey: string,
+  fallbackEnabled: boolean
+): Promise<{ url: string | null; isGenerated: boolean }> {
+  // 1. Try to generate with AI
+  const imageData = await generateImage(keyword, title, apiKey);
+  
+  if (imageData) {
+    const uploadedUrl = await uploadImageToStorage(supabase, imageData, slug);
+    if (uploadedUrl) {
+      return { url: uploadedUrl, isGenerated: true };
+    }
+  }
+
+  // 2. If AI failed and fallback is enabled, use fallback
+  if (fallbackEnabled) {
+    console.log("AI image failed, using fallback image");
+    const fallbackUrl = await getFallbackImage(supabase, keyword);
+    return { url: fallbackUrl, isGenerated: false };
+  }
+
+  return { url: null, isGenerated: false };
 }
 
 async function generateArticleContent(
@@ -227,19 +371,26 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get automation settings
+    const settings = await getSettings(supabase);
+    console.log("Automation settings:", settings);
+
     // Parse request body for optional parameters
-    let articlesToPublish = 3;
+    let articlesToPublish = settings.articles_per_execution;
+    let isTestMode = false;
+    
     try {
       const body = await req.json();
       if (body.count) articlesToPublish = Math.min(body.count, 10);
+      if (body.test) isTestMode = true;
     } catch {
       // No body or invalid JSON, use defaults
     }
 
-    console.log(`Auto-publish starting: targeting ${articlesToPublish} articles`);
+    console.log(`Auto-publish starting: targeting ${articlesToPublish} articles${isTestMode ? " (TEST MODE)" : ""}`);
 
     // 1. Get unprocessed news with highest engagement potential
-    const { data: newsItems, error: newsError } = await supabase
+    let query = supabase
       .from("curated_news")
       .select(`
         *,
@@ -249,6 +400,13 @@ serve(async (req) => {
       .order("engagement_potential", { ascending: false })
       .limit(articlesToPublish);
 
+    // If trending boost is enabled, filter for higher engagement items
+    if (settings.trending_boost_enabled) {
+      query = query.gte("engagement_potential", 50);
+    }
+
+    const { data: newsItems, error: newsError } = await query;
+
     if (newsError) {
       console.error("Error fetching news:", newsError);
       return new Response(
@@ -257,7 +415,19 @@ serve(async (req) => {
       );
     }
 
-    if (!newsItems || newsItems.length === 0) {
+    // If no high-engagement news and trending boost is on, get any available
+    let finalNewsItems = newsItems || [];
+    if (finalNewsItems.length === 0 && settings.trending_boost_enabled) {
+      const { data: anyNews } = await supabase
+        .from("curated_news")
+        .select(`*, news_sources (name, url)`)
+        .eq("processed", false)
+        .order("engagement_potential", { ascending: false })
+        .limit(articlesToPublish);
+      finalNewsItems = anyNews || [];
+    }
+
+    if (!finalNewsItems || finalNewsItems.length === 0) {
       console.log("No unprocessed news items available");
       return new Response(
         JSON.stringify({ message: "No news items to process", published: 0 }),
@@ -265,7 +435,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Found ${newsItems.length} news items to process`);
+    console.log(`Found ${finalNewsItems.length} news items to process`);
 
     // 2. Get existing articles for internal linking
     const { data: existingArticles } = await supabase
@@ -283,11 +453,11 @@ serve(async (req) => {
       .eq("is_ai", true)
       .single();
 
-    const publishedArticles: string[] = [];
+    const publishedArticles: Array<{ slug: string; title: string; imageGenerated: boolean; imageUrl: string | null }> = [];
     const errors: string[] = [];
 
     // 4. Process each news item
-    for (const newsItem of newsItems) {
+    for (const newsItem of finalNewsItems) {
       try {
         console.log(`Processing: ${newsItem.original_title}`);
 
@@ -316,13 +486,15 @@ serve(async (req) => {
           slugCounter++;
         }
 
-        // Generate image
-        let featuredImageUrl: string | null = null;
-        const imageData = await generateImage(article.mainKeyword, article.title, LOVABLE_API_KEY);
-        
-        if (imageData) {
-          featuredImageUrl = await uploadImageToStorage(supabase, imageData, finalSlug);
-        }
+        // Get image (with fallback support)
+        const imageResult = await getArticleImage(
+          supabase,
+          article.mainKeyword,
+          article.title,
+          finalSlug,
+          LOVABLE_API_KEY,
+          settings.image_fallback_enabled
+        );
 
         // Insert article as published
         const { data: newArticle, error: articleError } = await supabase
@@ -336,7 +508,7 @@ serve(async (req) => {
             content: article.content,
             main_keyword: article.mainKeyword,
             reading_time: article.readingTime || 5,
-            featured_image: featuredImageUrl,
+            featured_image: imageResult.url,
             featured_image_alt: article.featuredImageAlt,
             status: "published",
             published_at: new Date().toISOString(),
@@ -361,8 +533,13 @@ serve(async (req) => {
           .update({ processed: true, article_id: newArticle.id })
           .eq("id", newsItem.id);
 
-        publishedArticles.push(newArticle.slug);
-        console.log(`Published: ${newArticle.title} (${newArticle.slug})`);
+        publishedArticles.push({
+          slug: newArticle.slug,
+          title: newArticle.title,
+          imageGenerated: imageResult.isGenerated,
+          imageUrl: imageResult.url,
+        });
+        console.log(`Published: ${newArticle.title} (${newArticle.slug}) - Image: ${imageResult.isGenerated ? "AI Generated" : "Fallback"}`);
 
         // Small delay between articles to avoid rate limits
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -380,6 +557,10 @@ serve(async (req) => {
         success: true,
         published: publishedArticles.length,
         articles: publishedArticles,
+        settings: {
+          fallbackEnabled: settings.image_fallback_enabled,
+          trendingBoostEnabled: settings.trending_boost_enabled,
+        },
         errors: errors.length > 0 ? errors : undefined,
         timestamp: new Date().toISOString(),
       }),
