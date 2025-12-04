@@ -1,18 +1,33 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Breadcrumb from "@/components/Breadcrumb";
+import { SEOHead } from "@/components/SEOHead";
 import Timeline from "@/components/Timeline";
 import ValueCard from "@/components/ValueCard";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Target, Eye, Heart, Lightbulb, TrendingUp, Leaf } from "lucide-react";
 
 const About = () => {
+  const breadcrumbItems = [{ label: "Sobre" }];
+
   return (
     <div className="min-h-screen">
+      {/* SEO */}
+      <SEOHead
+        title="Sobre o Byoma Research - Nossa Missão e Valores"
+        description="Conheça o Byoma Research: sua fonte de inteligência sobre finanças sustentáveis, crédito de carbono, tokenização verde e economia regenerativa. Saiba mais sobre nossa missão."
+        url="/about"
+        keywords={["sobre byoma research", "missão finanças sustentáveis", "economia verde", "finanças regenerativas"]}
+      />
+
       <Navbar />
       
       <section className="pt-32 pb-20 bg-gradient-hero text-primary-foreground">
         <div className="container mx-auto px-6">
           <ScrollReveal>
+            {/* Breadcrumb */}
+            <Breadcrumb items={breadcrumbItems} className="mb-6 text-primary-foreground/70" />
+            
             <h1 className="text-5xl md:text-6xl font-bold mb-6">SOBRE O BYOMA RESEARCH</h1>
             <p className="text-xl max-w-3xl text-primary-foreground/90">
               Sua fonte de inteligência e insights sobre o mercado de finanças sustentáveis, tokenização verde e economia regenerativa

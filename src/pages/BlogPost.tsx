@@ -2,6 +2,8 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, Clock, User, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Breadcrumb from "@/components/Breadcrumb";
+import { SEOHead, ArticleSchema } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,6 +53,11 @@ const BlogPost = () => {
   if (error || !article) {
     return (
       <div className="min-h-screen flex flex-col">
+        <SEOHead
+          title="Artigo não encontrado"
+          description="O artigo que você procura não foi encontrado."
+          noIndex
+        />
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -73,14 +80,46 @@ const BlogPost = () => {
       })
     : "";
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: "Blog", href: "/blog" },
+    ...(article.category ? [{ label: article.category.name, href: `/blog?category=${article.category.slug || article.category.name}` }] : []),
+    { label: article.title },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* SEO Meta Tags */}
+      <SEOHead
+        title={article.meta_title || article.title}
+        description={article.meta_description || article.excerpt || ""}
+        image={article.featured_image || undefined}
+        url={`/blog/${slug}`}
+        type="article"
+        author={article.author?.name}
+        publishedAt={article.published_at || undefined}
+        keywords={article.tags?.map(t => t.name)}
+      />
+      
+      {/* Article JSON-LD */}
+      <ArticleSchema
+        title={article.title}
+        description={article.meta_description || article.excerpt || ""}
+        image={article.featured_image || undefined}
+        url={`/blog/${slug}`}
+        author={article.author?.name}
+        publishedAt={article.published_at || undefined}
+      />
+
       <Navbar />
 
       {/* Hero Section */}
       <section className="pt-24 pb-12 bg-muted/30">
         <div className="container mx-auto px-6 max-w-4xl">
           <ScrollReveal>
+            {/* Breadcrumb */}
+            <Breadcrumb items={breadcrumbItems} className="mb-6" />
+
             <Button
               variant="ghost"
               size="sm"
@@ -111,7 +150,7 @@ const BlogPost = () => {
               {formattedDate && (
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>{formattedDate}</span>
+                  <time dateTime={article.published_at || undefined}>{formattedDate}</time>
                 </div>
               )}
               <div className="flex items-center gap-2">
@@ -139,6 +178,9 @@ const BlogPost = () => {
                   src={article.featured_image}
                   alt={article.featured_image_alt || article.title}
                   className="w-full h-full object-cover"
+                  loading="eager"
+                  width={1200}
+                  height={675}
                 />
               </div>
             </ScrollReveal>
@@ -150,7 +192,7 @@ const BlogPost = () => {
       <section className="pb-16 flex-1">
         <div className="container mx-auto px-6 max-w-4xl">
           <ScrollReveal>
-            <div
+            <article
               className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90 prose-strong:text-foreground"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
@@ -159,13 +201,16 @@ const BlogPost = () => {
           {/* Author Bio */}
           {article.author && (
             <ScrollReveal delay={0.2}>
-              <div className="mt-12 p-6 bg-muted rounded-lg border-l-4 border-primary">
+              <aside className="mt-12 p-6 bg-muted rounded-lg border-l-4 border-primary">
                 <div className="flex items-center gap-4">
                   {article.author.avatar && (
                     <img
                       src={article.author.avatar}
                       alt={article.author.name}
                       className="w-16 h-16 rounded-full object-cover"
+                      loading="lazy"
+                      width={64}
+                      height={64}
                     />
                   )}
                   <div>
@@ -184,7 +229,7 @@ const BlogPost = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </aside>
             </ScrollReveal>
           )}
 
@@ -229,7 +274,7 @@ const BlogPost = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {relatedArticles.map((related, index) => (
                 <ScrollReveal key={related.id} delay={index * 0.1}>
-                  <div
+                  <article
                     onClick={() => navigate(`/blog/${related.slug}`)}
                     className="cursor-pointer group"
                   >
@@ -238,6 +283,9 @@ const BlogPost = () => {
                         src={related.featured_image || "/placeholder.svg"}
                         alt={related.title}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        width={400}
+                        height={225}
                       />
                     </div>
                     {related.category && (
@@ -249,7 +297,7 @@ const BlogPost = () => {
                     <p className="text-sm text-muted-foreground mt-2">
                       {related.reading_time || 5} min de leitura
                     </p>
-                  </div>
+                  </article>
                 </ScrollReveal>
               ))}
             </div>
