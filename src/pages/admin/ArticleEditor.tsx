@@ -12,6 +12,7 @@ import {
   TrendingUp,
   Link2,
   Image as ImageIcon,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,6 +58,7 @@ const articleSchema = z.object({
 });
 
 type ArticleFormData = z.infer<typeof articleSchema>;
+type RegeneratingSection = 'none' | 'title' | 'excerpt' | 'content' | 'meta';
 
 interface Category {
   id: string;
@@ -75,6 +77,14 @@ interface SeoAnalysis {
   suggestions: string[];
 }
 
+const sectionLabels: Record<RegeneratingSection, string> = {
+  none: '',
+  title: 'Título',
+  excerpt: 'Resumo',
+  content: 'Conteúdo',
+  meta: 'Meta Tags',
+};
+
 export default function ArticleEditor() {
   const { id } = useParams();
   const isEditing = !!id && id !== "new";
@@ -85,6 +95,7 @@ export default function ArticleEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
+  const [regeneratingSection, setRegeneratingSection] = useState<RegeneratingSection>('none');
   const [categories, setCategories] = useState<Category[]>([]);
   const [seoAnalysis, setSeoAnalysis] = useState<SeoAnalysis | null>(null);
   
@@ -278,14 +289,12 @@ export default function ArticleEditor() {
       return;
     }
 
-    // Clear any existing timers
     generationTimersRef.current.forEach(timer => clearTimeout(timer));
     generationTimersRef.current = [];
 
     setIsGenerating(true);
     setGenerationStep('analyzing');
 
-    // Set up progress simulation timers
     const timer1 = setTimeout(() => setGenerationStep('generating'), 2000);
     const timer2 = setTimeout(() => setGenerationStep('optimizing'), 5000);
     generationTimersRef.current.push(timer1, timer2);
@@ -297,7 +306,6 @@ export default function ArticleEditor() {
 
       if (error) throw error;
 
-      // Clear timers and set to complete
       generationTimersRef.current.forEach(timer => clearTimeout(timer));
       setGenerationStep('complete');
 
@@ -313,7 +321,6 @@ export default function ArticleEditor() {
         toast.success("Conteúdo gerado com sucesso!");
       }
 
-      // Reset after showing complete state
       setTimeout(() => {
         setGenerationStep('idle');
         setIsGenerating(false);
@@ -326,6 +333,84 @@ export default function ArticleEditor() {
       setIsGenerating(false);
     }
   };
+
+  const regenerateSection = async (section: RegeneratingSection) => {
+    const keyword = form.getValues("main_keyword");
+    if (!keyword) {
+      toast.error("Defina uma palavra-chave principal primeiro");
+      return;
+    }
+
+    setRegeneratingSection(section);
+
+    try {
+      const context = {
+        title: form.getValues("title"),
+        content: form.getValues("content"),
+        excerpt: form.getValues("excerpt"),
+      };
+
+      const { data, error } = await supabase.functions.invoke("generate-article", {
+        body: { keyword, section, context },
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        switch (section) {
+          case 'title':
+            if (data.title) {
+              form.setValue("title", data.title);
+              form.setValue("slug", generateSlug(data.title));
+            }
+            break;
+          case 'excerpt':
+            if (data.excerpt) {
+              form.setValue("excerpt", data.excerpt);
+            }
+            break;
+          case 'content':
+            if (data.content) {
+              form.setValue("content", data.content);
+              analyzeSeo(data.content, keyword);
+            }
+            break;
+          case 'meta':
+            if (data.meta_title) form.setValue("meta_title", data.meta_title);
+            if (data.meta_description) form.setValue("meta_description", data.meta_description);
+            break;
+        }
+
+        toast.success(`${sectionLabels[section]} regenerado com sucesso!`);
+      }
+    } catch (error) {
+      console.error("Error regenerating section:", error);
+      toast.error("Erro ao regenerar. Tente novamente.");
+    } finally {
+      setRegeneratingSection('none');
+    }
+  };
+
+  const isRegenerating = regeneratingSection !== 'none';
+  const isDisabled = isGenerating || isRegenerating;
+
+  const RegenerateButton = ({ section }: { section: RegeneratingSection }) => (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      onClick={() => regenerateSection(section)}
+      disabled={isDisabled || !form.getValues("main_keyword")}
+      className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+    >
+      {regeneratingSection === section ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : (
+        <RefreshCw className="h-3 w-3" />
+      )}
+      Regenerar
+    </Button>
+  );
 
   if (authLoading || isLoading) {
     return (
@@ -355,7 +440,7 @@ export default function ArticleEditor() {
           <Button
             variant="outline"
             onClick={generateWithAI}
-            disabled={isGenerating}
+            disabled={isDisabled}
           >
             {isGenerating ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -400,7 +485,10 @@ export default function ArticleEditor() {
                         name="title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Título</FormLabel>
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Título</FormLabel>
+                              <RegenerateButton section="title" />
+                            </div>
                             <FormControl>
                               <Input
                                 {...field}
@@ -440,7 +528,10 @@ export default function ArticleEditor() {
                         name="excerpt"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Resumo</FormLabel>
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Resumo</FormLabel>
+                              <RegenerateButton section="excerpt" />
+                            </div>
                             <FormControl>
                               <Textarea
                                 {...field}
@@ -458,7 +549,10 @@ export default function ArticleEditor() {
                         name="content"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Conteúdo</FormLabel>
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Conteúdo</FormLabel>
+                              <RegenerateButton section="content" />
+                            </div>
                             <FormControl>
                               <Textarea
                                 {...field}
@@ -520,7 +614,10 @@ export default function ArticleEditor() {
                         name="meta_title"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Meta Título ({field.value?.length || 0}/60)</FormLabel>
+                            <div className="flex items-center justify-between">
+                              <FormLabel>Meta Título ({field.value?.length || 0}/60)</FormLabel>
+                              <RegenerateButton section="meta" />
+                            </div>
                             <FormControl>
                               <Input
                                 {...field}

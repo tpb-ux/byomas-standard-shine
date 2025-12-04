@@ -20,6 +20,8 @@ interface GeneratedArticle {
   featuredImageAlt: string;
 }
 
+type SectionType = 'full' | 'title' | 'excerpt' | 'content' | 'meta';
+
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -30,16 +32,93 @@ function generateSlug(title: string): string {
     .substring(0, 100);
 }
 
+function getSectionPrompt(section: SectionType, keyword: string, context?: { title?: string; content?: string; excerpt?: string }): { system: string; user: string } {
+  const baseContext = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi) para o blog "Byoma Research".`;
+
+  switch (section) {
+    case 'title':
+      return {
+        system: `${baseContext}
+TAREFA: Gerar apenas um título H1 otimizado para SEO.
+REGRAS:
+- Máximo 60 caracteres
+- Incluir a palavra-chave principal naturalmente
+- Ser atrativo e descritivo
+- Gerar também um slug URL-friendly
+
+FORMATO DE RESPOSTA (JSON apenas):
+{"title": "Título Otimizado", "slug": "slug-url-friendly"}`,
+        user: `Gere um título SEO-otimizado para um artigo sobre: ${keyword}
+${context?.content ? `\nCONTEXTO DO ARTIGO:\n${context.content.substring(0, 500)}...` : ''}`
+      };
+
+    case 'excerpt':
+      return {
+        system: `${baseContext}
+TAREFA: Gerar apenas um resumo/excerpt otimizado.
+REGRAS:
+- Máximo 300 caracteres
+- Resumir o conteúdo de forma atrativa
+- Incluir a palavra-chave naturalmente
+- Despertar curiosidade para leitura
+
+FORMATO DE RESPOSTA (JSON apenas):
+{"excerpt": "Resumo atrativo do artigo..."}`,
+        user: `Gere um resumo atrativo para um artigo sobre: ${keyword}
+${context?.title ? `\nTÍTULO: ${context.title}` : ''}
+${context?.content ? `\nCONTEÚDO:\n${context.content.substring(0, 800)}...` : ''}`
+      };
+
+    case 'content':
+      return {
+        system: `${baseContext}
+TAREFA: Gerar apenas o corpo do artigo em HTML.
+REGRAS:
+- Mínimo 800 palavras, máximo 1500 palavras
+- Usar H2 e H3 para estrutura (NÃO incluir H1)
+- Densidade de keyword: 1-2%
+- Conteúdo informativo e bem estruturado
+- Incluir listas, parágrafos curtos
+
+FORMATO DE RESPOSTA (JSON apenas):
+{"content": "<h2>Subtítulo</h2><p>Conteúdo...</p>...", "readingTime": 5}`,
+        user: `Gere o corpo do artigo sobre: ${keyword}
+${context?.title ? `\nTÍTULO: ${context.title}` : ''}
+${context?.excerpt ? `\nRESUMO: ${context.excerpt}` : ''}`
+      };
+
+    case 'meta':
+      return {
+        system: `${baseContext}
+TAREFA: Gerar meta title e meta description para SEO.
+REGRAS:
+- Meta title: máximo 60 caracteres, incluir keyword
+- Meta description: máximo 155 caracteres, incluir keyword naturalmente
+- Otimizados para CTR nos resultados de busca
+
+FORMATO DE RESPOSTA (JSON apenas):
+{"meta_title": "Título Meta SEO", "meta_description": "Descrição meta para busca..."}`,
+        user: `Gere meta tags SEO para um artigo sobre: ${keyword}
+${context?.title ? `\nTÍTULO: ${context.title}` : ''}
+${context?.excerpt ? `\nRESUMO: ${context.excerpt}` : ''}`
+      };
+
+    default:
+      return { system: '', user: '' };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { newsId, categoryId, keyword, type } = await req.json();
+    const { newsId, categoryId, keyword, type, section = 'full', context } = await req.json();
 
     // Support two modes: from news OR from keyword
     const isKeywordMode = !newsId && keyword;
+    const isSectionMode = section !== 'full' && keyword;
     
     if (!newsId && !keyword) {
       return new Response(
@@ -54,9 +133,97 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // SECTION MODE: Generate only specific section
+    if (isSectionMode) {
+      console.log(`Generating section: ${section} for keyword: ${keyword}`);
+      
+      const { system: sectionSystemPrompt, user: sectionUserPrompt } = getSectionPrompt(
+        section as SectionType,
+        keyword,
+        context
+      );
+
+      const sectionResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: sectionSystemPrompt },
+            { role: "user", content: sectionUserPrompt },
+          ],
+        }),
+      });
+
+      if (!sectionResponse.ok) {
+        const errorText = await sectionResponse.text();
+        console.error("AI section generation failed:", sectionResponse.status, errorText);
+        
+        if (sectionResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (sectionResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "AI credits exhausted. Please add funds." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        return new Response(
+          JSON.stringify({ error: "AI generation failed" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const sectionAiData = await sectionResponse.json();
+      const sectionContent = sectionAiData.choices?.[0]?.message?.content;
+
+      if (!sectionContent) {
+        return new Response(
+          JSON.stringify({ error: "No content generated" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      try {
+        const cleanContent = sectionContent.replace(/```json\n?|\n?```/g, "").trim();
+        const sectionData = JSON.parse(cleanContent);
+        
+        console.log(`Section ${section} generated successfully`);
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            section,
+            ...sectionData,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (parseError) {
+        console.error("Failed to parse section response:", sectionContent);
+        return new Response(
+          JSON.stringify({ error: "Failed to parse AI response" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // FULL ARTICLE MODE (existing logic)
     let newsData = null;
 
-    // Mode 1: Generate from curated news
     if (newsId) {
       const { data: news, error: newsError } = await supabase
         .from("curated_news")
@@ -90,13 +257,6 @@ serve(async (req) => {
       .select("id")
       .eq("is_ai", true)
       .single();
-
-    if (!LOVABLE_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     const existingArticlesList = existingArticles?.map(a => `- "${a.title}" (slug: ${a.slug})`).join("\n") || "Nenhum artigo publicado ainda.";
 
@@ -137,7 +297,6 @@ IMPORTANTE: Retorne APENAS o JSON, sem markdown ou texto adicional.`;
     let userPrompt: string;
     
     if (isKeywordMode) {
-      // Mode 2: Generate from keyword
       userPrompt = `Crie um artigo SEO-otimizado sobre o tema:
 
 PALAVRA-CHAVE PRINCIPAL: ${keyword}
@@ -146,7 +305,6 @@ TIPO DE CONTEÚDO: ${type === 'full' ? 'Artigo completo e aprofundado' : 'Artigo
 
 CONTEXTO: O blog Byoma Research foca em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi). Crie um conteúdo original, informativo e bem estruturado sobre o tema fornecido.`;
     } else {
-      // Mode 1: Generate from news
       userPrompt = `Transforme esta notícia em um artigo SEO-otimizado:
 
 TÍTULO ORIGINAL: ${newsData.original_title}
@@ -212,7 +370,6 @@ URL ORIGINAL: ${newsData.original_url}`;
     // Parse JSON response
     let article: GeneratedArticle;
     try {
-      // Remove possible markdown code blocks
       const cleanContent = aiContent.replace(/```json\n?|\n?```/g, "").trim();
       article = JSON.parse(cleanContent);
     } catch (parseError) {
@@ -246,7 +403,6 @@ URL ORIGINAL: ${newsData.original_url}`;
     }
 
     // Mode 1: Save article from news
-    // Ensure slug is unique
     const baseSlug = article.slug || generateSlug(article.title);
     let finalSlug = baseSlug;
     let slugCounter = 1;
@@ -263,7 +419,6 @@ URL ORIGINAL: ${newsData.original_url}`;
       slugCounter++;
     }
 
-    // Insert the article
     const { data: newArticle, error: articleError } = await supabase
       .from("articles")
       .insert({
@@ -297,7 +452,6 @@ URL ORIGINAL: ${newsData.original_url}`;
 
     console.log(`Article created: ${newArticle.id}`);
 
-    // Insert external links
     if (article.suggestedExternalLinks?.length) {
       for (const link of article.suggestedExternalLinks) {
         await supabase.from("external_links").insert({
@@ -309,7 +463,6 @@ URL ORIGINAL: ${newsData.original_url}`;
       }
     }
 
-    // Insert internal links (only if target articles exist)
     if (article.suggestedInternalLinks?.length && existingArticles?.length) {
       for (const link of article.suggestedInternalLinks) {
         const targetArticle = existingArticles.find(a => a.slug === link.targetSlug);
@@ -323,7 +476,6 @@ URL ORIGINAL: ${newsData.original_url}`;
       }
     }
 
-    // Mark curated news as processed
     await supabase
       .from("curated_news")
       .update({ processed: true, article_id: newArticle.id })
