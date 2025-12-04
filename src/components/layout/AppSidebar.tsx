@@ -18,6 +18,7 @@ import {
   Zap,
   MessageSquare,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -58,6 +59,7 @@ const publicNavItems = [
 
 const adminNavItems = [
   { title: "Dashboard", url: "/admin", icon: BarChart3 },
+  { title: "Gerar Artigo", url: "/admin/generate", icon: Sparkles },
   { title: "Artigos", url: "/admin/articles", icon: FileText },
   { title: "Curadoria", url: "/admin/curator", icon: Newspaper },
   { title: "Automação", url: "/admin/automation", icon: Zap },
