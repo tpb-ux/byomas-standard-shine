@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
@@ -10,11 +12,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronRight, Leaf, TrendingUp, Globe, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronRight, Leaf, TrendingUp, Globe, Zap, BookOpen, Clock, Eye } from "lucide-react";
 
 const Index = () => {
   const { data: articles, isLoading } = useBlogArticles();
   const latestArticles = articles?.slice(0, 6) || [];
+
+  // Fetch pillar pages for the home section
+  const { data: pillarPages, isLoading: isPillarLoading } = useQuery({
+    queryKey: ["pillar-pages-home"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pillar_pages")
+        .select("id, title, slug, excerpt, featured_image, reading_time, views, main_keyword")
+        .eq("status", "published")
+        .order("views", { ascending: false })
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const categories = [
     { name: "Crédito de Carbono", icon: Leaf, slug: "credito-carbono" },
@@ -142,9 +160,102 @@ const Index = () => {
         </section>
       </ScrollReveal>
 
+      {/* Pillar Pages / Guias Completos Section */}
+      {pillarPages && pillarPages.length > 0 && (
+        <ScrollReveal>
+          <section className="py-16 md:py-24 bg-card border-y border-border">
+            <div className="container mx-auto px-6">
+              <div className="flex items-center justify-between mb-12">
+                <div>
+                  <span className="text-xs font-medium uppercase tracking-widest text-primary mb-2 block">
+                    GUIAS COMPLETOS
+                  </span>
+                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                    Aprenda do Zero ao Avançado
+                  </h2>
+                  <p className="text-muted-foreground">
+                    Conteúdo aprofundado para dominar o mercado verde
+                  </p>
+                </div>
+                <Link to="/guias">
+                  <Button 
+                    variant="outline" 
+                    className="hidden md:flex items-center gap-2 border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                  >
+                    Ver todos <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {isPillarLoading ? (
+                  [...Array(4)].map((_, i) => (
+                    <Card key={i} className="border border-border">
+                      <Skeleton className="h-32 w-full" />
+                      <CardContent className="p-4">
+                        <Skeleton className="h-4 w-3/4 mb-2" />
+                        <Skeleton className="h-3 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  pillarPages.map((page) => (
+                    <Link key={page.id} to={`/guia/${page.slug}`} className="group">
+                      <Card className="h-full border border-border hover:border-primary/50 transition-all duration-300">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="p-2 bg-primary/10 rounded">
+                              <BookOpen className="h-5 w-5 text-primary" />
+                            </div>
+                            {page.main_keyword && (
+                              <Badge variant="outline" className="text-xs">
+                                {page.main_keyword}
+                              </Badge>
+                            )}
+                          </div>
+                          <h3 className="font-semibold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                            {page.title}
+                          </h3>
+                          {page.excerpt && (
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                              {page.excerpt}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {page.reading_time || 15} min
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              {page.views || 0}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-8 text-center md:hidden">
+                <Link to="/guias">
+                  <Button 
+                    variant="outline" 
+                    className="items-center gap-2 border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                  >
+                    Ver todos os guias <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </section>
+        </ScrollReveal>
+      )}
+
       {/* Categories Section */}
       <ScrollReveal>
-        <section className="py-16 bg-card border-y border-border">
+        <section className="py-16 bg-background">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
               <span className="text-xs font-medium uppercase tracking-widest text-primary mb-2 block">
@@ -184,7 +295,7 @@ const Index = () => {
 
       {/* Newsletter Section */}
       <ScrollReveal>
-        <section className="py-16 md:py-24 bg-background">
+        <section className="py-16 md:py-24 bg-card border-t border-border">
           <div className="container mx-auto px-6">
             <div className="max-w-2xl mx-auto text-center">
               <span className="text-xs font-medium uppercase tracking-widest text-primary mb-2 block">
@@ -201,7 +312,7 @@ const Index = () => {
                 <Input
                   type="email"
                   placeholder="Seu melhor email"
-                  className="bg-card border-border text-foreground placeholder:text-muted-foreground"
+                  className="bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
                 <Button className="bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap">
                   Inscrever-se

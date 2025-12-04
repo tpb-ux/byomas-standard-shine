@@ -61,6 +61,8 @@ const adminNavItems = [
   { title: "Artigos", url: "/admin/articles", icon: FileText },
   { title: "Curadoria", url: "/admin/curator", icon: Newspaper },
   { title: "Automação", url: "/admin/automation", icon: Zap },
+  { title: "Topic Clusters", url: "/admin/topics", icon: FolderTree },
+  { title: "Pillar Pages", url: "/admin/pillar-pages", icon: FileText },
   { title: "Categorias", url: "/admin/categories", icon: Tags },
   { title: "SEO", url: "/admin/seo", icon: TrendingUp },
   { title: "Performance", url: "/admin/performance", icon: Activity },

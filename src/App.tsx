@@ -17,6 +17,7 @@ import Tag from "./pages/Tag";
 import Tags from "./pages/Tags";
 import Topic from "./pages/Topic";
 import PillarPage from "./pages/PillarPage";
+import Guides from "./pages/Guides";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -31,6 +32,8 @@ import AdminPerformance from "./pages/admin/Performance";
 import AdminSettings from "./pages/admin/Settings";
 import AdminSubscribers from "./pages/admin/Subscribers";
 import AdminMessages from "./pages/admin/Messages";
+import AdminTopicClusters from "./pages/admin/TopicClustersAdmin";
+import AdminPillarPages from "./pages/admin/PillarPagesAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +58,7 @@ const App = () => {
               <Route path="/contato" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              <Route path="/guias" element={<Guides />} />
               
               {/* SEO Routes - Tags, Topics, Pillar Pages */}
               <Route path="/tag/:slug" element={<Tag />} />
@@ -95,6 +99,16 @@ const App = () => {
               <Route path="/admin/automation" element={
                 <ProtectedRoute requiredRole="admin">
                   <AppLayout><AdminAutomation /></AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/topics" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AppLayout><AdminTopicClusters /></AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/pillar-pages" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AppLayout><AdminPillarPages /></AppLayout>
                 </ProtectedRoute>
               } />
               <Route path="/admin/categories" element={
