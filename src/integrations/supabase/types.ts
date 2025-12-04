@@ -853,6 +853,13 @@ export type Database = {
         Args: { page_slug: string }
         Returns: undefined
       }
+      recalculate_all_seo_metrics: {
+        Args: never
+        Returns: {
+          articles_processed: number
+          avg_score: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"

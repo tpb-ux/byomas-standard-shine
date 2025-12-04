@@ -95,19 +95,24 @@ ${context?.content ? `\nCONTEÚDO:\n${context.content.substring(0, 800)}...` : '
     case 'content':
       return {
         system: `${baseContext}
-TAREFA: Gerar apenas o corpo do artigo em HTML.
-REGRAS:
-- Mínimo 800 palavras, máximo 1500 palavras
-- Usar H2 e H3 para estrutura (NÃO incluir H1)
-- Densidade de keyword: 1-2%
-- Conteúdo informativo e bem estruturado
-- Incluir listas, parágrafos curtos
+TAREFA: Gerar apenas o corpo do artigo em HTML otimizado para SEO 85+.
+REGRAS OBRIGATÓRIAS PARA SEO 85+:
+- MÍNIMO 1200 palavras, ideal 1500+ palavras
+- Usar H2 (mínimo 4) e H3 (mínimo 3) para estrutura (NÃO incluir H1)
+- Densidade de keyword: 1.5-2.5% (repetir a keyword naturalmente ao longo do texto)
+- Conteúdo informativo, aprofundado e bem estruturado
+- Incluir listas com bullets, parágrafos curtos (2-3 frases)
+- Cada seção H2 deve ter pelo menos 150 palavras
+- Incluir dados estatísticos, exemplos práticos e citações de especialistas
+- Usar formatação: <strong>, <em>, listas <ul><li>
 
 FORMATO DE RESPOSTA (JSON apenas):
-{"content": "<h2>Subtítulo</h2><p>Conteúdo...</p>...", "readingTime": 5}`,
+{"content": "<h2>Subtítulo</h2><p>Conteúdo...</p>...", "readingTime": 8}`,
         user: `Gere o corpo do artigo sobre: ${keyword}
 ${context?.title ? `\nTÍTULO: ${context.title}` : ''}
-${context?.excerpt ? `\nRESUMO: ${context.excerpt}` : ''}`
+${context?.excerpt ? `\nRESUMO: ${context.excerpt}` : ''}
+
+IMPORTANTE: O artigo deve ter NO MÍNIMO 1200 palavras para atingir SEO score 85+. Seja completo e aprofundado.`
       };
 
     case 'meta':
@@ -300,36 +305,45 @@ serve(async (req) => {
 
     const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
 
-Sua tarefa é criar um artigo completo e otimizado para SEO para o blog "Byoma Research".
+Sua tarefa é criar um artigo completo e ALTAMENTE otimizado para SEO (score 85+) para o blog "Byoma Research".
 
-REGRAS DE SEO OBRIGATÓRIAS:
-1. Título (H1): máximo 60 caracteres, incluir palavra-chave principal
-2. Meta description: máximo 155 caracteres, incluir palavra-chave naturalmente
-3. Estrutura: usar H2 e H3 para organizar o conteúdo
-4. Densidade de keyword: 1-2% (natural, sem keyword stuffing)
-5. Conteúdo: mínimo 800 palavras, máximo 1500 palavras
-6. Links internos: sugerir 5 links para artigos existentes (se disponíveis)
-7. Links externos: sugerir 5 links para fontes confiáveis (domínios .gov, .org, grandes publicações)
+REGRAS DE SEO OBRIGATÓRIAS PARA SCORE 85+:
+1. Título (H1): máximo 60 caracteres, INCLUIR palavra-chave principal no início
+2. Meta description: máximo 155 caracteres (ideal 140-155), incluir palavra-chave naturalmente
+3. Meta title: máximo 60 caracteres (ideal 50-60), incluir palavra-chave
+4. Estrutura: usar MÍNIMO 4 H2 e 3 H3 para organizar o conteúdo
+5. Densidade de keyword: 1.5-2.5% (repetir keyword naturalmente 15-25 vezes em 1200 palavras)
+6. Conteúdo: MÍNIMO 1200 palavras, ideal 1500+ palavras
+7. Links internos: sugerir 5 links para artigos existentes (se disponíveis)
+8. Links externos: sugerir 5 links para fontes confiáveis (.gov, .org, publicações renomadas)
+9. Incluir: listas com bullets, dados estatísticos, exemplos práticos
+10. Cada seção H2 deve ter pelo menos 150 palavras
 
 ARTIGOS EXISTENTES PARA LINKS INTERNOS:
 ${existingArticlesList}
 
+FONTES AUTORITATIVAS PARA LINKS EXTERNOS:
+${authoritySourcesList}
+
 FORMATO DE RESPOSTA (JSON):
 {
-  "title": "Título otimizado H1",
+  "title": "Título otimizado H1 com keyword",
   "slug": "slug-do-artigo",
-  "metaTitle": "Meta título para SEO (max 60 chars)",
-  "metaDescription": "Meta description para SEO (max 155 chars)",
+  "metaTitle": "Meta título para SEO (50-60 chars com keyword)",
+  "metaDescription": "Meta description para SEO (140-155 chars com keyword)",
   "excerpt": "Resumo atrativo (max 300 chars)",
-  "content": "<h2>Subtítulo</h2><p>Conteúdo...</p>...",
+  "content": "<h2>Subtítulo</h2><p>Conteúdo extenso...</p>...",
   "mainKeyword": "palavra-chave principal",
-  "readingTime": 5,
+  "readingTime": 8,
   "suggestedInternalLinks": [{"anchor": "texto âncora", "targetSlug": "slug-do-artigo"}],
   "suggestedExternalLinks": [{"anchor": "texto âncora", "url": "https://...", "domain": "dominio.com"}],
-  "featuredImageAlt": "Descrição da imagem para acessibilidade"
+  "featuredImageAlt": "Descrição da imagem com keyword para acessibilidade"
 }
 
-IMPORTANTE: Retorne APENAS o JSON, sem markdown ou texto adicional.`;
+IMPORTANTE: 
+- Retorne APENAS o JSON, sem markdown ou texto adicional
+- O conteúdo DEVE ter no mínimo 1200 palavras para atingir score 85+
+- Repita a keyword de forma natural ao longo do texto para densidade de 1.5-2.5%`;
 
     // Build user prompt based on mode
     let userPrompt: string;
