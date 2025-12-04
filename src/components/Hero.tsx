@@ -3,8 +3,6 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Hero = () => {
-  console.log("[Hero] Rendering Hero component");
-  
   return (
     <section className="relative min-h-screen w-full bg-background pt-20">
       <div className="absolute inset-0 bg-gradient-hero" />

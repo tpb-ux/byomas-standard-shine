@@ -9,7 +9,6 @@ interface ScrollRevealProps {
 }
 
 const ScrollReveal = ({ children, delay = 0, direction = "up", className = "" }: ScrollRevealProps) => {
-  console.log("[ScrollReveal] Rendering with delay:", delay);
   const directionOffset = {
     up: { y: 40 },
     down: { y: -40 },
