@@ -67,6 +67,7 @@ export type Database = {
           source_url: string | null
           status: Database["public"]["Enums"]["article_status"] | null
           title: string
+          topic_cluster_id: string | null
           updated_at: string | null
           views: number | null
         }
@@ -92,6 +93,7 @@ export type Database = {
           source_url?: string | null
           status?: Database["public"]["Enums"]["article_status"] | null
           title: string
+          topic_cluster_id?: string | null
           updated_at?: string | null
           views?: number | null
         }
@@ -117,6 +119,7 @@ export type Database = {
           source_url?: string | null
           status?: Database["public"]["Enums"]["article_status"] | null
           title?: string
+          topic_cluster_id?: string | null
           updated_at?: string | null
           views?: number | null
         }
@@ -135,7 +138,53 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "articles_topic_cluster_id_fkey"
+            columns: ["topic_cluster_id"]
+            isOneToOne: false
+            referencedRelation: "topic_clusters"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      authority_sources: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          domain: string
+          id: string
+          is_active: boolean | null
+          name: string
+          trust_score: number | null
+          url: string
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          domain: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          trust_score?: number | null
+          url: string
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          domain?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          trust_score?: number | null
+          url?: string
+          usage_count?: number | null
+        }
+        Relationships: []
       }
       authors: {
         Row: {
@@ -469,6 +518,87 @@ export type Database = {
         }
         Relationships: []
       }
+      pillar_pages: {
+        Row: {
+          author_id: string | null
+          category_id: string | null
+          content: string
+          created_at: string | null
+          excerpt: string | null
+          featured_articles: string[] | null
+          featured_image: string | null
+          featured_image_alt: string | null
+          id: string
+          main_keyword: string | null
+          meta_description: string | null
+          meta_title: string | null
+          reading_time: number | null
+          slug: string
+          status: string | null
+          table_of_contents: Json | null
+          title: string
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          author_id?: string | null
+          category_id?: string | null
+          content: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_articles?: string[] | null
+          featured_image?: string | null
+          featured_image_alt?: string | null
+          id?: string
+          main_keyword?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          reading_time?: number | null
+          slug: string
+          status?: string | null
+          table_of_contents?: Json | null
+          title: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          author_id?: string | null
+          category_id?: string | null
+          content?: string
+          created_at?: string | null
+          excerpt?: string | null
+          featured_articles?: string[] | null
+          featured_image?: string | null
+          featured_image_alt?: string | null
+          id?: string
+          main_keyword?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          reading_time?: number | null
+          slug?: string
+          status?: string | null
+          table_of_contents?: Json | null
+          title?: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pillar_pages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "authors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pillar_pages_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -566,6 +696,53 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      topic_clusters: {
+        Row: {
+          article_count: number | null
+          category_id: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          article_count?: number | null
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          article_count?: number | null
+          category_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_clusters_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_reading_history: {
         Row: {
@@ -670,6 +847,10 @@ export type Database = {
       }
       increment_article_views: {
         Args: { article_slug: string }
+        Returns: undefined
+      }
+      increment_pillar_views: {
+        Args: { page_slug: string }
         Returns: undefined
       }
     }
