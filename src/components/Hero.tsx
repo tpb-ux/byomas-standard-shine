@@ -5,8 +5,8 @@ const Hero = () => {
   return <section className="relative min-h-screen w-full bg-background pt-20">
       <div className="absolute inset-0 bg-gradient-hero" />
       
-      <div className="relative z-10 flex min-h-screen items-center">
-        <div className="container mx-auto px-6">
+      <div className="relative z-10 flex min-h-screen items-center text-destructive-foreground">
+        <div className="container mx-auto px-6 text-secondary-foreground">
           <div className="max-w-4xl">
             <p className="mb-6 text-sm font-medium uppercase tracking-widest text-primary">
               BYOMA RESEARCH
@@ -14,8 +14,8 @@ const Hero = () => {
             <h1 className="mb-8 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               <span className="text-foreground">Libere o poder  do conhecimento da </span>
               <span className="text-primary">Amazonia</span>
-              <span className="text-foreground"> 
-Insight, Research & Relatórios ESG</span>
+              <span className="text-secondary-foreground">  Insight, Research &
+Relatórios ESG</span>
             </h1>
             <p className="mb-10 max-w-2xl text-lg text-slate-300">
               Análises, tendências e insights do mercado de crédito de carbono, 
