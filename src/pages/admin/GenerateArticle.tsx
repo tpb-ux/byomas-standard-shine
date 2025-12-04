@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,10 @@ import {
   Hash,
   Clock,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  ImageIcon,
+  X
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -70,10 +73,8 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
   const issues: string[] = [];
   const passed: string[] = [];
   
-  // Scoring
   let score = 0;
   
-  // Word count (max 25 points)
   if (wordCount >= 1200) {
     score += 25;
     passed.push(`Contagem de palavras: ${wordCount} (mínimo 1200)`);
@@ -85,7 +86,6 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
     issues.push(`Contagem de palavras: ${wordCount} (muito baixo, mínimo 800)`);
   }
   
-  // H2 count (max 15 points)
   if (h2Matches.length >= 4) {
     score += 15;
     passed.push(`H2 tags: ${h2Matches.length} (mínimo 4)`);
@@ -96,7 +96,6 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
     issues.push(`H2 tags: ${h2Matches.length} (muito baixo)`);
   }
   
-  // H3 count (max 10 points)
   if (h3Matches.length >= 3) {
     score += 10;
     passed.push(`H3 tags: ${h3Matches.length} (mínimo 3)`);
@@ -107,7 +106,6 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
     issues.push(`Sem H3 tags (recomendado 3+)`);
   }
   
-  // Keyword density (max 15 points)
   if (keywordDensity >= 1.5 && keywordDensity <= 2.5) {
     score += 15;
     passed.push(`Densidade de keyword: ${keywordDensity.toFixed(2)}% (ideal 1.5-2.5%)`);
@@ -119,7 +117,6 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
     issues.push(`Densidade de keyword: ${keywordDensity.toFixed(2)}% (fora do ideal)`);
   }
   
-  // Meta title (max 10 points)
   if (content.meta_title && content.meta_title.length >= 30 && content.meta_title.length <= 60) {
     score += 10;
     passed.push(`Meta título: ${content.meta_title.length} caracteres (30-60)`);
@@ -130,7 +127,6 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
     issues.push("Meta título não definido");
   }
   
-  // Meta description (max 10 points)
   if (content.meta_description && content.meta_description.length >= 120 && content.meta_description.length <= 160) {
     score += 10;
     passed.push(`Meta descrição: ${content.meta_description.length} caracteres (120-160)`);
@@ -141,7 +137,6 @@ function analyzeSEO(content: GeneratedContent): SEOAnalysis {
     issues.push("Meta descrição não definida");
   }
   
-  // Links bonus (max 15 points) - assumed from generation
   score += 15;
   passed.push("Links internos e externos sugeridos pela IA");
   
@@ -163,8 +158,14 @@ export default function GenerateArticle() {
   const [seoAnalysis, setSeoAnalysis] = useState<SEOAnalysis | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState<GeneratedContent | null>(null);
+  
+  // Image upload state
+  const [featuredImage, setFeaturedImage] = useState<File | null>(null);
+  const [featuredImagePreview, setFeaturedImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch categories
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -177,7 +178,81 @@ export default function GenerateArticle() {
     },
   });
 
-  // Generate article mutation
+  // Image upload handler
+  const handleImageUpload = async (file: File): Promise<string | null> => {
+    setUploadingImage(true);
+    try {
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+      
+      if (!fileExt || !allowedExts.includes(fileExt)) {
+        toast.error("Formato de imagem inválido. Use JPG, PNG, WebP ou GIF.");
+        return null;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Imagem muito grande. Máximo 5MB.");
+        return null;
+      }
+      
+      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('article-images')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+      
+      if (uploadError) throw uploadError;
+      
+      const { data: urlData } = supabase.storage
+        .from('article-images')
+        .getPublicUrl(fileName);
+      
+      return urlData.publicUrl;
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      toast.error(error.message || "Erro ao fazer upload da imagem");
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleFileSelect = useCallback((file: File) => {
+    setFeaturedImage(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setFeaturedImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      handleFileSelect(file);
+    }
+  }, [handleFileSelect]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const removeImage = () => {
+    setFeaturedImage(null);
+    setFeaturedImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const generateMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("generate-article", {
@@ -204,11 +279,15 @@ export default function GenerateArticle() {
     },
   });
 
-  // Save as draft mutation
   const saveDraftMutation = useMutation({
     mutationFn: async () => {
       const content = editedContent || generatedContent;
       if (!content) throw new Error("Nenhum conteúdo para salvar");
+
+      let imageUrl: string | null = null;
+      if (featuredImage) {
+        imageUrl = await handleImageUpload(featuredImage);
+      }
 
       const { data, error } = await supabase
         .from("articles")
@@ -221,6 +300,7 @@ export default function GenerateArticle() {
           meta_description: content.meta_description,
           main_keyword: content.main_keyword,
           reading_time: content.reading_time,
+          featured_image: imageUrl,
           featured_image_alt: content.featured_image_alt,
           status: "draft",
           ai_generated: true,
@@ -241,22 +321,42 @@ export default function GenerateArticle() {
     },
   });
 
-  // Publish mutation
   const publishMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("generate-article", {
-        body: { 
-          keyword,
-          categoryId: categoryId || undefined,
-          saveArticle: true
-        },
-      });
+      const content = editedContent || generatedContent;
+      if (!content) throw new Error("Nenhum conteúdo para publicar");
+
+      let imageUrl: string | null = null;
+      if (featuredImage) {
+        imageUrl = await handleImageUpload(featuredImage);
+      }
+
+      const { data, error } = await supabase
+        .from("articles")
+        .insert({
+          title: content.title,
+          slug: content.slug,
+          excerpt: content.excerpt,
+          content: content.content,
+          meta_title: content.meta_title,
+          meta_description: content.meta_description,
+          main_keyword: content.main_keyword,
+          reading_time: content.reading_time,
+          featured_image: imageUrl,
+          featured_image_alt: content.featured_image_alt,
+          status: "published",
+          published_at: new Date().toISOString(),
+          ai_generated: true,
+          category_id: categoryId || null,
+        })
+        .select()
+        .single();
+
       if (error) throw error;
-      if (data.error) throw new Error(data.error);
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`Artigo publicado: ${data.title || data.slug}`);
+      toast.success(`Artigo publicado: ${data.title}`);
       resetForm();
     },
     onError: (error: Error) => {
@@ -271,6 +371,8 @@ export default function GenerateArticle() {
     setEditedContent(null);
     setSeoAnalysis(null);
     setIsEditing(false);
+    setFeaturedImage(null);
+    setFeaturedImagePreview(null);
   };
 
   const handleGenerate = () => {
@@ -339,6 +441,70 @@ export default function GenerateArticle() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Featured Image Upload */}
+          <div className="space-y-2">
+            <Label>Imagem Destacada</Label>
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                isDragging 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-border hover:border-primary/50'
+              }`}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileSelect(file);
+                }}
+              />
+              
+              {featuredImagePreview ? (
+                <div className="relative inline-block">
+                  <img
+                    src={featuredImagePreview}
+                    alt="Preview"
+                    className="max-h-48 rounded-lg mx-auto"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage();
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex justify-center">
+                    {uploadingImage ? (
+                      <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
+                    ) : (
+                      <Upload className="h-10 w-10 text-muted-foreground" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Arraste uma imagem ou clique para selecionar
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG, WebP ou GIF (máx. 5MB)
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -448,6 +614,17 @@ export default function GenerateArticle() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Image Preview */}
+                    {featuredImagePreview && (
+                      <div className="aspect-video overflow-hidden rounded-lg bg-muted">
+                        <img
+                          src={featuredImagePreview}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Título</p>
                       <h2 className="text-2xl font-bold">{generatedContent.title}</h2>
@@ -462,6 +639,12 @@ export default function GenerateArticle() {
                         <Clock className="mr-1 h-3 w-3" />
                         {generatedContent.reading_time} min
                       </Badge>
+                      {featuredImage && (
+                        <Badge variant="outline" className="text-green-600">
+                          <ImageIcon className="mr-1 h-3 w-3" />
+                          Imagem anexada
+                        </Badge>
+                      )}
                     </div>
 
                     <div className="p-3 bg-muted/50 rounded-lg">
@@ -501,10 +684,14 @@ export default function GenerateArticle() {
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="p-2 bg-muted/50 rounded">
                       <p className="text-muted-foreground">Palavras</p>
                       <p className="font-semibold">{seoAnalysis.wordCount}</p>
+                    </div>
+                    <div className="p-2 bg-muted/50 rounded">
+                      <p className="text-muted-foreground">Densidade</p>
+                      <p className="font-semibold">{seoAnalysis.keywordDensity.toFixed(2)}%</p>
                     </div>
                     <div className="p-2 bg-muted/50 rounded">
                       <p className="text-muted-foreground">H2 Tags</p>
@@ -514,23 +701,19 @@ export default function GenerateArticle() {
                       <p className="text-muted-foreground">H3 Tags</p>
                       <p className="font-semibold">{seoAnalysis.h3Count}</p>
                     </div>
-                    <div className="p-2 bg-muted/50 rounded">
-                      <p className="text-muted-foreground">Keyword %</p>
-                      <p className="font-semibold">{seoAnalysis.keywordDensity.toFixed(2)}%</p>
-                    </div>
                   </div>
 
                   <Separator />
 
                   {seoAnalysis.passed.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-green-500 flex items-center gap-1">
+                      <p className="text-sm font-medium text-green-600 flex items-center gap-1">
                         <CheckCircle2 className="h-4 w-4" />
-                        Aprovado
+                        Aprovados
                       </p>
-                      <ul className="text-xs space-y-1 text-muted-foreground">
+                      <ul className="text-xs space-y-1">
                         {seoAnalysis.passed.map((item, i) => (
-                          <li key={i}>✓ {item}</li>
+                          <li key={i} className="text-muted-foreground">• {item}</li>
                         ))}
                       </ul>
                     </div>
@@ -538,13 +721,13 @@ export default function GenerateArticle() {
 
                   {seoAnalysis.issues.length > 0 && (
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-yellow-500 flex items-center gap-1">
+                      <p className="text-sm font-medium text-yellow-600 flex items-center gap-1">
                         <AlertCircle className="h-4 w-4" />
-                        Melhorias
+                        Sugestões
                       </p>
-                      <ul className="text-xs space-y-1 text-muted-foreground">
+                      <ul className="text-xs space-y-1">
                         {seoAnalysis.issues.map((item, i) => (
-                          <li key={i}>⚠ {item}</li>
+                          <li key={i} className="text-muted-foreground">• {item}</li>
                         ))}
                       </ul>
                     </div>
@@ -553,17 +736,14 @@ export default function GenerateArticle() {
               </Card>
             )}
 
-            {/* Actions */}
+            {/* Action Buttons */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Ações</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="pt-6 space-y-3">
                 <Button
                   variant="outline"
                   className="w-full"
                   onClick={() => saveDraftMutation.mutate()}
-                  disabled={saveDraftMutation.isPending}
+                  disabled={saveDraftMutation.isPending || publishMutation.isPending}
                 >
                   {saveDraftMutation.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -575,7 +755,7 @@ export default function GenerateArticle() {
                 <Button
                   className="w-full"
                   onClick={() => publishMutation.mutate()}
-                  disabled={publishMutation.isPending}
+                  disabled={saveDraftMutation.isPending || publishMutation.isPending}
                 >
                   {publishMutation.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -584,9 +764,6 @@ export default function GenerateArticle() {
                   )}
                   Publicar Artigo
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Publicar salvará o artigo com links internos e externos
-                </p>
               </CardContent>
             </Card>
           </div>

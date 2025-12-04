@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Navbar from "@/components/Navbar";
@@ -20,6 +20,16 @@ import { ArrowLeft, Clock, Eye, BookOpen, Calendar, User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Article } from "@/hooks/useBlogArticles";
+
+// Generate slug from text for heading IDs
+const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
 
 interface PillarPage {
   id: string;
@@ -325,7 +335,21 @@ const PillarPageComponent = () => {
                 prose-th:bg-muted prose-th:p-3 prose-th:text-left prose-th:border prose-th:border-border
                 prose-td:p-3 prose-td:border prose-td:border-border"
               >
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h2: ({ children, ...props }) => {
+                      const text = String(children);
+                      const id = generateSlug(text);
+                      return <h2 id={id} {...props}>{children}</h2>;
+                    },
+                    h3: ({ children, ...props }) => {
+                      const text = String(children);
+                      const id = generateSlug(text);
+                      return <h3 id={id} {...props}>{children}</h3>;
+                    },
+                  }}
+                >
                   {page.content}
                 </ReactMarkdown>
               </div>
