@@ -17,7 +17,7 @@ const Hero = () => {
               <span className="text-foreground"> 
 Insight, Research & Relatórios ESG</span>
             </h1>
-            <p className="mb-10 max-w-2xl text-lg text-muted-foreground">
+            <p className="mb-10 max-w-2xl text-lg text-slate-300">
               Análises, tendências e insights do mercado de crédito de carbono, 
               finanças regenerativas e economia verde para tomadas de decisão estratégicas.
             </p>
