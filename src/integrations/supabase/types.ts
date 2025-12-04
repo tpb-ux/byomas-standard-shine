@@ -170,6 +170,30 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -285,6 +309,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fallback_images: {
+        Row: {
+          alt_text: string | null
+          category: string | null
+          created_at: string | null
+          id: string
+          url: string
+          usage_count: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          url: string
+          usage_count?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          url?: string
+          usage_count?: number | null
+        }
+        Relationships: []
       }
       internal_links: {
         Row: {

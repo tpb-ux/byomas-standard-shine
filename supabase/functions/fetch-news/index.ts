@@ -13,6 +13,20 @@ interface RSSItem {
   pubDate?: string;
 }
 
+// Trending keywords for priority boost
+const TRENDING_KEYWORDS = [
+  "COP30", "COP29", "CBAM", "EUDR", "carbono", "carbon",
+  "ESG", "verde", "sustent", "clima", "climate", "net zero",
+  "tokeniz", "ReFi", "green bond", "título verde", "biodiversidade",
+  "desmatamento", "floresta", "REDD", "crédito de carbono"
+];
+
+// Trusted sources for priority boost
+const TRUSTED_SOURCES = [
+  "Carbon Pulse", "Climate Home", "Reuters", "Bloomberg",
+  "Valor Econômico", "Estadão", "BNDES", "CVM"
+];
+
 async function parseRSS(url: string): Promise<RSSItem[]> {
   try {
     const response = await fetch(url, {
@@ -48,12 +62,68 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
   }
 }
 
-async function analyzeEngagement(title: string, description: string): Promise<number> {
+async function getRecentKeywords(supabase: any): Promise<string[]> {
+  try {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const { data } = await supabase
+      .from("articles")
+      .select("main_keyword")
+      .gte("published_at", yesterday.toISOString())
+      .eq("status", "published");
+    
+    return data?.map((a: any) => a.main_keyword?.toLowerCase()).filter(Boolean) || [];
+  } catch {
+    return [];
+  }
+}
+
+async function analyzeEngagement(
+  title: string, 
+  description: string,
+  sourceName: string,
+  recentKeywords: string[]
+): Promise<{ score: number; isTrending: boolean }> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   
+  let baseScore = 50;
+  let isTrending = false;
+  
+  // Trending keyword boost
+  const combinedText = `${title} ${description}`.toLowerCase();
+  for (const keyword of TRENDING_KEYWORDS) {
+    if (combinedText.includes(keyword.toLowerCase())) {
+      baseScore += 8;
+      isTrending = true;
+    }
+  }
+  
+  // Trusted source boost
+  for (const source of TRUSTED_SOURCES) {
+    if (sourceName.toLowerCase().includes(source.toLowerCase())) {
+      baseScore += 5;
+      break;
+    }
+  }
+  
+  // Novelty boost - avoid saturated topics
+  let hasSaturation = false;
+  for (const keyword of recentKeywords) {
+    if (keyword && combinedText.includes(keyword)) {
+      baseScore -= 8;
+      hasSaturation = true;
+      break;
+    }
+  }
+  
+  // If no saturation, give novelty boost
+  if (!hasSaturation && recentKeywords.length > 0) {
+    baseScore += 10;
+  }
+  
   if (!LOVABLE_API_KEY) {
-    // Return default score if no API key
-    return 50;
+    return { score: Math.min(100, Math.max(0, baseScore)), isTrending };
   }
   
   try {
@@ -90,17 +160,23 @@ Responda APENAS com o número, sem texto adicional.`,
     
     if (!response.ok) {
       console.error("AI engagement analysis failed:", response.status);
-      return 50;
+      return { score: Math.min(100, Math.max(0, baseScore)), isTrending };
     }
     
     const data = await response.json();
     const scoreText = data.choices?.[0]?.message?.content?.trim();
-    const score = parseInt(scoreText, 10);
+    const aiScore = parseInt(scoreText, 10);
     
-    return isNaN(score) ? 50 : Math.min(100, Math.max(0, score));
+    if (!isNaN(aiScore)) {
+      // Combine AI score with our boost/penalties
+      const finalScore = Math.round((aiScore * 0.7) + (baseScore * 0.3));
+      return { score: Math.min(100, Math.max(0, finalScore)), isTrending };
+    }
+    
+    return { score: Math.min(100, Math.max(0, baseScore)), isTrending };
   } catch (error) {
     console.error("Error analyzing engagement:", error);
-    return 50;
+    return { score: Math.min(100, Math.max(0, baseScore)), isTrending };
   }
 }
 
@@ -113,6 +189,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get recent keywords for novelty calculation
+    const recentKeywords = await getRecentKeywords(supabase);
+    console.log(`Found ${recentKeywords.length} recent keywords for novelty check`);
 
     // Get active news sources
     const { data: sources, error: sourcesError } = await supabase
@@ -130,6 +210,7 @@ serve(async (req) => {
 
     let totalFetched = 0;
     let totalNew = 0;
+    let totalTrending = 0;
 
     for (const source of sources || []) {
       if (!source.rss_feed) continue;
@@ -151,11 +232,15 @@ serve(async (req) => {
           continue;
         }
 
-        // Analyze engagement potential
-        const engagementScore = await analyzeEngagement(
+        // Analyze engagement potential with enhanced prioritization
+        const { score: engagementScore, isTrending } = await analyzeEngagement(
           item.title,
-          item.description || ""
+          item.description || "",
+          source.name,
+          recentKeywords
         );
+
+        if (isTrending) totalTrending++;
 
         // Insert new curated news
         const { error: insertError } = await supabase
@@ -173,7 +258,7 @@ serve(async (req) => {
           console.error(`Error inserting news: ${insertError.message}`);
         } else {
           totalNew++;
-          console.log(`Added: ${item.title} (engagement: ${engagementScore})`);
+          console.log(`Added: ${item.title} (engagement: ${engagementScore}${isTrending ? ", TRENDING" : ""})`);
         }
 
         totalFetched++;
@@ -186,14 +271,15 @@ serve(async (req) => {
         .eq("id", source.id);
     }
 
-    console.log(`Fetch complete: ${totalNew} new items out of ${totalFetched} total`);
+    console.log(`Fetch complete: ${totalNew} new items out of ${totalFetched} total (${totalTrending} trending)`);
 
     return new Response(
       JSON.stringify({
         success: true,
         totalFetched,
         totalNew,
-        message: `Encontradas ${totalNew} novas notícias de ${sources?.length || 0} fontes`,
+        totalTrending,
+        message: `Encontradas ${totalNew} novas notícias de ${sources?.length || 0} fontes (${totalTrending} trending)`,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
