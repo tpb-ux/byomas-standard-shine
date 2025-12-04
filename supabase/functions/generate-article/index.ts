@@ -142,9 +142,10 @@ serve(async (req) => {
   }
 
   try {
-    const { newsId, categoryId, keyword, type, section = 'full', context } = await req.json();
+    const { newsId, categoryId, keyword, type, section = 'full', context, saveArticle = false } = await req.json();
 
     // Support two modes: from news OR from keyword
+    // saveArticle: when true in keyword mode, saves article to database with status 'published'
     const isKeywordMode = !newsId && keyword;
     const isSectionMode = section !== 'full' && keyword;
     
@@ -445,21 +446,138 @@ URL ORIGINAL: ${newsData.original_url}`;
       );
     }
 
-    // For keyword mode, just return the generated content without saving
+    // For keyword mode: return content OR save to database if saveArticle=true
     if (isKeywordMode) {
-      console.log("Keyword mode: returning generated content without saving");
+      if (!saveArticle) {
+        console.log("Keyword mode: returning generated content without saving");
+        return new Response(
+          JSON.stringify({
+            success: true,
+            title: article.title,
+            slug: article.slug || generateSlug(article.title),
+            excerpt: article.excerpt,
+            content: article.content,
+            meta_title: article.metaTitle,
+            meta_description: article.metaDescription,
+            main_keyword: article.mainKeyword || keyword,
+            reading_time: article.readingTime,
+            featured_image_alt: article.featuredImageAlt,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      // saveArticle=true: Save article to database with status 'published'
+      console.log("Keyword mode with saveArticle=true: saving to database");
+      
+      // Generate unique slug
+      const baseSlug = article.slug || generateSlug(article.title);
+      let finalSlug = baseSlug;
+      let slugCounter = 1;
+
+      while (true) {
+        const { data: existingSlug } = await supabase
+          .from("articles")
+          .select("id")
+          .eq("slug", finalSlug)
+          .single();
+
+        if (!existingSlug) break;
+        finalSlug = `${baseSlug}-${slugCounter}`;
+        slugCounter++;
+      }
+
+      // Insert article with status 'published'
+      const { data: newArticle, error: articleError } = await supabase
+        .from("articles")
+        .insert({
+          title: article.title,
+          slug: finalSlug,
+          meta_title: article.metaTitle,
+          meta_description: article.metaDescription,
+          excerpt: article.excerpt,
+          content: article.content,
+          main_keyword: article.mainKeyword || keyword,
+          reading_time: article.readingTime || 5,
+          featured_image_alt: article.featuredImageAlt,
+          status: "published",
+          published_at: new Date().toISOString(),
+          ai_generated: true,
+          is_curated: false,
+          author_id: aiAuthor?.id,
+          category_id: categoryId || null,
+        })
+        .select()
+        .single();
+
+      if (articleError) {
+        console.error("Error inserting article:", articleError);
+        return new Response(
+          JSON.stringify({ error: "Failed to save article", details: articleError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log(`Article created from keyword: ${newArticle.id} - ${newArticle.title}`);
+
+      // Associate tags based on content analysis
+      if (existingTags?.length) {
+        const matchedTags = findMatchingTags(
+          article.content,
+          article.title,
+          article.mainKeyword || keyword,
+          existingTags
+        );
+
+        if (matchedTags.length > 0) {
+          for (const tag of matchedTags) {
+            await supabase.from("article_tags").insert({
+              article_id: newArticle.id,
+              tag_id: tag.id,
+            });
+          }
+          console.log(`Associated ${matchedTags.length} tags to article`);
+        }
+      }
+
+      // Insert external links
+      if (article.suggestedExternalLinks?.length) {
+        for (const link of article.suggestedExternalLinks) {
+          await supabase.from("external_links").insert({
+            article_id: newArticle.id,
+            anchor_text: link.anchor,
+            url: link.url,
+            domain: link.domain,
+          });
+        }
+        console.log(`Added ${article.suggestedExternalLinks.length} external links`);
+      }
+
+      // Insert internal links
+      if (article.suggestedInternalLinks?.length && existingArticles?.length) {
+        for (const link of article.suggestedInternalLinks) {
+          const targetArticle = existingArticles.find(a => a.slug === link.targetSlug);
+          if (targetArticle) {
+            await supabase.from("internal_links").insert({
+              source_article_id: newArticle.id,
+              target_article_id: targetArticle.id,
+              anchor_text: link.anchor,
+            });
+          }
+        }
+        console.log(`Added internal links to article`);
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
-          title: article.title,
-          slug: article.slug || generateSlug(article.title),
-          excerpt: article.excerpt,
-          content: article.content,
-          meta_title: article.metaTitle,
-          meta_description: article.metaDescription,
-          main_keyword: article.mainKeyword || keyword,
-          reading_time: article.readingTime,
-          featured_image_alt: article.featuredImageAlt,
+          articleId: newArticle.id,
+          slug: finalSlug,
+          title: newArticle.title,
+          status: "published",
+          message: "Artigo gerado e publicado com sucesso",
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
