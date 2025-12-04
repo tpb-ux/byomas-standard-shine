@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminArticles from "./pages/admin/Articles";
 import AdminArticleEditor from "./pages/admin/ArticleEditor";
 import AdminCurator from "./pages/admin/Curator";
+import AdminAutomation from "./pages/admin/Automation";
 import AdminCategories from "./pages/admin/Categories";
 import AdminSources from "./pages/admin/Sources";
 import AdminSEOAnalytics from "./pages/admin/SEOAnalytics";
@@ -75,6 +76,11 @@ const App = () => {
               <Route path="/admin/curator" element={
                 <ProtectedRoute requiredRole="editor">
                   <AppLayout><AdminCurator /></AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/automation" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AppLayout><AdminAutomation /></AppLayout>
                 </ProtectedRoute>
               } />
               <Route path="/admin/categories" element={
