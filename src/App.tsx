@@ -38,6 +38,8 @@ const AdminMessages = lazy(() => import("./pages/admin/Messages"));
 const AdminTopicClusters = lazy(() => import("./pages/admin/TopicClustersAdmin"));
 const AdminPillarPages = lazy(() => import("./pages/admin/PillarPagesAdmin"));
 const AdminGenerateArticle = lazy(() => import("./pages/admin/GenerateArticle"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 const queryClient = new QueryClient();
 
@@ -75,6 +77,10 @@ const App = () => {
                 <Route path="/tags" element={<Tags />} />
                 <Route path="/topico/:slug" element={<Topic />} />
                 <Route path="/guia/:slug" element={<PillarPage />} />
+                
+                {/* Legal Pages */}
+                <Route path="/privacidade" element={<PrivacyPolicy />} />
+                <Route path="/termos" element={<Terms />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />

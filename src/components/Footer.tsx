@@ -69,6 +69,24 @@ const Footer = () => {
                   <ChevronRight className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
               </li>
+              <li>
+                <Link 
+                  to="/privacidade" 
+                  className="group flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Política de Privacidade
+                  <ChevronRight className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/termos" 
+                  className="group flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Termos de Uso
+                  <ChevronRight className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
             </ul>
           </div>
           
