@@ -36,11 +36,14 @@ serve(async (req) => {
   }
 
   try {
-    const { newsId, categoryId } = await req.json();
+    const { newsId, categoryId, keyword, type } = await req.json();
 
-    if (!newsId) {
+    // Support two modes: from news OR from keyword
+    const isKeywordMode = !newsId && keyword;
+    
+    if (!newsId && !keyword) {
       return new Response(
-        JSON.stringify({ error: "newsId is required" }),
+        JSON.stringify({ error: "Either newsId or keyword is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -51,22 +54,27 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get the curated news item
-    const { data: news, error: newsError } = await supabase
-      .from("curated_news")
-      .select(`
-        *,
-        news_sources (name, url)
-      `)
-      .eq("id", newsId)
-      .single();
+    let newsData = null;
 
-    if (newsError || !news) {
-      console.error("Error fetching news:", newsError);
-      return new Response(
-        JSON.stringify({ error: "News item not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Mode 1: Generate from curated news
+    if (newsId) {
+      const { data: news, error: newsError } = await supabase
+        .from("curated_news")
+        .select(`
+          *,
+          news_sources (name, url)
+        `)
+        .eq("id", newsId)
+        .single();
+
+      if (newsError || !news) {
+        console.error("Error fetching news:", newsError);
+        return new Response(
+          JSON.stringify({ error: "News item not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      newsData = news;
     }
 
     // Get existing articles for internal link suggestions
@@ -94,7 +102,7 @@ serve(async (req) => {
 
     const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
 
-Sua tarefa é transformar uma notícia curada em um artigo completo e otimizado para SEO para o blog "Byoma Research".
+Sua tarefa é criar um artigo completo e otimizado para SEO para o blog "Byoma Research".
 
 REGRAS DE SEO OBRIGATÓRIAS:
 1. Título (H1): máximo 60 caracteres, incluir palavra-chave principal
@@ -102,7 +110,7 @@ REGRAS DE SEO OBRIGATÓRIAS:
 3. Estrutura: usar H2 e H3 para organizar o conteúdo
 4. Densidade de keyword: 1-2% (natural, sem keyword stuffing)
 5. Conteúdo: mínimo 800 palavras, máximo 1500 palavras
-6. Links internos: sugerir 5 links para artigos existentes
+6. Links internos: sugerir 5 links para artigos existentes (se disponíveis)
 7. Links externos: sugerir 5 links para fontes confiáveis (domínios .gov, .org, grandes publicações)
 
 ARTIGOS EXISTENTES PARA LINKS INTERNOS:
@@ -125,17 +133,32 @@ FORMATO DE RESPOSTA (JSON):
 
 IMPORTANTE: Retorne APENAS o JSON, sem markdown ou texto adicional.`;
 
-    const userPrompt = `Transforme esta notícia em um artigo SEO-otimizado:
+    // Build user prompt based on mode
+    let userPrompt: string;
+    
+    if (isKeywordMode) {
+      // Mode 2: Generate from keyword
+      userPrompt = `Crie um artigo SEO-otimizado sobre o tema:
 
-TÍTULO ORIGINAL: ${news.original_title}
+PALAVRA-CHAVE PRINCIPAL: ${keyword}
 
-CONTEÚDO/DESCRIÇÃO: ${news.original_content || "Sem conteúdo adicional disponível"}
+TIPO DE CONTEÚDO: ${type === 'full' ? 'Artigo completo e aprofundado' : 'Artigo informativo'}
 
-FONTE: ${news.news_sources?.name || "Fonte não especificada"} (${news.news_sources?.url || ""})
+CONTEXTO: O blog Byoma Research foca em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi). Crie um conteúdo original, informativo e bem estruturado sobre o tema fornecido.`;
+    } else {
+      // Mode 1: Generate from news
+      userPrompt = `Transforme esta notícia em um artigo SEO-otimizado:
 
-URL ORIGINAL: ${news.original_url}`;
+TÍTULO ORIGINAL: ${newsData.original_title}
 
-    console.log("Calling Lovable AI to generate article...");
+CONTEÚDO/DESCRIÇÃO: ${newsData.original_content || "Sem conteúdo adicional disponível"}
+
+FONTE: ${newsData.news_sources?.name || "Fonte não especificada"} (${newsData.news_sources?.url || ""})
+
+URL ORIGINAL: ${newsData.original_url}`;
+    }
+
+    console.log(`Calling Lovable AI to generate article (mode: ${isKeywordMode ? 'keyword' : 'news'})...`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -200,6 +223,29 @@ URL ORIGINAL: ${news.original_url}`;
       );
     }
 
+    // For keyword mode, just return the generated content without saving
+    if (isKeywordMode) {
+      console.log("Keyword mode: returning generated content without saving");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          title: article.title,
+          slug: article.slug || generateSlug(article.title),
+          excerpt: article.excerpt,
+          content: article.content,
+          meta_title: article.metaTitle,
+          meta_description: article.metaDescription,
+          main_keyword: article.mainKeyword || keyword,
+          reading_time: article.readingTime,
+          featured_image_alt: article.featuredImageAlt,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Mode 1: Save article from news
     // Ensure slug is unique
     const baseSlug = article.slug || generateSlug(article.title);
     let finalSlug = baseSlug;
@@ -235,8 +281,8 @@ URL ORIGINAL: ${news.original_url}`;
         is_curated: true,
         author_id: aiAuthor?.id,
         category_id: categoryId || null,
-        source_url: news.original_url,
-        source_name: news.news_sources?.name,
+        source_url: newsData.original_url,
+        source_name: newsData.news_sources?.name,
       })
       .select()
       .single();
