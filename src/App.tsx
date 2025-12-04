@@ -21,6 +21,7 @@ import AdminCurator from "./pages/admin/Curator";
 import AdminCategories from "./pages/admin/Categories";
 import AdminSources from "./pages/admin/Sources";
 import AdminSEOAnalytics from "./pages/admin/SEOAnalytics";
+import AdminPerformance from "./pages/admin/Performance";
 import AdminSettings from "./pages/admin/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -89,6 +90,11 @@ const App = () => {
               <Route path="/admin/seo" element={
                 <ProtectedRoute requiredRole="editor">
                   <AppLayout><AdminSEOAnalytics /></AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/performance" element={
+                <ProtectedRoute requiredRole="editor">
+                  <AppLayout><AdminPerformance /></AppLayout>
                 </ProtectedRoute>
               } />
               <Route path="/admin/settings" element={
