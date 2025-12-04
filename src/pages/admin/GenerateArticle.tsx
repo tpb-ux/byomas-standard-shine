@@ -32,8 +32,10 @@ import {
   AlertCircle,
   Upload,
   ImageIcon,
-  X
+  X,
+  Tag
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -47,6 +49,8 @@ interface GeneratedContent {
   main_keyword: string;
   reading_time: number;
   featured_image_alt: string;
+  suggestedTags?: string[];
+  suggestedFaqs?: Array<{ question: string; answer: string }>;
 }
 
 interface SEOAnalysis {
@@ -57,6 +61,12 @@ interface SEOAnalysis {
   keywordDensity: number;
   issues: string[];
   passed: string[];
+}
+
+interface Tag {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 function analyzeSEO(content: GeneratedContent): SEOAnalysis {
@@ -170,6 +180,10 @@ export default function GenerateArticle() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Tags state
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [suggestedTagNames, setSuggestedTagNames] = useState<string[]>([]);
+
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -179,6 +193,18 @@ export default function GenerateArticle() {
         .order("name");
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: allTags } = useQuery({
+    queryKey: ["tags"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tags")
+        .select("id, name, slug")
+        .order("name");
+      if (error) throw error;
+      return data as Tag[];
     },
   });
 
@@ -297,6 +323,18 @@ export default function GenerateArticle() {
       setSeoAnalysis(analysis);
       toast.success("Artigo gerado com sucesso!");
 
+      // Set suggested tags
+      if (data.suggestedTags && data.suggestedTags.length > 0) {
+        setSuggestedTagNames(data.suggestedTags);
+        // Find matching tag IDs and pre-select them
+        const matchingTagIds = allTags
+          ?.filter(t => data.suggestedTags?.some(
+            st => st.toLowerCase() === t.name.toLowerCase()
+          ))
+          .map(t => t.id) || [];
+        setSelectedTags(matchingTagIds);
+      }
+
       // Auto-generate image if enabled
       if (autoGenerateImage && !featuredImage) {
         generateImageMutation.mutate(keyword);
@@ -318,6 +356,9 @@ export default function GenerateArticle() {
         imageUrl = await handleImageUpload(featuredImage);
       }
 
+      // Get FAQs from generated content
+      const faqs = content.suggestedFaqs || [];
+
       const { data, error } = await supabase
         .from("articles")
         .insert({
@@ -334,11 +375,22 @@ export default function GenerateArticle() {
           status: "draft",
           ai_generated: true,
           category_id: categoryId || null,
+          faqs: faqs.length > 0 ? JSON.parse(JSON.stringify(faqs)) : [],
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Save tags associations
+      if (selectedTags.length > 0 && data) {
+        const tagAssociations = selectedTags.map(tagId => ({
+          article_id: data.id,
+          tag_id: tagId,
+        }));
+        await supabase.from("article_tags").insert(tagAssociations);
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -365,6 +417,9 @@ export default function GenerateArticle() {
         throw new Error("Artigos publicados precisam de uma imagem destacada");
       }
 
+      // Get FAQs from generated content
+      const faqs = content.suggestedFaqs || [];
+
       const { data, error } = await supabase
         .from("articles")
         .insert({
@@ -382,11 +437,22 @@ export default function GenerateArticle() {
           published_at: new Date().toISOString(),
           ai_generated: true,
           category_id: categoryId || null,
+          faqs: faqs.length > 0 ? JSON.parse(JSON.stringify(faqs)) : [],
         })
         .select()
         .single();
 
       if (error) throw error;
+
+      // Save tags associations
+      if (selectedTags.length > 0 && data) {
+        const tagAssociations = selectedTags.map(tagId => ({
+          article_id: data.id,
+          tag_id: tagId,
+        }));
+        await supabase.from("article_tags").insert(tagAssociations);
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -408,6 +474,22 @@ export default function GenerateArticle() {
     setFeaturedImage(null);
     setFeaturedImagePreview(null);
     setGeneratedImageUrl(null);
+    setSelectedTags([]);
+    setSuggestedTagNames([]);
+  };
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
+  const isTagSuggested = (tagName: string) => {
+    return suggestedTagNames.some(
+      st => st.toLowerCase() === tagName.toLowerCase()
+    );
   };
 
   const handleGenerate = () => {
@@ -725,6 +807,55 @@ export default function GenerateArticle() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Tags Selection Card */}
+            {allTags && allTags.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Tag className="h-5 w-5" />
+                    Tags do Artigo
+                  </CardTitle>
+                  <CardDescription>
+                    {suggestedTagNames.length > 0 
+                      ? "Tags sugeridas pela IA estão destacadas em verde"
+                      : "Selecione as tags relevantes para o artigo"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.map((tag) => {
+                      const isSelected = selectedTags.includes(tag.id);
+                      const isSuggested = isTagSuggested(tag.name);
+                      return (
+                        <Badge
+                          key={tag.id}
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer transition-colors ${
+                            isSuggested && !isSelected 
+                              ? "border-green-500 text-green-600 hover:bg-green-500/10" 
+                              : isSelected 
+                                ? isSuggested 
+                                  ? "bg-green-600 hover:bg-green-700" 
+                                  : ""
+                                : "hover:bg-muted"
+                          }`}
+                          onClick={() => toggleTag(tag.id)}
+                        >
+                          {isSuggested && <Sparkles className="mr-1 h-3 w-3" />}
+                          {tag.name}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  {selectedTags.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-3">
+                      {selectedTags.length} tag(s) selecionada(s)
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* SEO Analysis Sidebar */}

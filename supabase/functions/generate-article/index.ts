@@ -321,12 +321,16 @@ REGRAS DE SEO OBRIGATÓRIAS PARA SCORE 85+:
 9. Incluir: listas com bullets, dados estatísticos, exemplos práticos
 10. Cada seção H2 deve ter pelo menos 150 palavras
 11. FAQs: GERAR 5 perguntas frequentes relevantes sobre o tema para Rich Snippets
+12. Tags: SUGERIR 3-5 tags relevantes da lista de tags disponíveis
 
 ARTIGOS EXISTENTES PARA LINKS INTERNOS:
 ${existingArticlesList}
 
 FONTES AUTORITATIVAS PARA LINKS EXTERNOS:
 ${authoritySourcesList}
+
+TAGS DISPONÍVEIS PARA SUGESTÃO (escolha 3-5 mais relevantes):
+${tagsList}
 
 FORMATO DE RESPOSTA (JSON):
 {
@@ -341,6 +345,7 @@ FORMATO DE RESPOSTA (JSON):
   "suggestedInternalLinks": [{"anchor": "texto âncora", "targetSlug": "slug-do-artigo"}],
   "suggestedExternalLinks": [{"anchor": "texto âncora", "url": "https://...", "domain": "dominio.com"}],
   "featuredImageAlt": "Descrição da imagem com keyword para acessibilidade",
+  "suggestedTags": ["Tag1", "Tag2", "Tag3"],
   "suggestedFaqs": [{"question": "Pergunta relevante sobre o tema?", "answer": "Resposta completa e informativa com 50-100 palavras."}]
 }
 
@@ -348,7 +353,8 @@ IMPORTANTE:
 - Retorne APENAS o JSON, sem markdown ou texto adicional
 - O conteúdo DEVE ter no mínimo 1200 palavras para atingir score 85+
 - Repita a keyword de forma natural ao longo do texto para densidade de 1.5-2.5%
-- GERE EXATAMENTE 5 FAQs relevantes e informativas sobre o tema`;
+- GERE EXATAMENTE 5 FAQs relevantes e informativas sobre o tema
+- SUGIRA 3-5 TAGS da lista de tags disponíveis que sejam mais relevantes para o artigo`;
 
     // Build user prompt based on mode
     let userPrompt: string;
