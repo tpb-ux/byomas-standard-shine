@@ -14,6 +14,7 @@ import {
   ChevronDown,
   LogOut,
   User,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -58,6 +59,7 @@ const adminNavItems = [
   { title: "Curadoria", url: "/admin/curator", icon: Newspaper },
   { title: "Categorias", url: "/admin/categories", icon: Tags },
   { title: "SEO", url: "/admin/seo", icon: TrendingUp },
+  { title: "Performance", url: "/admin/performance", icon: Activity },
   { title: "Fontes", url: "/admin/sources", icon: Search },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
