@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.process-article-tags]
 verify_jwt = false
+
+[functions.process-external-links]
+verify_jwt = false
