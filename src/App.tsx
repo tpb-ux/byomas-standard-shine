@@ -25,6 +25,8 @@ import AdminSources from "./pages/admin/Sources";
 import AdminSEOAnalytics from "./pages/admin/SEOAnalytics";
 import AdminPerformance from "./pages/admin/Performance";
 import AdminSettings from "./pages/admin/Settings";
+import AdminSubscribers from "./pages/admin/Subscribers";
+import AdminMessages from "./pages/admin/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -108,6 +110,16 @@ const App = () => {
               <Route path="/admin/settings" element={
                 <ProtectedRoute requiredRole="admin">
                   <AppLayout><AdminSettings /></AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/subscribers" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AppLayout><AdminSubscribers /></AppLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/messages" element={
+                <ProtectedRoute requiredRole="admin">
+                  <AppLayout><AdminMessages /></AppLayout>
                 </ProtectedRoute>
               } />
               
