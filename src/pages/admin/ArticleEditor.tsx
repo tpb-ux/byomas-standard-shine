@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -40,6 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AIGenerationProgress, GenerationStep } from "@/components/admin/AIGenerationProgress";
 
 const articleSchema = z.object({
   title: z.string().min(10, "Título deve ter pelo menos 10 caracteres"),
@@ -83,8 +84,11 @@ export default function ArticleEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
   const [categories, setCategories] = useState<Category[]>([]);
   const [seoAnalysis, setSeoAnalysis] = useState<SeoAnalysis | null>(null);
+  
+  const generationTimersRef = useRef<NodeJS.Timeout[]>([]);
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -274,13 +278,28 @@ export default function ArticleEditor() {
       return;
     }
 
+    // Clear any existing timers
+    generationTimersRef.current.forEach(timer => clearTimeout(timer));
+    generationTimersRef.current = [];
+
     setIsGenerating(true);
+    setGenerationStep('analyzing');
+
+    // Set up progress simulation timers
+    const timer1 = setTimeout(() => setGenerationStep('generating'), 2000);
+    const timer2 = setTimeout(() => setGenerationStep('optimizing'), 5000);
+    generationTimersRef.current.push(timer1, timer2);
+
     try {
       const { data, error } = await supabase.functions.invoke("generate-article", {
         body: { keyword, type: "full" },
       });
 
       if (error) throw error;
+
+      // Clear timers and set to complete
+      generationTimersRef.current.forEach(timer => clearTimeout(timer));
+      setGenerationStep('complete');
 
       if (data) {
         form.setValue("title", data.title || form.getValues("title"));
@@ -293,10 +312,17 @@ export default function ArticleEditor() {
         analyzeSeo(data.content, keyword);
         toast.success("Conteúdo gerado com sucesso!");
       }
+
+      // Reset after showing complete state
+      setTimeout(() => {
+        setGenerationStep('idle');
+        setIsGenerating(false);
+      }, 2000);
     } catch (error) {
       console.error("Error generating content:", error);
       toast.error("Erro ao gerar conteúdo. Tente novamente.");
-    } finally {
+      generationTimersRef.current.forEach(timer => clearTimeout(timer));
+      setGenerationStep('idle');
       setIsGenerating(false);
     }
   };
@@ -348,6 +374,11 @@ export default function ArticleEditor() {
           </Button>
         </div>
       </div>
+
+      {/* AI Generation Progress Indicator */}
+      {isGenerating && (
+        <AIGenerationProgress currentStep={generationStep} isVisible={isGenerating} />
+      )}
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
