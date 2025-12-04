@@ -9,6 +9,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
+  Users,
+  MessageSquare,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +25,8 @@ interface Stats {
   totalViews: number;
   avgSeoScore: number;
   curatedNews: number;
+  activeSubscribers: number;
+  unreadMessages: number;
 }
 
 interface RecentArticle {
@@ -79,6 +83,18 @@ export default function AdminDashboard() {
           .select("*", { count: "exact", head: true })
           .eq("processed", false);
 
+        // Fetch active subscribers count
+        const { count: subscribersCount } = await supabase
+          .from("newsletter_subscribers")
+          .select("*", { count: "exact", head: true })
+          .eq("is_active", true);
+
+        // Fetch unread messages count
+        const { count: messagesCount } = await supabase
+          .from("contact_messages")
+          .select("*", { count: "exact", head: true })
+          .is("read_at", null);
+
         setStats({
           totalArticles,
           publishedArticles,
@@ -86,6 +102,8 @@ export default function AdminDashboard() {
           totalViews,
           avgSeoScore: Math.round(avgSeoScore),
           curatedNews: curatedCount || 0,
+          activeSubscribers: subscribersCount || 0,
+          unreadMessages: messagesCount || 0,
         });
 
         // Fetch recent articles
@@ -147,6 +165,22 @@ export default function AdminDashboard() {
       trend: "Novo",
       trendUp: true,
     },
+    {
+      title: "Subscribers Ativos",
+      value: stats?.activeSubscribers || 0,
+      description: "Inscritos na newsletter",
+      icon: Users,
+      trend: "+8%",
+      trendUp: true,
+    },
+    {
+      title: "Mensagens Não Lidas",
+      value: stats?.unreadMessages || 0,
+      description: "Aguardando resposta",
+      icon: MessageSquare,
+      trend: stats?.unreadMessages && stats.unreadMessages > 0 ? "Novo" : "0",
+      trendUp: stats?.unreadMessages ? stats.unreadMessages === 0 : true,
+    },
   ];
 
   return (
@@ -172,7 +206,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (
           <Card key={stat.title} className="border border-border hover:border-primary/50 transition-all group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

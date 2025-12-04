@@ -16,6 +16,8 @@ import {
   User,
   Activity,
   Zap,
+  MessageSquare,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -63,6 +65,8 @@ const adminNavItems = [
   { title: "SEO", url: "/admin/seo", icon: TrendingUp },
   { title: "Performance", url: "/admin/performance", icon: Activity },
   { title: "Fontes", url: "/admin/sources", icon: Search },
+  { title: "Newsletter", url: "/admin/subscribers", icon: Users },
+  { title: "Mensagens", url: "/admin/messages", icon: MessageSquare },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
 
