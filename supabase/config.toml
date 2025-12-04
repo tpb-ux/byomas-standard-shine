@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.newsletter-subscribe]
 verify_jwt = false
+
+[functions.auto-internal-linking]
+verify_jwt = false
