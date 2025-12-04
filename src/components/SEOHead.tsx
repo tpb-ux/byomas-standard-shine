@@ -13,8 +13,8 @@ interface SEOHeadProps {
   noIndex?: boolean;
 }
 
-const SITE_NAME = "Byoma Research";
-const BASE_URL = "https://byomaresearch.com";
+const SITE_NAME = "Amazonia Research";
+const BASE_URL = "https://amazoniaresearch.com";
 
 export const SEOHead = ({
   title,
@@ -138,8 +138,8 @@ export const OrganizationSchema = () => {
     logo: `${BASE_URL}/logo.png`,
     description: "Sua fonte de inteligência e insights sobre o mercado de finanças sustentáveis, tokenização verde e economia regenerativa.",
     sameAs: [
-      "https://linkedin.com/company/byomaresearch",
-      "https://twitter.com/byomaresearch",
+      "https://linkedin.com/company/amazoniaresearch",
+      "https://twitter.com/amazoniaresearch",
     ],
   };
 

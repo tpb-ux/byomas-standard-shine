@@ -19,6 +19,7 @@ interface GeneratedArticle {
   suggestedExternalLinks: Array<{ anchor: string; url: string; domain: string }>;
   featuredImageAlt: string;
   suggestedTags: string[];
+  suggestedFaqs: Array<{ question: string; answer: string }>;
 }
 
 // Helper function to find matching tags based on content
@@ -56,7 +57,7 @@ function generateSlug(title: string): string {
 }
 
 function getSectionPrompt(section: SectionType, keyword: string, context?: { title?: string; content?: string; excerpt?: string }): { system: string; user: string } {
-  const baseContext = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi) para o blog "Byoma Research".`;
+  const baseContext = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi) para o blog "Amazonia Research".`;
 
   switch (section) {
     case 'title':
@@ -306,7 +307,7 @@ serve(async (req) => {
 
     const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
 
-Sua tarefa é criar um artigo completo e ALTAMENTE otimizado para SEO (score 85+) para o blog "Byoma Research".
+Sua tarefa é criar um artigo completo e ALTAMENTE otimizado para SEO (score 85+) para o blog "Amazonia Research".
 
 REGRAS DE SEO OBRIGATÓRIAS PARA SCORE 85+:
 1. Título (H1): máximo 60 caracteres, INCLUIR palavra-chave principal no início
@@ -319,6 +320,7 @@ REGRAS DE SEO OBRIGATÓRIAS PARA SCORE 85+:
 8. Links externos: sugerir 5 links para fontes confiáveis (.gov, .org, publicações renomadas)
 9. Incluir: listas com bullets, dados estatísticos, exemplos práticos
 10. Cada seção H2 deve ter pelo menos 150 palavras
+11. FAQs: GERAR 5 perguntas frequentes relevantes sobre o tema para Rich Snippets
 
 ARTIGOS EXISTENTES PARA LINKS INTERNOS:
 ${existingArticlesList}
@@ -338,13 +340,15 @@ FORMATO DE RESPOSTA (JSON):
   "readingTime": 8,
   "suggestedInternalLinks": [{"anchor": "texto âncora", "targetSlug": "slug-do-artigo"}],
   "suggestedExternalLinks": [{"anchor": "texto âncora", "url": "https://...", "domain": "dominio.com"}],
-  "featuredImageAlt": "Descrição da imagem com keyword para acessibilidade"
+  "featuredImageAlt": "Descrição da imagem com keyword para acessibilidade",
+  "suggestedFaqs": [{"question": "Pergunta relevante sobre o tema?", "answer": "Resposta completa e informativa com 50-100 palavras."}]
 }
 
 IMPORTANTE: 
 - Retorne APENAS o JSON, sem markdown ou texto adicional
 - O conteúdo DEVE ter no mínimo 1200 palavras para atingir score 85+
-- Repita a keyword de forma natural ao longo do texto para densidade de 1.5-2.5%`;
+- Repita a keyword de forma natural ao longo do texto para densidade de 1.5-2.5%
+- GERE EXATAMENTE 5 FAQs relevantes e informativas sobre o tema`;
 
     // Build user prompt based on mode
     let userPrompt: string;
@@ -356,7 +360,9 @@ PALAVRA-CHAVE PRINCIPAL: ${keyword}
 
 TIPO DE CONTEÚDO: ${type === 'full' ? 'Artigo completo e aprofundado' : 'Artigo informativo'}
 
-CONTEXTO: O blog Byoma Research foca em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi). Crie um conteúdo original, informativo e bem estruturado sobre o tema fornecido.`;
+CONTEXTO: O blog Amazonia Research foca em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi). Crie um conteúdo original, informativo e bem estruturado sobre o tema fornecido.
+
+IMPORTANTE: Inclua 5 FAQs (perguntas frequentes) relevantes com respostas detalhadas de 50-100 palavras cada.`;
     } else {
       userPrompt = `Transforme esta notícia em um artigo SEO-otimizado:
 
@@ -462,6 +468,7 @@ URL ORIGINAL: ${newsData.original_url}`;
             main_keyword: article.mainKeyword || keyword,
             reading_time: article.readingTime,
             featured_image_alt: article.featuredImageAlt,
+            suggested_faqs: article.suggestedFaqs || [],
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -52,7 +52,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* SEO */}
       <SEOHead
-        title="Byoma Research - Insights de Finanças Sustentáveis e Mercado Verde"
+        title="Amazonia Research - Insights de Finanças Sustentáveis e Mercado Verde"
         description="Sua fonte de inteligência sobre crédito de carbono, tokenização verde, finanças regenerativas e economia sustentável. Análises, tendências e insights do mercado verde."
         url="/"
         keywords={["crédito de carbono", "green tokens", "tokenização verde", "finanças regenerativas", "ReFi", "sustentabilidade", "mercado de carbono", "economia verde"]}

@@ -18,7 +18,7 @@ const Navbar = () => {
     <nav className="fixed top-0 z-50 w-full bg-background border-b border-border">
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center space-x-1">
-          <span className="text-xl font-bold text-primary">BYOMA</span>
+          <span className="text-xl font-bold text-primary">AMAZONIA</span>
           <span className="text-xl font-bold text-foreground">RESEARCH</span>
         </Link>
         
@@ -51,7 +51,7 @@ const Navbar = () => {
             <SheetContent side="right" className="w-[300px] bg-background border-border">
               <div className="flex flex-col gap-6 mt-8">
                 <Link to="/" className="flex items-center space-x-1 mb-4" onClick={() => setIsOpen(false)}>
-                  <span className="text-xl font-bold text-primary">BYOMA</span>
+                  <span className="text-xl font-bold text-primary">AMAZONIA</span>
                   <span className="text-xl font-bold text-foreground">RESEARCH</span>
                 </Link>
                 
