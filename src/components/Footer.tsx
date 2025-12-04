@@ -1,9 +1,47 @@
-import { Facebook, Twitter, Linkedin, Instagram, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { Facebook, Twitter, Linkedin, Instagram, ChevronRight, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes("@")) {
+      toast.error("Por favor, insira um email válido");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("newsletter-subscribe", {
+        body: { email },
+      });
+
+      if (error) throw error;
+
+      setIsSubscribed(true);
+      setEmail("");
+      toast.success(data.message || "Inscrição realizada com sucesso!");
+      
+      // Reset success state after 5 seconds
+      setTimeout(() => setIsSubscribed(false), 5000);
+    } catch (error: any) {
+      console.error("Newsletter subscription error:", error);
+      toast.error(error.message || "Erro ao inscrever. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-6 py-16">
@@ -111,16 +149,29 @@ const Footer = () => {
             <p className="mb-4 text-sm text-muted-foreground">
               Receba insights sobre mercado verde e sustentabilidade
             </p>
-            <div className="mb-4 flex gap-2">
+            <form onSubmit={handleNewsletterSubmit} className="mb-4 flex gap-2">
               <Input 
                 type="email" 
                 placeholder="Seu e-mail" 
                 className="bg-background border-border text-foreground placeholder:text-muted-foreground"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
               />
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Inscrever
+              <Button 
+                type="submit"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isSubscribed ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  "Inscrever"
+                )}
               </Button>
-            </div>
+            </form>
             <div className="flex gap-4">
               <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <Facebook className="h-5 w-5" />
