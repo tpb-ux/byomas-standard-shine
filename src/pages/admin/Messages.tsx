@@ -7,11 +7,10 @@ import {
   Loader2,
   Search,
   Filter,
-  Eye,
   Check,
   CheckCheck,
   Trash2,
-  X,
+  Download,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -243,6 +242,30 @@ export default function AdminMessages() {
 
   const filteredMessages = getFilteredMessages();
 
+  const exportToCSV = () => {
+    const csvContent = [
+      ["Nome", "Email", "Telefone", "Tipo", "Status", "Data", "Mensagem"].join(","),
+      ...filteredMessages.map(m => [
+        `"${m.name.replace(/"/g, '""')}"`,
+        m.email,
+        m.phone || "",
+        getInquiryTypeLabel(m.inquiry_type),
+        getMessageStatus(m) === "responded" ? "Respondida" : 
+          getMessageStatus(m) === "read" ? "Lida" : "Não lida",
+        format(new Date(m.created_at), "dd/MM/yyyy HH:mm"),
+        `"${m.message.substring(0, 200).replace(/"/g, '""').replace(/\n/g, ' ')}"`
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `mensagens_contato_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success("Exportação concluída!");
+  };
+
   return (
     <div className="container max-w-7xl py-8 space-y-8">
       <div className="flex items-center justify-between">
@@ -255,6 +278,15 @@ export default function AdminMessages() {
             {unreadCount} não lidas | {pendingCount} aguardando resposta
           </p>
         </div>
+        <Button
+          variant="outline"
+          className="border-border hover:border-primary/50"
+          onClick={exportToCSV}
+          disabled={filteredMessages.length === 0}
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Exportar CSV
+        </Button>
       </div>
 
       <Card className="border border-border">

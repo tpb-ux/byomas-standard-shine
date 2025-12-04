@@ -11,12 +11,14 @@ import {
   Loader2,
   Users,
   MessageSquare,
+  Bell,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Stats {
   totalArticles: number;
@@ -43,6 +45,10 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentArticles, setRecentArticles] = useState<RecentArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newNotifications, setNewNotifications] = useState<{subscribers: number; messages: number}>({
+    subscribers: 0,
+    messages: 0
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -51,6 +57,57 @@ export default function AdminDashboard() {
       navigate("/");
     }
   }, [user, isAdmin, isEditor, authLoading, navigate]);
+
+  // Realtime notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('dashboard-notifications')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'newsletter_subscribers' },
+        (payload) => {
+          const newSubscriber = payload.new as { email: string };
+          toast.info(`📧 Novo subscriber: ${newSubscriber.email}`, {
+            description: "Alguém se inscreveu na newsletter!",
+            duration: 5000,
+          });
+          setStats(prev => prev ? { ...prev, activeSubscribers: prev.activeSubscribers + 1 } : null);
+          setNewNotifications(prev => ({ ...prev, subscribers: prev.subscribers + 1 }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'contact_messages' },
+        (payload) => {
+          const newMessage = payload.new as { name: string; inquiry_type: string };
+          toast.info(`📬 Nova mensagem de ${newMessage.name}`, {
+            description: `Tipo: ${getInquiryTypeLabel(newMessage.inquiry_type)}`,
+            duration: 5000,
+          });
+          setStats(prev => prev ? { ...prev, unreadMessages: prev.unreadMessages + 1 } : null);
+          setNewNotifications(prev => ({ ...prev, messages: prev.messages + 1 }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  const getInquiryTypeLabel = (type: string) => {
+    const types: Record<string, string> = {
+      general: "Informação Geral",
+      partnership: "Parcerias Comerciais",
+      consultation: "Consultoria",
+      press: "Imprensa",
+      support: "Suporte Técnico",
+      certification: "Certificação",
+    };
+    return types[type] || type;
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -140,6 +197,7 @@ export default function AdminDashboard() {
       icon: FileText,
       trend: "+12%",
       trendUp: true,
+      hasNewNotification: false,
     },
     {
       title: "Visualizações",
@@ -148,6 +206,7 @@ export default function AdminDashboard() {
       icon: Eye,
       trend: "+24%",
       trendUp: true,
+      hasNewNotification: false,
     },
     {
       title: "Score SEO Médio",
@@ -156,6 +215,7 @@ export default function AdminDashboard() {
       icon: TrendingUp,
       trend: stats?.avgSeoScore && stats.avgSeoScore > 70 ? "+5%" : "-3%",
       trendUp: stats?.avgSeoScore ? stats.avgSeoScore > 70 : false,
+      hasNewNotification: false,
     },
     {
       title: "Notícias para Curar",
@@ -164,22 +224,27 @@ export default function AdminDashboard() {
       icon: Newspaper,
       trend: "Novo",
       trendUp: true,
+      hasNewNotification: false,
     },
     {
       title: "Subscribers Ativos",
       value: stats?.activeSubscribers || 0,
       description: "Inscritos na newsletter",
       icon: Users,
-      trend: "+8%",
+      trend: newNotifications.subscribers > 0 ? `+${newNotifications.subscribers} novo` : "+8%",
       trendUp: true,
+      hasNewNotification: newNotifications.subscribers > 0,
+      link: "/admin/subscribers",
     },
     {
       title: "Mensagens Não Lidas",
       value: stats?.unreadMessages || 0,
       description: "Aguardando resposta",
       icon: MessageSquare,
-      trend: stats?.unreadMessages && stats.unreadMessages > 0 ? "Novo" : "0",
-      trendUp: stats?.unreadMessages ? stats.unreadMessages === 0 : true,
+      trend: newNotifications.messages > 0 ? `+${newNotifications.messages} nova` : (stats?.unreadMessages && stats.unreadMessages > 0 ? "Novo" : "0"),
+      trendUp: newNotifications.messages > 0 || (stats?.unreadMessages ? stats.unreadMessages === 0 : true),
+      hasNewNotification: newNotifications.messages > 0,
+      link: "/admin/messages",
     },
   ];
 
@@ -195,25 +260,52 @@ export default function AdminDashboard() {
             Visão geral do Byoma Research
           </p>
         </div>
-        <Button 
-          onClick={() => navigate("/admin/articles/new")}
-          variant="outline"
-          className="border-border hover:border-primary/50"
-        >
-          <FileText className="mr-2 h-4 w-4" />
-          Novo Artigo
-        </Button>
+        <div className="flex items-center gap-2">
+          {(newNotifications.subscribers > 0 || newNotifications.messages > 0) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="relative border-primary/50 text-primary"
+              onClick={() => setNewNotifications({ subscribers: 0, messages: 0 })}
+            >
+              <Bell className="h-4 w-4 mr-2" />
+              {newNotifications.subscribers + newNotifications.messages} novas
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full animate-pulse" />
+            </Button>
+          )}
+          <Button 
+            onClick={() => navigate("/admin/articles/new")}
+            variant="outline"
+            className="border-border hover:border-primary/50"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Novo Artigo
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="border border-border hover:border-primary/50 transition-all group">
+          <Card 
+            key={stat.title} 
+            className={`border transition-all group cursor-pointer ${
+              stat.hasNewNotification 
+                ? "border-primary bg-primary/5 animate-pulse" 
+                : "border-border hover:border-primary/50"
+            }`}
+            onClick={() => stat.link && navigate(stat.link)}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-normal text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <stat.icon className="h-4 w-4 text-primary" />
+              <div className="relative">
+                <stat.icon className="h-4 w-4 text-primary" />
+                {stat.hasNewNotification && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-primary rounded-full animate-ping" />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-light tracking-wide">{stat.value}</div>
@@ -221,7 +313,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-muted-foreground">{stat.description}</p>
                 <Badge
                   variant={stat.trendUp ? "default" : "destructive"}
-                  className="text-xs"
+                  className={`text-xs ${stat.hasNewNotification ? "animate-bounce" : ""}`}
                 >
                   {stat.trendUp ? (
                     <ArrowUpRight className="mr-1 h-3 w-3" />
