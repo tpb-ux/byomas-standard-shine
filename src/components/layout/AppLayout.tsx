@@ -28,6 +28,7 @@ const routeNames: Record<string, string> = {
   "/admin/curator": "Curadoria",
   "/admin/categories": "Categorias",
   "/admin/seo": "SEO",
+  "/admin/performance": "Performance",
   "/admin/sources": "Fontes",
   "/admin/settings": "Configurações",
 };
@@ -55,7 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider defaultOpen={true}>
       <AppSidebar />
       <SidebarInset className="flex flex-col min-h-screen">
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
@@ -63,11 +64,11 @@ export function AppLayout({ children }: AppLayoutProps) {
               {breadcrumbs.map((crumb, index) => (
                 <BreadcrumbItem key={crumb.path}>
                   {index === breadcrumbs.length - 1 ? (
-                    <BreadcrumbPage>{crumb.name}</BreadcrumbPage>
+                    <BreadcrumbPage className="font-normal">{crumb.name}</BreadcrumbPage>
                   ) : (
                     <>
                       <BreadcrumbLink asChild>
-                        <Link to={crumb.path}>{crumb.name}</Link>
+                        <Link to={crumb.path} className="font-normal">{crumb.name}</Link>
                       </BreadcrumbLink>
                       <BreadcrumbSeparator />
                     </>

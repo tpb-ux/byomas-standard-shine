@@ -156,9 +156,9 @@ export default function AdminCurator() {
   };
 
   const getEngagementColor = (score: number) => {
-    if (score >= 80) return "text-green-500";
+    if (score >= 80) return "text-primary";
     if (score >= 60) return "text-yellow-500";
-    return "text-red-500";
+    return "text-destructive";
   };
 
   const filteredNews = news.filter((item) =>
@@ -177,12 +177,20 @@ export default function AdminCurator() {
     <div className="container max-w-7xl py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Curadoria de Notícias</h1>
-          <p className="text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+            CURADORIA INTELIGENTE
+          </span>
+          <h1 className="text-3xl font-light tracking-wide text-foreground">Curadoria de Notícias</h1>
+          <p className="text-muted-foreground font-normal">
             Transforme notícias em artigos otimizados para SEO
           </p>
         </div>
-        <Button onClick={fetchNewNews} disabled={isFetching}>
+        <Button 
+          onClick={fetchNewNews} 
+          disabled={isFetching}
+          variant="outline"
+          className="border-border hover:border-primary/50"
+        >
           {isFetching ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -193,7 +201,7 @@ export default function AdminCurator() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border border-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -223,16 +231,24 @@ export default function AdminCurator() {
 
       {/* News List */}
       {filteredNews.length === 0 ? (
-        <Card>
+        <Card className="border border-border">
           <CardContent className="py-12 text-center">
+            <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+              BYOMA RESEARCH
+            </span>
             <Newspaper className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <h3 className="text-lg font-semibold mb-2">
+            <h3 className="text-lg font-normal mb-2">
               Nenhuma notícia para curar
             </h3>
             <p className="text-muted-foreground mb-4">
               Clique em "Buscar Notícias" para obter novas notícias das fontes configuradas
             </p>
-            <Button onClick={fetchNewNews} disabled={isFetching}>
+            <Button 
+              onClick={fetchNewNews} 
+              disabled={isFetching}
+              variant="outline"
+              className="border-border hover:border-primary/50"
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
               Buscar Agora
             </Button>
@@ -241,10 +257,10 @@ export default function AdminCurator() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filteredNews.map((item) => (
-            <Card key={item.id} className="hover:shadow-lg transition-shadow">
+            <Card key={item.id} className="border border-border hover:border-primary/50 transition-all group">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg line-clamp-2">
+                  <CardTitle className="text-lg font-normal line-clamp-2 group-hover:text-primary transition-colors">
                     {item.original_title}
                   </CardTitle>
                   <Badge variant="outline" className={getEngagementColor(item.engagement_potential)}>
@@ -295,6 +311,7 @@ export default function AdminCurator() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="border-border hover:border-primary/50"
                     onClick={() => window.open(item.original_url, "_blank")}
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -302,6 +319,7 @@ export default function AdminCurator() {
                   <Button
                     variant="outline"
                     size="icon"
+                    className="border-border hover:border-primary/50"
                     onClick={() => dismissNews(item.id)}
                   >
                     <X className="h-4 w-4" />

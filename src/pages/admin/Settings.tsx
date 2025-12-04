@@ -125,19 +125,22 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
-        <p className="text-muted-foreground">
+        <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+          CONFIGURAÇÕES
+        </span>
+        <h1 className="text-3xl font-light tracking-wide text-foreground">Configurações</h1>
+        <p className="text-muted-foreground font-normal">
           Gerencie seu perfil e configurações do sistema
         </p>
       </div>
 
       {/* Profile Settings */}
-      <Card>
+      <Card className="border border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 font-normal">
+            <User className="h-5 w-5 text-primary" />
             Perfil
           </CardTitle>
           <CardDescription>Atualize suas informações pessoais</CardDescription>
@@ -175,6 +178,8 @@ const Settings = () => {
             <Button
               type="submit"
               disabled={updateProfileMutation.isPending}
+              variant="outline"
+              className="border-border hover:border-primary/50"
             >
               {updateProfileMutation.isPending && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -188,10 +193,10 @@ const Settings = () => {
 
       {/* User Management - Admin Only */}
       {isAdmin && (
-        <Card>
+        <Card className="border border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 font-normal">
+              <Shield className="h-5 w-5 text-primary" />
               Gerenciamento de Usuários
             </CardTitle>
             <CardDescription>
@@ -201,22 +206,22 @@ const Settings = () => {
           <CardContent>
             {usersLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Usuário</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Função</TableHead>
-                    <TableHead>Cadastro</TableHead>
+                    <TableHead className="font-normal">Usuário</TableHead>
+                    <TableHead className="font-normal">Email</TableHead>
+                    <TableHead className="font-normal">Função</TableHead>
+                    <TableHead className="font-normal">Cadastro</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {users?.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="font-medium">
+                    <TableRow key={u.id} className="hover:bg-accent/50">
+                      <TableCell className="font-normal">
                         {u.full_name || "Sem nome"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -253,10 +258,10 @@ const Settings = () => {
       )}
 
       {/* Blog Settings */}
-      <Card>
+      <Card className="border border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Palette className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 font-normal">
+            <Palette className="h-5 w-5 text-primary" />
             Configurações do Blog
           </CardTitle>
           <CardDescription>

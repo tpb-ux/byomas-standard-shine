@@ -82,13 +82,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarHeader className="border-b border-border p-4">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">BR</span>
+          <div className="flex h-10 w-10 items-center justify-center border border-primary">
+            <span className="text-lg font-light tracking-wide text-primary">BR</span>
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-foreground">Byoma</span>
-              <span className="text-xs text-muted-foreground">Research</span>
+              <span className="text-xs font-medium uppercase tracking-widest text-primary">BYOMA</span>
+              <span className="text-lg font-light tracking-wide text-foreground">Research</span>
             </div>
           )}
         </Link>
@@ -96,7 +96,7 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+          <SidebarGroupLabel className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Navegação
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -110,7 +110,7 @@ export function AppSidebar() {
                   >
                     <Link to={item.url} className="flex items-center gap-3">
                       <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      <span className="font-normal">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -123,7 +123,7 @@ export function AppSidebar() {
           <SidebarGroup>
             <Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
               <CollapsibleTrigger asChild>
-                <SidebarGroupLabel className="flex cursor-pointer items-center justify-between text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground">
+                <SidebarGroupLabel className="flex cursor-pointer items-center justify-between text-xs font-medium uppercase tracking-widest text-muted-foreground hover:text-foreground">
                   <span>Administração</span>
                   <ChevronDown
                     className={cn(
@@ -145,7 +145,7 @@ export function AppSidebar() {
                         >
                           <Link to={item.url} className="flex items-center gap-3">
                             <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
+                            <span className="font-normal">{item.title}</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -165,16 +165,16 @@ export function AppSidebar() {
               <button className="flex w-full items-center gap-3 rounded-lg p-2 hover:bg-accent transition-colors">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={profile?.avatar_url || ""} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm border border-primary/20">
                     {profile?.full_name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
                 {!collapsed && (
                   <div className="flex flex-col items-start text-left">
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-normal">
                       {profile?.full_name || "Usuário"}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                       {isAdmin ? "Admin" : isEditor ? "Editor" : "Viewer"}
                     </span>
                   </div>
@@ -198,10 +198,10 @@ export function AppSidebar() {
         ) : (
           <Link
             to="/auth"
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary p-2 text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary bg-transparent p-2 text-primary hover:bg-primary/10 transition-colors"
           >
             <User className="h-4 w-4" />
-            {!collapsed && <span>Entrar</span>}
+            {!collapsed && <span className="font-normal">Entrar</span>}
           </Link>
         )}
       </SidebarFooter>

@@ -72,43 +72,46 @@ const SEOAnalytics = () => {
   });
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-yellow-600";
-    return "text-red-600";
+    if (score >= 80) return "text-primary";
+    if (score >= 60) return "text-yellow-500";
+    return "text-destructive";
   };
 
   const getScoreBadge = (score: number) => {
-    if (score >= 80) return <Badge className="bg-green-600">Bom</Badge>;
-    if (score >= 60) return <Badge className="bg-yellow-600">Regular</Badge>;
+    if (score >= 80) return <Badge className="bg-primary">Bom</Badge>;
+    if (score >= 60) return <Badge className="bg-yellow-500">Regular</Badge>;
     return <Badge variant="destructive">Baixo</Badge>;
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">SEO Analytics</h1>
-        <p className="text-muted-foreground">
+        <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+          ANÁLISE DE PERFORMANCE
+        </span>
+        <h1 className="text-3xl font-light tracking-wide text-foreground">SEO Analytics</h1>
+        <p className="text-muted-foreground font-normal">
           Monitore a performance SEO dos seus artigos
         </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Score Médio</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">Score Médio</CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${getScoreColor(seoData?.avgScore || 0)}`}>
+            <div className={`text-3xl font-light tracking-wide ${getScoreColor(seoData?.avgScore || 0)}`}>
               {(seoData?.avgScore || 0).toFixed(0)}
             </div>
             <Progress
@@ -118,13 +121,13 @@ const SEOAnalytics = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Artigos Analisados</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">Artigos Analisados</CardTitle>
+            <CheckCircle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">
+            <div className="text-3xl font-light tracking-wide">
               {seoData?.articlesWithMetrics}/{seoData?.totalArticles}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
@@ -133,26 +136,26 @@ const SEOAnalytics = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Links Internos</CardTitle>
-            <LinkIcon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">Links Internos</CardTitle>
+            <LinkIcon className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{seoData?.internalLinksCount}</div>
+            <div className="text-3xl font-light tracking-wide">{seoData?.internalLinksCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
               conexões entre artigos
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Links Externos</CardTitle>
-            <LinkIcon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">Links Externos</CardTitle>
+            <LinkIcon className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{seoData?.externalLinksCount}</div>
+            <div className="text-3xl font-light tracking-wide">{seoData?.externalLinksCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
               referências externas
             </p>
@@ -162,21 +165,21 @@ const SEOAnalytics = () => {
 
       {/* Alerts */}
       {((seoData?.lowScoreArticles?.length || 0) > 0 || (seoData?.noKeywordArticles?.length || 0) > 0) && (
-        <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+        <Card className="border border-primary/50 bg-primary/5">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-500">
+            <CardTitle className="flex items-center gap-2 text-primary font-normal">
               <AlertTriangle className="h-5 w-5" />
               Atenção Necessária
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {(seoData?.lowScoreArticles?.length || 0) > 0 && (
-              <p className="text-sm text-yellow-700 dark:text-yellow-500">
+              <p className="text-sm text-foreground/80">
                 • {seoData?.lowScoreArticles.length} artigo(s) com score SEO abaixo de 60
               </p>
             )}
             {(seoData?.noKeywordArticles?.length || 0) > 0 && (
-              <p className="text-sm text-yellow-700 dark:text-yellow-500">
+              <p className="text-sm text-foreground/80">
                 • {seoData?.noKeywordArticles.length} artigo(s) sem palavra-chave principal definida
               </p>
             )}
@@ -185,34 +188,34 @@ const SEOAnalytics = () => {
       )}
 
       {/* SEO Metrics Table */}
-      <Card>
+      <Card className="border border-border">
         <CardHeader>
-          <CardTitle>Métricas por Artigo</CardTitle>
+          <CardTitle className="font-normal">Métricas por Artigo</CardTitle>
         </CardHeader>
         <CardContent>
           {seoData?.metrics && seoData.metrics.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Artigo</TableHead>
-                  <TableHead>Score</TableHead>
-                  <TableHead>Palavras</TableHead>
-                  <TableHead>H1</TableHead>
-                  <TableHead>H2</TableHead>
-                  <TableHead>H3</TableHead>
-                  <TableHead>Densidade KW</TableHead>
-                  <TableHead>Links Int.</TableHead>
-                  <TableHead>Links Ext.</TableHead>
+                  <TableHead className="font-normal">Artigo</TableHead>
+                  <TableHead className="font-normal">Score</TableHead>
+                  <TableHead className="font-normal">Palavras</TableHead>
+                  <TableHead className="font-normal">H1</TableHead>
+                  <TableHead className="font-normal">H2</TableHead>
+                  <TableHead className="font-normal">H3</TableHead>
+                  <TableHead className="font-normal">Densidade KW</TableHead>
+                  <TableHead className="font-normal">Links Int.</TableHead>
+                  <TableHead className="font-normal">Links Ext.</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {seoData.metrics.map((metric) => (
-                  <TableRow key={metric.id}>
+                  <TableRow key={metric.id} className="hover:bg-accent/50">
                     <TableCell>
                       {metric.article ? (
                         <Link
                           to={`/admin/articles/${metric.article.id}`}
-                          className="font-medium hover:text-primary transition-colors line-clamp-1"
+                          className="font-normal hover:text-primary transition-colors line-clamp-1"
                         >
                           {metric.article.title}
                         </Link>
@@ -222,7 +225,7 @@ const SEOAnalytics = () => {
                     </TableCell>
                     <TableCell>{getScoreBadge(metric.seo_score || 0)}</TableCell>
                     <TableCell>{metric.word_count}</TableCell>
-                    <TableCell className={metric.h1_count === 1 ? "text-green-600" : "text-red-600"}>
+                    <TableCell className={metric.h1_count === 1 ? "text-primary" : "text-destructive"}>
                       {metric.h1_count}
                     </TableCell>
                     <TableCell>{metric.h2_count}</TableCell>
@@ -230,8 +233,8 @@ const SEOAnalytics = () => {
                     <TableCell>
                       <span className={
                         (metric.keyword_density || 0) >= 1 && (metric.keyword_density || 0) <= 2
-                          ? "text-green-600"
-                          : "text-yellow-600"
+                          ? "text-primary"
+                          : "text-yellow-500"
                       }>
                         {(metric.keyword_density || 0).toFixed(1)}%
                       </span>
@@ -244,6 +247,9 @@ const SEOAnalytics = () => {
             </Table>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
+              <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+                BYOMA RESEARCH
+              </span>
               Nenhuma métrica SEO registrada ainda. As métricas são geradas automaticamente quando artigos são criados pela IA.
             </div>
           )}
@@ -252,9 +258,9 @@ const SEOAnalytics = () => {
 
       {/* Articles without keywords */}
       {seoData?.noKeywordArticles && seoData.noKeywordArticles.length > 0 && (
-        <Card>
+        <Card className="border border-border">
           <CardHeader>
-            <CardTitle className="text-yellow-700 dark:text-yellow-500">
+            <CardTitle className="text-primary font-normal">
               Artigos sem Palavra-chave Principal
             </CardTitle>
           </CardHeader>
@@ -262,15 +268,15 @@ const SEOAnalytics = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Artigo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Ação</TableHead>
+                  <TableHead className="font-normal">Artigo</TableHead>
+                  <TableHead className="font-normal">Status</TableHead>
+                  <TableHead className="font-normal">Ação</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {seoData.noKeywordArticles.map((article) => (
-                  <TableRow key={article.id}>
-                    <TableCell className="font-medium">{article.title}</TableCell>
+                  <TableRow key={article.id} className="hover:bg-accent/50">
+                    <TableCell className="font-normal">{article.title}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{article.status}</Badge>
                     </TableCell>

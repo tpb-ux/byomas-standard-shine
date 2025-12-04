@@ -170,19 +170,26 @@ export default function AdminArticles() {
     <div className="container max-w-7xl py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Artigos</h1>
-          <p className="text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+            GESTÃO DE CONTEÚDO
+          </span>
+          <h1 className="text-3xl font-light tracking-wide text-foreground">Artigos</h1>
+          <p className="text-muted-foreground font-normal">
             Gerencie todos os artigos do blog
           </p>
         </div>
-        <Button onClick={() => navigate("/admin/articles/new")}>
+        <Button 
+          onClick={() => navigate("/admin/articles/new")}
+          variant="outline"
+          className="border-border hover:border-primary/50"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Novo Artigo
         </Button>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border border-border">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -212,24 +219,31 @@ export default function AdminArticles() {
       </Card>
 
       {/* Articles Table */}
-      <Card>
+      <Card className="border border-border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 font-normal">
+            <FileText className="h-5 w-5 text-primary" />
             Lista de Artigos ({filteredArticles.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredArticles.length === 0 ? (
             <div className="text-center py-12">
+              <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+                BYOMA RESEARCH
+              </span>
               <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Nenhum artigo encontrado</h3>
+              <h3 className="text-lg font-normal mb-2">Nenhum artigo encontrado</h3>
               <p className="text-muted-foreground mb-4">
                 {searchQuery
                   ? "Tente uma busca diferente"
                   : "Comece criando seu primeiro artigo"}
               </p>
-              <Button onClick={() => navigate("/admin/articles/new")}>
+              <Button 
+                onClick={() => navigate("/admin/articles/new")}
+                variant="outline"
+                className="border-border hover:border-primary/50"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Criar Artigo
               </Button>
@@ -239,18 +253,18 @@ export default function AdminArticles() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Views</TableHead>
-                    <TableHead>Criado em</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
+                    <TableHead className="font-normal">Título</TableHead>
+                    <TableHead className="font-normal">Categoria</TableHead>
+                    <TableHead className="font-normal">Status</TableHead>
+                    <TableHead className="text-center font-normal">Views</TableHead>
+                    <TableHead className="font-normal">Criado em</TableHead>
+                    <TableHead className="text-right font-normal">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredArticles.map((article) => (
-                    <TableRow key={article.id}>
-                      <TableCell className="font-medium max-w-xs truncate">
+                    <TableRow key={article.id} className="hover:bg-accent/50">
+                      <TableCell className="font-normal max-w-xs truncate">
                         {article.title}
                       </TableCell>
                       <TableCell>
@@ -315,7 +329,7 @@ export default function AdminArticles() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir artigo?</AlertDialogTitle>
+            <AlertDialogTitle className="font-normal">Excluir artigo?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta ação não pode ser desfeita. O artigo será permanentemente
               removido do sistema.
