@@ -2,6 +2,8 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -113,13 +115,13 @@ const PillarPageComponent = () => {
   }, [slug]);
 
   const breadcrumbItems = [
-    { label: "Guias", href: "/blog" },
+    { label: "Guias", href: "/guias" },
     ...(page?.category ? [{ label: page.category.name }] : []),
     { label: page?.title || "Guia" },
   ];
 
   const schemaBreadcrumbItems = [
-    { name: "Guias", url: "/blog" },
+    { name: "Guias", url: "/guias" },
     ...(page?.category ? [{ name: page.category.name, url: `/blog?categoria=${page.category.slug}` }] : []),
     { name: page?.title || "Guia", url: `/guia/${slug}` },
   ];
@@ -156,7 +158,7 @@ const PillarPageComponent = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Guia não encontrado</h1>
             <Button asChild>
-              <Link to="/blog">Voltar ao blog</Link>
+              <Link to="/guias">Voltar aos guias</Link>
             </Button>
           </div>
         </div>
@@ -189,11 +191,11 @@ const PillarPageComponent = () => {
             <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
             <Link
-              to="/blog"
+              to="/guias"
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-6 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              Voltar ao blog
+              Voltar aos guias
             </Link>
 
             <div className="max-w-4xl">
@@ -307,21 +309,26 @@ const PillarPageComponent = () => {
                 className="lg:hidden mb-8"
               />
 
-              <div
-                className="prose prose-lg dark:prose-invert max-w-none
-                  prose-headings:font-bold prose-headings:text-foreground
-                  prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
-                  prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
-                  prose-p:text-muted-foreground prose-p:leading-relaxed
-                  prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                  prose-strong:text-foreground
-                  prose-ul:text-muted-foreground prose-ol:text-muted-foreground
-                  prose-li:marker:text-primary
-                  prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg
-                  prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
-                  prose-pre:bg-muted prose-pre:border prose-pre:border-border"
-                dangerouslySetInnerHTML={{ __html: page.content }}
-              />
+              <div className="prose prose-lg dark:prose-invert max-w-none
+                prose-headings:font-bold prose-headings:text-foreground
+                prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
+                prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
+                prose-p:text-muted-foreground prose-p:leading-relaxed
+                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                prose-strong:text-foreground
+                prose-ul:text-muted-foreground prose-ol:text-muted-foreground
+                prose-li:marker:text-primary
+                prose-blockquote:border-primary prose-blockquote:bg-primary/5 prose-blockquote:py-2 prose-blockquote:px-6 prose-blockquote:rounded-r-lg
+                prose-code:bg-muted prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
+                prose-pre:bg-muted prose-pre:border prose-pre:border-border
+                prose-table:border prose-table:border-border
+                prose-th:bg-muted prose-th:p-3 prose-th:text-left prose-th:border prose-th:border-border
+                prose-td:p-3 prose-td:border prose-td:border-border"
+              >
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {page.content}
+                </ReactMarkdown>
+              </div>
             </article>
           </div>
         </div>
