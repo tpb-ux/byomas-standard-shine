@@ -153,12 +153,19 @@ export default function AdminDashboard() {
     <div className="container max-w-7xl py-8 space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+            PAINEL ADMINISTRATIVO
+          </span>
+          <h1 className="text-3xl font-light tracking-wide text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground font-normal">
             Visão geral do Byoma Research
           </p>
         </div>
-        <Button onClick={() => navigate("/admin/articles/new")}>
+        <Button 
+          onClick={() => navigate("/admin/articles/new")}
+          variant="outline"
+          className="border-border hover:border-primary/50"
+        >
           <FileText className="mr-2 h-4 w-4" />
           Novo Artigo
         </Button>
@@ -167,15 +174,15 @@ export default function AdminDashboard() {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
-          <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+          <Card key={stat.title} className="border border-border hover:border-primary/50 transition-all group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-normal text-muted-foreground">
                 {stat.title}
               </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
+              <stat.icon className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-2xl font-light tracking-wide">{stat.value}</div>
               <div className="flex items-center justify-between mt-1">
                 <p className="text-xs text-muted-foreground">{stat.description}</p>
                 <Badge
@@ -197,10 +204,10 @@ export default function AdminDashboard() {
 
       {/* Recent Articles & Quick Actions */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="border border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 font-normal">
+              <FileText className="h-5 w-5 text-primary" />
               Artigos Recentes
             </CardTitle>
             <CardDescription>
@@ -210,11 +217,14 @@ export default function AdminDashboard() {
           <CardContent>
             {recentArticles.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
+                <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+                  BYOMA RESEARCH
+                </span>
                 <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhum artigo ainda</p>
+                <p className="font-normal">Nenhum artigo ainda</p>
                 <Button
                   variant="outline"
-                  className="mt-4"
+                  className="mt-4 border-border hover:border-primary/50"
                   onClick={() => navigate("/admin/articles/new")}
                 >
                   Criar primeiro artigo
@@ -225,11 +235,11 @@ export default function AdminDashboard() {
                 {recentArticles.map((article) => (
                   <div
                     key={article.id}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/50 cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 cursor-pointer transition-all"
                     onClick={() => navigate(`/admin/articles/${article.id}`)}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{article.title}</p>
+                      <p className="font-normal truncate">{article.title}</p>
                       <p className="text-sm text-muted-foreground">
                         {article.views || 0} visualizações
                       </p>
@@ -246,10 +256,10 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 font-normal">
+              <BarChart3 className="h-5 w-5 text-primary" />
               Ações Rápidas
             </CardTitle>
             <CardDescription>
@@ -259,12 +269,12 @@ export default function AdminDashboard() {
           <CardContent className="grid gap-3">
             <Button
               variant="outline"
-              className="justify-start h-auto py-4"
+              className="justify-start h-auto py-4 border-border hover:border-primary/50"
               onClick={() => navigate("/admin/curator")}
             >
               <Newspaper className="mr-3 h-5 w-5 text-primary" />
               <div className="text-left">
-                <p className="font-medium">Curadoria de Notícias</p>
+                <p className="font-normal">Curadoria de Notícias</p>
                 <p className="text-xs text-muted-foreground">
                   {stats?.curatedNews || 0} notícias aguardando
                 </p>
@@ -272,12 +282,12 @@ export default function AdminDashboard() {
             </Button>
             <Button
               variant="outline"
-              className="justify-start h-auto py-4"
+              className="justify-start h-auto py-4 border-border hover:border-primary/50"
               onClick={() => navigate("/admin/seo")}
             >
               <TrendingUp className="mr-3 h-5 w-5 text-primary" />
               <div className="text-left">
-                <p className="font-medium">Análise SEO</p>
+                <p className="font-normal">Análise SEO</p>
                 <p className="text-xs text-muted-foreground">
                   Otimize seus artigos
                 </p>
@@ -285,12 +295,12 @@ export default function AdminDashboard() {
             </Button>
             <Button
               variant="outline"
-              className="justify-start h-auto py-4"
+              className="justify-start h-auto py-4 border-border hover:border-primary/50"
               onClick={() => navigate("/admin/sources")}
             >
               <Eye className="mr-3 h-5 w-5 text-primary" />
               <div className="text-left">
-                <p className="font-medium">Gerenciar Fontes</p>
+                <p className="font-normal">Gerenciar Fontes</p>
                 <p className="text-xs text-muted-foreground">
                   Configure feeds de notícias
                 </p>

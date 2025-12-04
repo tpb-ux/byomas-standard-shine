@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Loader2, RefreshCw, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, RefreshCw, ExternalLink, Rss } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -186,11 +186,14 @@ const Sources = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Fontes de Notícias</h1>
-          <p className="text-muted-foreground">
+          <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+            FEEDS RSS
+          </span>
+          <h1 className="text-3xl font-light tracking-wide text-foreground">Fontes de Notícias</h1>
+          <p className="text-muted-foreground font-normal">
             Gerencie as fontes RSS para curadoria automática
           </p>
         </div>
@@ -199,6 +202,7 @@ const Sources = () => {
             variant="outline"
             onClick={() => fetchNewsMutation.mutate()}
             disabled={fetchNewsMutation.isPending}
+            className="border-border hover:border-primary/50"
           >
             {fetchNewsMutation.isPending ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -209,14 +213,18 @@ const Sources = () => {
           </Button>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => resetForm()}>
+              <Button 
+                onClick={() => resetForm()}
+                variant="outline"
+                className="border-border hover:border-primary/50"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Fonte
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="font-normal">
                   {editingSource ? "Editar Fonte" : "Nova Fonte"}
                 </DialogTitle>
               </DialogHeader>
@@ -278,7 +286,7 @@ const Sources = () => {
                   <Label htmlFor="is_active">Fonte ativa</Label>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={resetForm}>
+                  <Button type="button" variant="outline" onClick={resetForm} className="border-border">
                     Cancelar
                   </Button>
                   <Button
@@ -297,30 +305,33 @@ const Sources = () => {
         </div>
       </div>
 
-      <Card>
+      <Card className="border border-border">
         <CardHeader>
-          <CardTitle>Todas as Fontes</CardTitle>
+          <CardTitle className="flex items-center gap-2 font-normal">
+            <Rss className="h-5 w-5 text-primary" />
+            Todas as Fontes
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : (
+          ) : sources && sources.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>RSS</TableHead>
-                  <TableHead>Última Busca</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="font-normal">Status</TableHead>
+                  <TableHead className="font-normal">Nome</TableHead>
+                  <TableHead className="font-normal">Categoria</TableHead>
+                  <TableHead className="font-normal">RSS</TableHead>
+                  <TableHead className="font-normal">Última Busca</TableHead>
+                  <TableHead className="text-right font-normal">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sources?.map((source) => (
-                  <TableRow key={source.id}>
+                  <TableRow key={source.id} className="hover:bg-accent/50">
                     <TableCell>
                       <Switch
                         checked={source.is_active ?? false}
@@ -331,12 +342,12 @@ const Sources = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{source.name}</span>
+                        <span className="font-normal">{source.name}</span>
                         <a
                           href={source.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:text-primary"
                         >
                           <ExternalLink className="h-3 w-3" />
                         </a>
@@ -351,7 +362,7 @@ const Sources = () => {
                     </TableCell>
                     <TableCell>
                       {source.rss_feed ? (
-                        <Badge variant="outline" className="text-green-600">
+                        <Badge variant="outline" className="text-primary border-primary/50">
                           Configurado
                         </Badge>
                       ) : (
@@ -386,6 +397,17 @@ const Sources = () => {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            <div className="text-center py-12">
+              <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+                BYOMA RESEARCH
+              </span>
+              <Rss className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <h3 className="text-lg font-normal mb-2">Nenhuma fonte encontrada</h3>
+              <p className="text-muted-foreground mb-4">
+                Comece adicionando sua primeira fonte RSS
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>

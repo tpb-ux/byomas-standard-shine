@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Tags } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,22 +162,29 @@ const Categories = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Categorias</h1>
-          <p className="text-muted-foreground">Gerencie as categorias do blog</p>
+          <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+            ORGANIZAÇÃO
+          </span>
+          <h1 className="text-3xl font-light tracking-wide text-foreground">Categorias</h1>
+          <p className="text-muted-foreground font-normal">Gerencie as categorias do blog</p>
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => resetForm()}>
+            <Button 
+              onClick={() => resetForm()}
+              variant="outline"
+              className="border-border hover:border-primary/50"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Nova Categoria
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="font-normal">
                 {editingCategory ? "Editar Categoria" : "Nova Categoria"}
               </DialogTitle>
             </DialogHeader>
@@ -248,7 +255,7 @@ const Categories = () => {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={resetForm}>
+                <Button type="button" variant="outline" onClick={resetForm} className="border-border">
                   Cancelar
                 </Button>
                 <Button
@@ -266,36 +273,39 @@ const Categories = () => {
         </Dialog>
       </div>
 
-      <Card>
+      <Card className="border border-border">
         <CardHeader>
-          <CardTitle>Todas as Categorias</CardTitle>
+          <CardTitle className="flex items-center gap-2 font-normal">
+            <Tags className="h-5 w-5 text-primary" />
+            Todas as Categorias
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : (
+          ) : categories && categories.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Cor</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Slug</TableHead>
-                  <TableHead>Artigos</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
+                  <TableHead className="font-normal">Cor</TableHead>
+                  <TableHead className="font-normal">Nome</TableHead>
+                  <TableHead className="font-normal">Slug</TableHead>
+                  <TableHead className="font-normal">Artigos</TableHead>
+                  <TableHead className="text-right font-normal">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {categories?.map((category) => (
-                  <TableRow key={category.id}>
+                  <TableRow key={category.id} className="hover:bg-accent/50">
                     <TableCell>
                       <div
-                        className="w-6 h-6 rounded-full"
+                        className="w-6 h-6 rounded-full border border-border"
                         style={{ backgroundColor: category.color || "#36454F" }}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{category.name}</TableCell>
+                    <TableCell className="font-normal">{category.name}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {category.slug}
                     </TableCell>
@@ -323,6 +333,17 @@ const Categories = () => {
                 ))}
               </TableBody>
             </Table>
+          ) : (
+            <div className="text-center py-12">
+              <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+                BYOMA RESEARCH
+              </span>
+              <Tags className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+              <h3 className="text-lg font-normal mb-2">Nenhuma categoria encontrada</h3>
+              <p className="text-muted-foreground mb-4">
+                Comece criando sua primeira categoria
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>

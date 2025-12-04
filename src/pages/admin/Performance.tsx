@@ -259,11 +259,14 @@ export default function Performance() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-2">
+            CORE WEB VITALS
+          </span>
+          <h1 className="text-3xl font-light tracking-wide text-foreground flex items-center gap-2">
             <Activity className="h-8 w-8 text-primary" />
             Performance
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground font-normal">
             Monitore as métricas de Core Web Vitals do seu blog
           </p>
         </div>
@@ -283,6 +286,7 @@ export default function Performance() {
             size="icon"
             onClick={handleRefresh}
             disabled={refreshing}
+            className="border-border hover:border-primary/50"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           </Button>
@@ -291,37 +295,37 @@ export default function Performance() {
 
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Medições</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">Total de Medições</CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{getTotalMeasurements()}</div>
+            <div className="text-2xl font-light tracking-wide">{getTotalMeasurements()}</div>
             <p className="text-xs text-muted-foreground">
               no período selecionado
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Páginas Analisadas</CardTitle>
-            <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">Páginas Analisadas</CardTitle>
+            <LayoutDashboard className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pageMetrics.length}</div>
+            <div className="text-2xl font-light tracking-wide">{pageMetrics.length}</div>
             <p className="text-xs text-muted-foreground">
               URLs únicas
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">LCP Médio</CardTitle>
-            <Paintbrush className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">LCP Médio</CardTitle>
+            <Paintbrush className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-light tracking-wide">
               {getMetricSummary("LCP") > 1000
                 ? `${(getMetricSummary("LCP") / 1000).toFixed(2)}s`
                 : `${Math.round(getMetricSummary("LCP"))}ms`}
@@ -331,13 +335,13 @@ export default function Performance() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border border-border hover:border-primary/50 transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">CLS Médio</CardTitle>
-            <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-normal">CLS Médio</CardTitle>
+            <LayoutDashboard className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-light tracking-wide">
               {getMetricSummary("CLS").toFixed(3)}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -349,7 +353,7 @@ export default function Performance() {
 
       {/* Core Web Vitals Cards */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Core Web Vitals</h2>
+        <h2 className="text-xl font-light tracking-wide mb-4">Core Web Vitals</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {Object.entries(METRIC_CONFIG).map(([name, config]) => {
             const value = getMetricSummary(name);
@@ -394,30 +398,33 @@ export default function Performance() {
         </TabsContent>
 
         <TabsContent value="pages">
-          <Card>
+          <Card className="border border-border">
             <CardHeader>
-              <CardTitle className="text-lg">Performance por Página</CardTitle>
+              <CardTitle className="text-lg font-normal">Performance por Página</CardTitle>
             </CardHeader>
             <CardContent>
               {pageMetrics.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
-                  Sem dados de páginas para exibir
-                </p>
+                <div className="text-center py-8">
+                  <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
+                    BYOMA RESEARCH
+                  </span>
+                  <p className="text-muted-foreground">Sem dados de páginas para exibir</p>
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-2 font-medium">URL</th>
-                        <th className="text-center py-3 px-2 font-medium">LCP</th>
-                        <th className="text-center py-3 px-2 font-medium">CLS</th>
-                        <th className="text-center py-3 px-2 font-medium">INP</th>
-                        <th className="text-center py-3 px-2 font-medium">Medições</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-2 font-normal">URL</th>
+                        <th className="text-center py-3 px-2 font-normal">LCP</th>
+                        <th className="text-center py-3 px-2 font-normal">CLS</th>
+                        <th className="text-center py-3 px-2 font-normal">INP</th>
+                        <th className="text-center py-3 px-2 font-normal">Medições</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pageMetrics.map((page) => (
-                        <tr key={page.page_url} className="border-b last:border-0">
+                        <tr key={page.page_url} className="border-b border-border last:border-0 hover:bg-accent/50">
                           <td className="py-3 px-2 text-sm max-w-[200px] truncate">
                             {page.page_url}
                           </td>
@@ -425,10 +432,10 @@ export default function Performance() {
                             <span
                               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                 getMetricRating("LCP", page.lcp_avg) === "good"
-                                  ? "bg-green-500/10 text-green-500"
+                                  ? "bg-primary/10 text-primary"
                                   : getMetricRating("LCP", page.lcp_avg) === "needs-improvement"
                                   ? "bg-yellow-500/10 text-yellow-500"
-                                  : "bg-red-500/10 text-red-500"
+                                  : "bg-destructive/10 text-destructive"
                               }`}
                             >
                               {page.lcp_avg > 1000
@@ -440,10 +447,10 @@ export default function Performance() {
                             <span
                               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                 getMetricRating("CLS", page.cls_avg) === "good"
-                                  ? "bg-green-500/10 text-green-500"
+                                  ? "bg-primary/10 text-primary"
                                   : getMetricRating("CLS", page.cls_avg) === "needs-improvement"
                                   ? "bg-yellow-500/10 text-yellow-500"
-                                  : "bg-red-500/10 text-red-500"
+                                  : "bg-destructive/10 text-destructive"
                               }`}
                             >
                               {page.cls_avg.toFixed(3)}
@@ -453,10 +460,10 @@ export default function Performance() {
                             <span
                               className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                                 getMetricRating("INP", page.inp_avg) === "good"
-                                  ? "bg-green-500/10 text-green-500"
+                                  ? "bg-primary/10 text-primary"
                                   : getMetricRating("INP", page.inp_avg) === "needs-improvement"
                                   ? "bg-yellow-500/10 text-yellow-500"
-                                  : "bg-red-500/10 text-red-500"
+                                  : "bg-destructive/10 text-destructive"
                               }`}
                             >
                               {Math.round(page.inp_avg)}ms
