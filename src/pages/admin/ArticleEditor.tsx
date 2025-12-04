@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Plus,
   Trash2,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,6 +89,12 @@ interface FAQ {
   answer: string;
 }
 
+interface ArticleTag {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 const sectionLabels: Record<RegeneratingSection, string> = {
   none: '',
   title: 'Título',
@@ -111,6 +118,8 @@ export default function ArticleEditor() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [seoAnalysis, setSeoAnalysis] = useState<SeoAnalysis | null>(null);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [allTags, setAllTags] = useState<ArticleTag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
   const generationTimersRef = useRef<NodeJS.Timeout[]>([]);
 
@@ -141,8 +150,10 @@ export default function ArticleEditor() {
 
   useEffect(() => {
     fetchCategories();
+    fetchTags();
     if (isEditing) {
       fetchArticle();
+      fetchArticleTags();
     }
   }, [id]);
 
@@ -152,6 +163,23 @@ export default function ArticleEditor() {
       .select("id, name, slug")
       .order("name");
     setCategories(data || []);
+  };
+
+  const fetchTags = async () => {
+    const { data } = await supabase
+      .from("tags")
+      .select("id, name, slug")
+      .order("name");
+    setAllTags(data || []);
+  };
+
+  const fetchArticleTags = async () => {
+    if (!id || id === "new") return;
+    const { data } = await supabase
+      .from("article_tags")
+      .select("tag_id")
+      .eq("article_id", id);
+    setSelectedTagIds(data?.map(t => t.tag_id) || []);
   };
 
   const fetchArticle = async () => {
@@ -279,6 +307,8 @@ export default function ArticleEditor() {
         faqs: faqs.length > 0 ? JSON.parse(JSON.stringify(faqs)) : [],
       };
 
+      let articleId = id;
+
       if (isEditing) {
         const { error } = await supabase
           .from("articles")
@@ -286,16 +316,34 @@ export default function ArticleEditor() {
           .eq("id", id);
 
         if (error) throw error;
-        toast.success("Artigo atualizado com sucesso!");
       } else {
-        const { error } = await supabase
+        const { data: newArticle, error } = await supabase
           .from("articles")
-          .insert([articleData]);
+          .insert([articleData])
+          .select()
+          .single();
 
         if (error) throw error;
-        toast.success("Artigo criado com sucesso!");
+        articleId = newArticle.id;
       }
 
+      // Update tags - first delete existing, then insert new ones
+      if (articleId) {
+        await supabase
+          .from("article_tags")
+          .delete()
+          .eq("article_id", articleId);
+
+        if (selectedTagIds.length > 0) {
+          const tagAssociations = selectedTagIds.map(tagId => ({
+            article_id: articleId,
+            tag_id: tagId,
+          }));
+          await supabase.from("article_tags").insert(tagAssociations);
+        }
+      }
+
+      toast.success(isEditing ? "Artigo atualizado com sucesso!" : "Artigo criado com sucesso!");
       navigate("/admin/articles");
     } catch (error: any) {
       console.error("Error saving article:", error);
@@ -307,6 +355,14 @@ export default function ArticleEditor() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const toggleTagSelection = (tagId: string) => {
+    setSelectedTagIds(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
   };
 
   const generateImageWithAI = async () => {
@@ -536,6 +592,7 @@ export default function ArticleEditor() {
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                   <TabsTrigger value="media">Mídia</TabsTrigger>
                   <TabsTrigger value="faqs">FAQs</TabsTrigger>
+                  <TabsTrigger value="tags">Tags</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="content" className="space-y-4 mt-4">
@@ -911,6 +968,60 @@ export default function ArticleEditor() {
                           {faqs.length} FAQ{faqs.length !== 1 ? 's' : ''} adicionada{faqs.length !== 1 ? 's' : ''}. 
                           Recomendamos 5 FAQs com respostas de 50-100 palavras cada.
                         </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="tags" className="space-y-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Tag className="h-5 w-5" />
+                        Tags do Artigo
+                      </CardTitle>
+                      <CardDescription>
+                        Selecione as tags relevantes para melhorar a categorização e SEO
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {allTags.length === 0 ? (
+                        <div className="text-center py-8 border border-dashed border-border rounded-lg">
+                          <Tag className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground mb-2">
+                            Nenhuma tag cadastrada
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Crie tags no painel de categorias para poder associá-las aos artigos
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap gap-2">
+                            {allTags.map((tag) => {
+                              const isSelected = selectedTagIds.includes(tag.id);
+                              return (
+                                <Badge
+                                  key={tag.id}
+                                  variant={isSelected ? "default" : "outline"}
+                                  className={`cursor-pointer transition-colors ${
+                                    isSelected 
+                                      ? "bg-primary hover:bg-primary/90" 
+                                      : "hover:bg-muted"
+                                  }`}
+                                  onClick={() => toggleTagSelection(tag.id)}
+                                >
+                                  {tag.name}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                          {selectedTagIds.length > 0 && (
+                            <p className="text-sm text-muted-foreground">
+                              {selectedTagIds.length} tag(s) selecionada(s)
+                            </p>
+                          )}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
