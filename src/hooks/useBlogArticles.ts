@@ -121,11 +121,12 @@ export const useBlogArticle = (slug: string) => {
 
       const tags = tagData?.map((t: any) => t.tags).filter(Boolean) || [];
 
-      // Increment views
-      await supabase
-        .from("articles")
-        .update({ views: (article.views || 0) + 1 })
-        .eq("id", article.id);
+      // Increment views using RPC function (bypasses RLS)
+      try {
+        await supabase.rpc("increment_article_views", { article_slug: slug });
+      } catch (err) {
+        console.error("Error incrementing views:", err);
+      }
 
       return { ...article, tags } as Article;
     },
