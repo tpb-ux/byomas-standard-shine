@@ -18,6 +18,29 @@ interface GeneratedArticle {
   suggestedInternalLinks: Array<{ anchor: string; targetSlug: string }>;
   suggestedExternalLinks: Array<{ anchor: string; url: string; domain: string }>;
   featuredImageAlt: string;
+  suggestedTags: string[];
+}
+
+// Helper function to find matching tags based on content
+function findMatchingTags(
+  content: string,
+  title: string,
+  mainKeyword: string,
+  tags: Array<{ id: string; name: string; slug: string }>
+): Array<{ id: string; name: string }> {
+  const textToAnalyze = `${title} ${mainKeyword} ${content}`.toLowerCase();
+  const matchedTags: Array<{ id: string; name: string }> = [];
+
+  for (const tag of tags) {
+    const tagName = tag.name.toLowerCase();
+    // Check if tag name appears in the content
+    if (textToAnalyze.includes(tagName)) {
+      matchedTags.push({ id: tag.id, name: tag.name });
+    }
+  }
+
+  // Return max 5 tags
+  return matchedTags.slice(0, 5);
 }
 
 type SectionType = 'full' | 'title' | 'excerpt' | 'content' | 'meta';
@@ -258,7 +281,22 @@ serve(async (req) => {
       .eq("is_ai", true)
       .single();
 
+    // Get existing tags for association
+    const { data: existingTags } = await supabase
+      .from("tags")
+      .select("id, name, slug");
+
+    // Get authority sources for external links
+    const { data: authoritySources } = await supabase
+      .from("authority_sources")
+      .select("id, name, url, domain, category")
+      .eq("is_active", true)
+      .order("trust_score", { ascending: false })
+      .limit(10);
+
     const existingArticlesList = existingArticles?.map(a => `- "${a.title}" (slug: ${a.slug})`).join("\n") || "Nenhum artigo publicado ainda.";
+    const tagsList = existingTags?.map(t => t.name).join(", ") || "";
+    const authoritySourcesList = authoritySources?.map(s => `- ${s.name}: ${s.url}`).join("\n") || "";
 
     const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
 
@@ -452,6 +490,27 @@ URL ORIGINAL: ${newsData.original_url}`;
 
     console.log(`Article created: ${newArticle.id}`);
 
+    // Associate tags based on content analysis
+    if (existingTags?.length) {
+      const matchedTags = findMatchingTags(
+        article.content,
+        article.title,
+        article.mainKeyword,
+        existingTags
+      );
+
+      if (matchedTags.length > 0) {
+        for (const tag of matchedTags) {
+          await supabase.from("article_tags").insert({
+            article_id: newArticle.id,
+            tag_id: tag.id,
+          });
+        }
+        console.log(`Associated ${matchedTags.length} tags to article`);
+      }
+    }
+
+    // Insert external links
     if (article.suggestedExternalLinks?.length) {
       for (const link of article.suggestedExternalLinks) {
         await supabase.from("external_links").insert({
@@ -461,8 +520,10 @@ URL ORIGINAL: ${newsData.original_url}`;
           domain: link.domain,
         });
       }
+      console.log(`Added ${article.suggestedExternalLinks.length} external links`);
     }
 
+    // Insert internal links
     if (article.suggestedInternalLinks?.length && existingArticles?.length) {
       for (const link of article.suggestedInternalLinks) {
         const targetArticle = existingArticles.find(a => a.slug === link.targetSlug);
