@@ -419,13 +419,26 @@ URL ORIGINAL: ${newsData.original_url}`;
       );
     }
 
-    // Parse JSON response
+    // Parse JSON response - clean markdown code blocks more aggressively
     let article: GeneratedArticle;
     try {
-      const cleanContent = aiContent.replace(/```json\n?|\n?```/g, "").trim();
+      // Remove markdown code blocks (```json, ```, etc.)
+      let cleanContent = aiContent
+        .replace(/^```(?:json)?\s*/i, "") // Remove opening ```json or ```
+        .replace(/\s*```\s*$/i, "")       // Remove closing ```
+        .trim();
+      
+      // Try to extract JSON if there's extra text
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanContent = jsonMatch[0];
+      }
+      
+      console.log("Parsing cleaned content, length:", cleanContent.length);
       article = JSON.parse(cleanContent);
+      console.log("Successfully parsed article:", article.title);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", aiContent);
+      console.error("Failed to parse AI response:", aiContent.substring(0, 500));
       return new Response(
         JSON.stringify({ error: "Failed to parse AI response" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
