@@ -1,6 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface FAQ {
+  question: string;
+  answer: string;
+}
+
 export interface Article {
   id: string;
   slug: string;
@@ -15,6 +20,7 @@ export interface Article {
   meta_title: string | null;
   meta_description: string | null;
   main_keyword: string | null;
+  faqs: FAQ[] | null;
   category: {
     id: string;
     name: string;
@@ -51,6 +57,7 @@ export const useBlogArticles = () => {
           meta_title,
           meta_description,
           main_keyword,
+          faqs,
           category:categories(id, name, slug, color),
           author:authors(id, name, avatar, bio, role)
         `)
@@ -71,6 +78,7 @@ export const useBlogArticles = () => {
           
           return {
             ...article,
+            faqs: (article.faqs as unknown as FAQ[]) || [],
             tags,
           } as Article;
         })
@@ -101,6 +109,7 @@ export const useBlogArticle = (slug: string) => {
           meta_title,
           meta_description,
           main_keyword,
+          faqs,
           category:categories(id, name, slug, color),
           author:authors(id, name, avatar, bio, role)
         `)
@@ -128,7 +137,7 @@ export const useBlogArticle = (slug: string) => {
         console.error("Error incrementing views:", err);
       }
 
-      return { ...article, tags } as Article;
+      return { ...article, faqs: (article.faqs as unknown as FAQ[]) || [], tags } as Article;
     },
     enabled: !!slug,
   });

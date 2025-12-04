@@ -53,6 +53,7 @@ export type Database = {
           created_at: string | null
           engagement_score: number | null
           excerpt: string | null
+          faqs: Json | null
           featured_image: string | null
           featured_image_alt: string | null
           id: string
@@ -79,6 +80,7 @@ export type Database = {
           created_at?: string | null
           engagement_score?: number | null
           excerpt?: string | null
+          faqs?: Json | null
           featured_image?: string | null
           featured_image_alt?: string | null
           id?: string
@@ -105,6 +107,7 @@ export type Database = {
           created_at?: string | null
           engagement_score?: number | null
           excerpt?: string | null
+          faqs?: Json | null
           featured_image?: string | null
           featured_image_alt?: string | null
           id?: string

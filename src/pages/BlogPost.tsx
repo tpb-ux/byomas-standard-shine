@@ -1,15 +1,22 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, Clock, User, Eye } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Eye, HelpCircle, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import BlogSidebar from "@/components/BlogSidebar";
 import RelatedPages from "@/components/RelatedPages";
 import InArticleLinks from "@/components/InArticleLinks";
-import { SEOHead, ArticleSchema } from "@/components/SEOHead";
+import { SEOHead, ArticleSchema, FAQSchema } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import ScrollReveal from "@/components/ScrollReveal";
 import { useBlogArticle, useRelatedArticles } from "@/hooks/useBlogArticles";
 
@@ -90,6 +97,9 @@ const BlogPost = () => {
     { label: article.title },
   ];
 
+  // Check if article has FAQs
+  const hasFaqs = article.faqs && article.faqs.length > 0;
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* SEO Meta Tags */}
@@ -113,6 +123,16 @@ const BlogPost = () => {
         author={article.author?.name}
         publishedAt={article.published_at || undefined}
       />
+
+      {/* FAQ Schema for Rich Snippets */}
+      {hasFaqs && (
+        <FAQSchema
+          items={article.faqs!.map(faq => ({
+            question: faq.question,
+            answer: faq.answer,
+          }))}
+        />
+      )}
 
       <Navbar />
 
@@ -213,6 +233,37 @@ const BlogPost = () => {
                   dangerouslySetInnerHTML={{ __html: article.content }}
                 />
               </ScrollReveal>
+
+              {/* FAQ Section */}
+              {hasFaqs && (
+                <ScrollReveal delay={0.1}>
+                  <Card className="mt-12 border-primary/20">
+                    <CardContent className="p-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <HelpCircle className="h-5 w-5 text-primary" />
+                        </div>
+                        <h2 className="text-2xl font-semibold text-foreground">
+                          Perguntas Frequentes
+                        </h2>
+                      </div>
+                      
+                      <Accordion type="single" collapsible className="w-full">
+                        {article.faqs!.map((faq, index) => (
+                          <AccordionItem key={index} value={`faq-${index}`} className="border-border">
+                            <AccordionTrigger className="text-left text-foreground hover:text-primary hover:no-underline py-4">
+                              {faq.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-muted-foreground pb-4">
+                              {faq.answer}
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
+                    </CardContent>
+                  </Card>
+                </ScrollReveal>
+              )}
 
               {/* In-Article Internal Links - SEO */}
               <InArticleLinks 

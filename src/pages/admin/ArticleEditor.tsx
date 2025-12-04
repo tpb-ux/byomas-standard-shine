@@ -15,6 +15,9 @@ import {
   RefreshCw,
   AlertTriangle,
   Wand2,
+  HelpCircle,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +83,11 @@ interface SeoAnalysis {
   suggestions: string[];
 }
 
+interface FAQ {
+  question: string;
+  answer: string;
+}
+
 const sectionLabels: Record<RegeneratingSection, string> = {
   none: '',
   title: 'Título',
@@ -102,6 +110,7 @@ export default function ArticleEditor() {
   const [regeneratingSection, setRegeneratingSection] = useState<RegeneratingSection>('none');
   const [categories, setCategories] = useState<Category[]>([]);
   const [seoAnalysis, setSeoAnalysis] = useState<SeoAnalysis | null>(null);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   
   const generationTimersRef = useRef<NodeJS.Timeout[]>([]);
 
@@ -171,6 +180,11 @@ export default function ArticleEditor() {
         featured_image_alt: data.featured_image_alt || "",
         status: data.status as ArticleFormData["status"],
       });
+
+      // Load FAQs
+      if (data.faqs && Array.isArray(data.faqs)) {
+        setFaqs(data.faqs as unknown as FAQ[]);
+      }
 
       analyzeSeo(data.content, data.main_keyword || "");
     } catch (error) {
@@ -262,6 +276,7 @@ export default function ArticleEditor() {
         featured_image_alt: data.featured_image_alt || null,
         status: data.status as "draft" | "published" | "scheduled" | "archived",
         published_at: data.status === "published" ? new Date().toISOString() : null,
+        faqs: faqs.length > 0 ? JSON.parse(JSON.stringify(faqs)) : [],
       };
 
       if (isEditing) {
@@ -520,6 +535,7 @@ export default function ArticleEditor() {
                   <TabsTrigger value="content">Conteúdo</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                   <TabsTrigger value="media">Mídia</TabsTrigger>
+                  <TabsTrigger value="faqs">FAQs</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="content" className="space-y-4 mt-4">
@@ -799,6 +815,102 @@ export default function ArticleEditor() {
                             Regenerar Imagem
                           </Button>
                         </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="faqs" className="space-y-4 mt-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <HelpCircle className="h-5 w-5" />
+                        Perguntas Frequentes (FAQs)
+                      </CardTitle>
+                      <CardDescription>
+                        FAQs aparecem como Rich Snippets no Google e melhoram o SEO
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {faqs.length === 0 && (
+                        <div className="text-center py-8 border border-dashed border-border rounded-lg">
+                          <HelpCircle className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground mb-4">
+                            Nenhuma FAQ adicionada ainda
+                          </p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Adicione perguntas frequentes para melhorar o SEO com Rich Snippets
+                          </p>
+                        </div>
+                      )}
+
+                      {faqs.map((faq, index) => (
+                        <div key={index} className="p-4 border border-border rounded-lg space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 space-y-3">
+                              <div>
+                                <Label className="text-sm font-medium">Pergunta {index + 1}</Label>
+                                <Input
+                                  value={faq.question}
+                                  onChange={(e) => {
+                                    const newFaqs = [...faqs];
+                                    newFaqs[index].question = e.target.value;
+                                    setFaqs(newFaqs);
+                                  }}
+                                  placeholder="Digite a pergunta..."
+                                  className="mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-sm font-medium">Resposta</Label>
+                                <Textarea
+                                  value={faq.answer}
+                                  onChange={(e) => {
+                                    const newFaqs = [...faqs];
+                                    newFaqs[index].answer = e.target.value;
+                                    setFaqs(newFaqs);
+                                  }}
+                                  placeholder="Digite a resposta (50-100 palavras recomendado)..."
+                                  rows={3}
+                                  className="mt-1"
+                                />
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const newFaqs = faqs.filter((_, i) => i !== index);
+                                setFaqs(newFaqs);
+                              }}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {faqs.length < 10 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setFaqs([...faqs, { question: "", answer: "" }]);
+                          }}
+                          className="w-full"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Adicionar FAQ ({faqs.length}/10)
+                        </Button>
+                      )}
+
+                      {faqs.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {faqs.length} FAQ{faqs.length !== 1 ? 's' : ''} adicionada{faqs.length !== 1 ? 's' : ''}. 
+                          Recomendamos 5 FAQs com respostas de 50-100 palavras cada.
+                        </p>
                       )}
                     </CardContent>
                   </Card>

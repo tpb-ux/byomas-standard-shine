@@ -240,7 +240,7 @@ const Footer = () => {
         
         <div className="mt-12 border-t border-border pt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2025 Byoma Research. Todos os direitos reservados.
+            © 2025 Amazonia Research. Todos os direitos reservados.
           </p>
         </div>
       </div>
