@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, TrendingUp, AlertTriangle, CheckCircle, Link as LinkIcon, BookOpen, FolderTree, Eye } from "lucide-react";
+import { Loader2, TrendingUp, AlertTriangle, CheckCircle, Link as LinkIcon, BookOpen, FolderTree, Eye, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
+import SEOEvolutionChart from "@/components/admin/SEOEvolutionChart";
 
 const SEOAnalytics = () => {
   const { data: seoData, isLoading } = useQuery({
@@ -36,14 +37,14 @@ const SEOAnalytics = () => {
         .select("id, title, slug, status, main_keyword, content")
         .eq("status", "published");
 
-      // Fetch internal/external links count
+      // Fetch internal/external links with created_at for charts
       const { data: internalLinks } = await supabase
         .from("internal_links")
-        .select("source_article_id");
+        .select("id, source_article_id, created_at");
 
       const { data: externalLinks } = await supabase
         .from("external_links")
-        .select("article_id");
+        .select("id, article_id, created_at");
 
       // Fetch topic clusters
       const { data: topicClusters } = await supabase
@@ -111,6 +112,8 @@ const SEOAnalytics = () => {
         avgPillarReadingTime,
         avgInternalLinks,
         avgExternalLinks,
+        internalLinksData: internalLinks || [],
+        externalLinksData: externalLinks || [],
       };
     },
   });
@@ -285,6 +288,19 @@ const SEOAnalytics = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Evolution Charts */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-normal text-foreground">Gráficos de Evolução</h2>
+        </div>
+        <SEOEvolutionChart
+          internalLinks={seoData?.internalLinksData || []}
+          externalLinks={seoData?.externalLinksData || []}
+          metrics={seoData?.metrics || []}
+        />
+      </div>
 
       {/* Tabs for different tables */}
       <Tabs defaultValue="articles" className="space-y-4">

@@ -30,9 +30,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, Pencil, Trash2, FolderTree, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, FolderTree, ExternalLink, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import ArticleClusterModal from "@/components/admin/ArticleClusterModal";
 
 interface TopicCluster {
   id: string;
@@ -50,6 +51,11 @@ const TopicClustersAdmin = () => {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCluster, setEditingCluster] = useState<TopicCluster | null>(null);
+  const [articleModalOpen, setArticleModalOpen] = useState(false);
+  const [selectedClusterForArticles, setSelectedClusterForArticles] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -421,6 +427,17 @@ const TopicClustersAdmin = () => {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => {
+                            setSelectedClusterForArticles({ id: cluster.id, name: cluster.name });
+                            setArticleModalOpen(true);
+                          }}
+                          title="Gerenciar artigos"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(cluster)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -455,6 +472,16 @@ const TopicClustersAdmin = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Article Cluster Modal */}
+      {selectedClusterForArticles && (
+        <ArticleClusterModal
+          clusterId={selectedClusterForArticles.id}
+          clusterName={selectedClusterForArticles.name}
+          open={articleModalOpen}
+          onOpenChange={setArticleModalOpen}
+        />
+      )}
     </div>
   );
 };
