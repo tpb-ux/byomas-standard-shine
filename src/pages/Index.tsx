@@ -10,21 +10,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Leaf, TrendingUp, Globe, Zap } from "lucide-react";
+import { ChevronRight, Leaf, TrendingUp, Globe, Zap } from "lucide-react";
 
 const Index = () => {
   const { data: articles, isLoading } = useBlogArticles();
   const latestArticles = articles?.slice(0, 6) || [];
 
   const categories = [
-    { name: "Crédito de Carbono", icon: Leaf, slug: "credito-carbono", color: "bg-emerald-500/10 text-emerald-600" },
-    { name: "Green Tokens", icon: Zap, slug: "green-tokens", color: "bg-blue-500/10 text-blue-600" },
-    { name: "Mercado ReFi", icon: TrendingUp, slug: "refi", color: "bg-purple-500/10 text-purple-600" },
-    { name: "Sustentabilidade", icon: Globe, slug: "sustentabilidade", color: "bg-teal-500/10 text-teal-600" },
+    { name: "Crédito de Carbono", icon: Leaf, slug: "credito-carbono" },
+    { name: "Green Tokens", icon: Zap, slug: "green-tokens" },
+    { name: "Mercado ReFi", icon: TrendingUp, slug: "refi" },
+    { name: "Sustentabilidade", icon: Globe, slug: "sustentabilidade" },
+  ];
+
+  const metrics = [
+    { value: "4+", label: "anos", description: "De análise do mercado de carbono" },
+    { value: "500+", label: "artigos", description: "Publicados sobre economia verde" },
+    { value: "50K+", label: "leitores", description: "Mensais engajados" },
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       {/* SEO */}
       <SEOHead
         title="Byoma Research - Insights de Finanças Sustentáveis e Mercado Verde"
@@ -36,6 +42,31 @@ const Index = () => {
 
       <Navbar />
       <Hero />
+
+      {/* Metrics Section - Estilo Kinexys */}
+      <ScrollReveal>
+        <section className="py-16 md:py-20 bg-card border-y border-border">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+              {metrics.map((metric, index) => (
+                <div key={index} className="text-center md:text-left">
+                  <div className="flex items-baseline justify-center md:justify-start gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-bold text-primary">
+                      {metric.value}
+                    </span>
+                    <span className="text-lg text-muted-foreground">
+                      {metric.label}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {metric.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </ScrollReveal>
       
       {/* Latest Articles Section */}
       <ScrollReveal>
@@ -43,6 +74,9 @@ const Index = () => {
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between mb-12">
               <div>
+                <span className="text-xs font-medium uppercase tracking-widest text-primary mb-2 block">
+                  INSIGHTS
+                </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                   Últimos Artigos
                 </h2>
@@ -51,8 +85,11 @@ const Index = () => {
                 </p>
               </div>
               <Link to="/blog">
-                <Button variant="outline" className="hidden md:flex items-center gap-2">
-                  Ver todos <ArrowRight className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  className="hidden md:flex items-center gap-2 border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                >
+                  Ver todos <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -60,9 +97,10 @@ const Index = () => {
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[...Array(6)].map((_, i) => (
-                  <Card key={i}>
-                    <Skeleton className="h-48 w-full rounded-t-lg" />
+                  <Card key={i} className="border border-border">
+                    <Skeleton className="h-48 w-full" />
                     <CardContent className="p-6">
+                      <Skeleton className="h-3 w-16 mb-3" />
                       <Skeleton className="h-4 w-24 mb-3" />
                       <Skeleton className="h-6 w-full mb-2" />
                       <Skeleton className="h-4 w-full" />
@@ -78,20 +116,25 @@ const Index = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="text-center py-12 border border-border">
                 <p className="text-muted-foreground mb-4">
                   Nenhum artigo publicado ainda.
                 </p>
                 <Link to="/blog">
-                  <Button>Explorar Blog</Button>
+                  <Button variant="outline" className="border-foreground text-foreground hover:bg-foreground hover:text-background">
+                    Explorar Blog
+                  </Button>
                 </Link>
               </div>
             )}
 
             <div className="mt-8 text-center md:hidden">
               <Link to="/blog">
-                <Button variant="outline" className="items-center gap-2">
-                  Ver todos os artigos <ArrowRight className="h-4 w-4" />
+                <Button 
+                  variant="outline" 
+                  className="items-center gap-2 border-border text-muted-foreground hover:text-foreground hover:border-foreground"
+                >
+                  Ver todos os artigos <ChevronRight className="h-4 w-4" />
                 </Button>
               </Link>
             </div>
@@ -101,11 +144,16 @@ const Index = () => {
 
       {/* Categories Section */}
       <ScrollReveal>
-        <section className="py-16 bg-muted/30">
+        <section className="py-16 bg-card border-y border-border">
           <div className="container mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8 text-center">
-              Explore por Categoria
-            </h2>
+            <div className="text-center mb-12">
+              <span className="text-xs font-medium uppercase tracking-widest text-primary mb-2 block">
+                CATEGORIAS
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                Explore por Tema
+              </h2>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {categories.map((category) => (
                 <Link
@@ -113,12 +161,18 @@ const Index = () => {
                   to={`/blog?category=${category.slug}`}
                   className="group"
                 >
-                  <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                  <Card className="h-full border border-border hover:border-primary/50 transition-all duration-300">
                     <CardContent className="p-6 flex flex-col items-center text-center">
-                      <div className={`p-4 rounded-full ${category.color} mb-4 transition-transform group-hover:scale-110`}>
-                        <category.icon className="h-6 w-6" />
+                      <div className="p-4 bg-primary/10 mb-4 transition-transform group-hover:scale-110">
+                        <category.icon className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="font-semibold text-foreground">{category.name}</h3>
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {category.name}
+                      </h3>
+                      <span className="flex items-center text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors mt-3">
+                        EXPLORAR
+                        <ChevronRight className="ml-1 h-3 w-3" />
+                      </span>
                     </CardContent>
                   </Card>
                 </Link>
@@ -130,13 +184,16 @@ const Index = () => {
 
       {/* Newsletter Section */}
       <ScrollReveal>
-        <section className="py-16 md:py-24 bg-primary text-primary-foreground">
+        <section className="py-16 md:py-24 bg-background">
           <div className="container mx-auto px-6">
             <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <span className="text-xs font-medium uppercase tracking-widest text-primary mb-2 block">
+                NEWSLETTER
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 Fique por dentro do mercado verde
               </h2>
-              <p className="text-primary-foreground/80 mb-8">
+              <p className="text-muted-foreground mb-8">
                 Receba análises exclusivas, tendências do mercado de carbono e 
                 insights sobre finanças regenerativas diretamente no seu email.
               </p>
@@ -144,9 +201,9 @@ const Index = () => {
                 <Input
                   type="email"
                   placeholder="Seu melhor email"
-                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                  className="bg-card border-border text-foreground placeholder:text-muted-foreground"
                 />
-                <Button variant="secondary" className="whitespace-nowrap">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap">
                   Inscrever-se
                 </Button>
               </form>

@@ -1,4 +1,4 @@
-import { Calendar, Clock, User } from "lucide-react";
+import { Calendar, Clock, User, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +24,7 @@ const BlogCard = ({ article }: BlogCardProps) => {
   return (
     <article>
       <Card 
-        className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group h-full"
+        className="overflow-hidden bg-card border border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group h-full"
         onClick={() => navigate(`/blog/${article.slug}`)}
       >
         <div className="aspect-video overflow-hidden bg-muted">
@@ -32,7 +32,7 @@ const BlogCard = ({ article }: BlogCardProps) => {
             <img
               src={article.featured_image}
               alt={article.featured_image_alt || article.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               width={400}
               height={225}
@@ -44,23 +44,31 @@ const BlogCard = ({ article }: BlogCardProps) => {
           )}
         </div>
         <CardContent className="p-6">
+          {/* Label BYOMA estilo Kinexys */}
+          <span className="text-xs font-medium tracking-widest text-primary mb-3 block">
+            BYOMA
+          </span>
+          
           {article.category?.name && (
-            <Badge className="mb-3" style={{ backgroundColor: article.category.color || undefined }}>
+            <Badge 
+              variant="outline" 
+              className="mb-3 border-border text-muted-foreground"
+            >
               {article.category.name}
             </Badge>
           )}
           
-          <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2">
+          <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-2">
             {article.title}
           </h3>
           
           {article.excerpt && (
-            <p className="text-muted-foreground mb-4 line-clamp-3">
+            <p className="text-muted-foreground mb-4 line-clamp-3 text-sm">
               {article.excerpt}
             </p>
           )}
           
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
             <div className="flex items-center gap-4">
               {article.author?.name && (
                 <div className="flex items-center gap-2">
@@ -73,12 +81,20 @@ const BlogCard = ({ article }: BlogCardProps) => {
                 <span>{readTime}</span>
               </div>
             </div>
+          </div>
+
+          {/* Link "SABER MAIS >" estilo Kinexys */}
+          <div className="flex items-center justify-between pt-4 border-t border-border">
             {formattedDate && (
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3" />
                 <time dateTime={article.published_at || undefined}>{formattedDate}</time>
               </div>
             )}
+            <span className="flex items-center text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+              SABER MAIS
+              <ChevronRight className="ml-1 h-3 w-3" />
+            </span>
           </div>
         </CardContent>
       </Card>
