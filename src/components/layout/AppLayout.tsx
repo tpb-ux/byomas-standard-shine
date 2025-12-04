@@ -31,6 +31,7 @@ const routeNames: Record<string, string> = {
   "/admin/performance": "Performance",
   "/admin/sources": "Fontes",
   "/admin/settings": "Configurações",
+  "/admin/site-settings": "Config. do Site",
 };
 
 export function AppLayout({ children }: AppLayoutProps) {

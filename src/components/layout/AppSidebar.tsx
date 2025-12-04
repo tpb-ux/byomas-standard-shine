@@ -71,6 +71,7 @@ const adminNavItems = [
   { title: "Fontes", url: "/admin/sources", icon: Search },
   { title: "Newsletter", url: "/admin/subscribers", icon: Users },
   { title: "Mensagens", url: "/admin/messages", icon: MessageSquare },
+  { title: "Config. do Site", url: "/admin/site-settings", icon: Settings },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
 

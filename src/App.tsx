@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SEOVerification } from "@/components/SEOVerification";
 import { initWebVitals } from "@/lib/webVitals";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const AdminSources = lazy(() => import("./pages/admin/Sources"));
 const AdminSEOAnalytics = lazy(() => import("./pages/admin/SEOAnalytics"));
 const AdminPerformance = lazy(() => import("./pages/admin/Performance"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
+const AdminSiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
 const AdminSubscribers = lazy(() => import("./pages/admin/Subscribers"));
 const AdminMessages = lazy(() => import("./pages/admin/Messages"));
 const AdminTopicClusters = lazy(() => import("./pages/admin/TopicClustersAdmin"));
@@ -65,6 +67,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <SEOVerification />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public routes */}
@@ -163,6 +166,11 @@ const App = () => {
                 <Route path="/admin/settings" element={
                   <ProtectedRoute requiredRole="admin">
                     <AppLayout><AdminSettings /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/site-settings" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminSiteSettings /></AppLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/subscribers" element={
