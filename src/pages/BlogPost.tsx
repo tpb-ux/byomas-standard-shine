@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import BlogSidebar from "@/components/BlogSidebar";
 import RelatedPages from "@/components/RelatedPages";
+import InArticleLinks from "@/components/InArticleLinks";
 import { SEOHead, ArticleSchema } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -213,6 +214,12 @@ const BlogPost = () => {
                 />
               </ScrollReveal>
 
+              {/* In-Article Internal Links - SEO */}
+              <InArticleLinks 
+                articleId={article.id} 
+                className="my-8 border-l-4 border-primary" 
+              />
+
               {/* Author Bio */}
               {article.author && (
                 <ScrollReveal delay={0.2}>
@@ -259,7 +266,7 @@ const BlogPost = () => {
                       {article.tags.map((tag) => (
                         <Link
                           key={tag.id}
-                          to={`/blog?tag=${encodeURIComponent(tag.name)}`}
+                          to={`/tag/${tag.slug || encodeURIComponent(tag.name.toLowerCase().replace(/\s+/g, '-'))}`}
                         >
                           <Badge
                             variant="secondary"

@@ -13,6 +13,10 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Tag from "./pages/Tag";
+import Tags from "./pages/Tags";
+import Topic from "./pages/Topic";
+import PillarPage from "./pages/PillarPage";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -51,6 +55,12 @@ const App = () => {
               <Route path="/contato" element={<Contact />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
+              
+              {/* SEO Routes - Tags, Topics, Pillar Pages */}
+              <Route path="/tag/:slug" element={<Tag />} />
+              <Route path="/tags" element={<Tags />} />
+              <Route path="/topico/:slug" element={<Topic />} />
+              <Route path="/guia/:slug" element={<PillarPage />} />
               
               {/* Auth routes */}
               <Route path="/auth" element={<Auth />} />

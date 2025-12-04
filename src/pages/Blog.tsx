@@ -6,6 +6,7 @@ import { SEOHead } from "@/components/SEOHead";
 import BlogCard from "@/components/BlogCard";
 import BlogSearch from "@/components/BlogSearch";
 import BlogSort, { SortOption } from "@/components/BlogSort";
+import TopicClusters from "@/components/TopicClusters";
 import ScrollReveal from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -196,6 +197,9 @@ const Blog = () => {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* Topic Clusters - SEO Navigation */}
+      <TopicClusters />
 
       {/* Blog Grid */}
       <section className="py-16 flex-1">
