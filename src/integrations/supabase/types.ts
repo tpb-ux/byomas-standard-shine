@@ -422,6 +422,45 @@ export type Database = {
         }
         Relationships: []
       }
+      glossary_terms: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          definition: string
+          id: string
+          related_terms: string[] | null
+          short_definition: string | null
+          slug: string
+          source_url: string | null
+          term: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          definition: string
+          id?: string
+          related_terms?: string[] | null
+          short_definition?: string | null
+          slug: string
+          source_url?: string | null
+          term: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          definition?: string
+          id?: string
+          related_terms?: string[] | null
+          short_definition?: string | null
+          slug?: string
+          source_url?: string | null
+          term?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       internal_links: {
         Row: {
           anchor_text: string

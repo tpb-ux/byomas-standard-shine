@@ -159,10 +159,19 @@ const Footer = () => {
               </li>
               <li>
                 <Link 
-                  to="/projetos" 
+                  to="/glossario" 
                   className="group flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Projetos
+                  Glossário
+                  <ChevronRight className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/calculadora-carbono" 
+                  className="group flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Calculadora de Carbono
                   <ChevronRight className="ml-1 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Link>
               </li>

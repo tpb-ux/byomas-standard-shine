@@ -40,6 +40,9 @@ const AdminPillarPages = lazy(() => import("./pages/admin/PillarPagesAdmin"));
 const AdminGenerateArticle = lazy(() => import("./pages/admin/GenerateArticle"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Glossary = lazy(() => import("./pages/Glossary"));
+const GlossaryTerm = lazy(() => import("./pages/GlossaryTerm"));
+const CarbonCalculator = lazy(() => import("./pages/CarbonCalculator"));
 
 const queryClient = new QueryClient();
 
@@ -81,6 +84,11 @@ const App = () => {
                 {/* Legal Pages */}
                 <Route path="/privacidade" element={<PrivacyPolicy />} />
                 <Route path="/termos" element={<Terms />} />
+                
+                {/* Tools & Glossary */}
+                <Route path="/glossario" element={<Glossary />} />
+                <Route path="/glossario/:slug" element={<GlossaryTerm />} />
+                <Route path="/calculadora-carbono" element={<CarbonCalculator />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
