@@ -14,7 +14,7 @@ interface SEOHeadProps {
 }
 
 const SITE_NAME = "Byoma Research";
-const BASE_URL = "https://byomaresearch.com"; // Atualizar com domínio real
+const BASE_URL = "https://byomaresearch.com";
 
 export const SEOHead = ({
   title,
@@ -32,14 +32,12 @@ export const SEOHead = ({
   const fullUrl = url ? `${BASE_URL}${url}` : BASE_URL;
   const imageUrl = image || `${BASE_URL}/og-image.png`;
   
-  // Truncar description para 160 caracteres
   const truncatedDescription = description.length > 160 
     ? description.substring(0, 157) + "..." 
     : description;
 
   return (
     <Helmet>
-      {/* Meta tags básicas */}
       <title>{fullTitle}</title>
       <meta name="description" content={truncatedDescription} />
       {keywords && keywords.length > 0 && (
@@ -48,10 +46,8 @@ export const SEOHead = ({
       {author && <meta name="author" content={author} />}
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
       
-      {/* Canonical URL */}
       <link rel="canonical" href={fullUrl} />
       
-      {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={truncatedDescription} />
       <meta property="og:type" content={type} />
@@ -60,13 +56,11 @@ export const SEOHead = ({
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:locale" content="pt_BR" />
       
-      {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={truncatedDescription} />
       <meta name="twitter:image" content={imageUrl} />
       
-      {/* Artigo específico */}
       {type === "article" && publishedAt && (
         <meta property="article:published_time" content={publishedAt} />
       )}
@@ -172,6 +166,106 @@ export const BreadcrumbSchema = ({ items }: { items: BreadcrumbItem[] }) => {
       name: item.name,
       item: `${BASE_URL}${item.url}`,
     })),
+  };
+
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
+  );
+};
+
+// JSON-LD Schema para FAQ
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export const FAQSchema = ({ items }: { items: FAQItem[] }) => {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map(item => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  };
+
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
+  );
+};
+
+// JSON-LD Schema para HowTo
+interface HowToStep {
+  name: string;
+  text: string;
+  image?: string;
+}
+
+interface HowToSchemaProps {
+  title: string;
+  description: string;
+  steps: HowToStep[];
+  totalTime?: string;
+  image?: string;
+}
+
+export const HowToSchema = ({ 
+  title, 
+  description, 
+  steps,
+  totalTime,
+  image 
+}: HowToSchemaProps) => {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: title,
+    description: description,
+    ...(totalTime && { totalTime }),
+    ...(image && { image }),
+    step: steps.map((step, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: step.name,
+      text: step.text,
+      ...(step.image && { image: step.image }),
+    })),
+  };
+
+  return (
+    <Helmet>
+      <script type="application/ld+json">{JSON.stringify(schema)}</script>
+    </Helmet>
+  );
+};
+
+// JSON-LD Schema para DefinedTerm (Glossário)
+interface DefinedTermSchemaProps {
+  term: string;
+  definition: string;
+  url: string;
+}
+
+export const DefinedTermSchema = ({ term, definition, url }: DefinedTermSchemaProps) => {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "DefinedTerm",
+    name: term,
+    description: definition,
+    url: `${BASE_URL}${url}`,
+    inDefinedTermSet: {
+      "@type": "DefinedTermSet",
+      name: "Glossário do Mercado Verde",
+      url: `${BASE_URL}/glossario`,
+    },
   };
 
   return (
