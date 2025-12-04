@@ -3,6 +3,8 @@ import { ArrowLeft, Calendar, Clock, User, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
+import BlogSidebar from "@/components/BlogSidebar";
+import RelatedPages from "@/components/RelatedPages";
 import { SEOHead, ArticleSchema } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -188,128 +190,130 @@ const BlogPost = () => {
         </section>
       )}
 
-      {/* Content */}
+      {/* Content with Sidebar */}
       <section className="pb-16 flex-1">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <ScrollReveal>
-            <article
-              className="prose prose-lg max-w-none
-                prose-headings:text-foreground prose-headings:font-light prose-headings:tracking-kinexys
-                prose-h1:text-4xl prose-h1:mt-12 prose-h1:mb-6
-                prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4
-                prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-normal
-                prose-p:text-foreground/90 prose-p:my-6
-                prose-li:text-foreground/90
-                prose-strong:text-foreground
-                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                prose-blockquote:border-l-primary prose-blockquote:text-foreground/80
-                prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded"
-              dangerouslySetInnerHTML={{ __html: article.content }}
-            />
-          </ScrollReveal>
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
+            {/* Main Content */}
+            <div className="flex-1 max-w-4xl">
+              <ScrollReveal>
+                <article
+                  className="prose prose-lg max-w-none
+                    prose-headings:text-foreground prose-headings:font-light prose-headings:tracking-kinexys
+                    prose-h1:text-4xl prose-h1:mt-12 prose-h1:mb-6
+                    prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4
+                    prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-normal
+                    prose-p:text-foreground/90 prose-p:my-6
+                    prose-li:text-foreground/90
+                    prose-strong:text-foreground
+                    prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                    prose-blockquote:border-l-primary prose-blockquote:text-foreground/80
+                    prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded"
+                  dangerouslySetInnerHTML={{ __html: article.content }}
+                />
+              </ScrollReveal>
 
-          {/* Author Bio */}
-          {article.author && (
-            <ScrollReveal delay={0.2}>
-              <aside className="mt-12 p-6 bg-muted rounded-lg border-l-4 border-primary">
-                <div className="flex items-center gap-4">
-                  {article.author.avatar && (
-                    <img
-                      src={article.author.avatar}
-                      alt={article.author.name}
-                      className="w-16 h-16 rounded-full object-cover"
-                      loading="lazy"
-                      width={64}
-                      height={64}
-                    />
-                  )}
-                  <div>
-                    <p className="font-semibold text-foreground mb-1">
-                      {article.author.name}
-                    </p>
-                    {article.author.role && (
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {article.author.role}
-                      </p>
-                    )}
-                    {article.author.bio && (
-                      <p className="text-sm text-muted-foreground">
-                        {article.author.bio}
-                      </p>
-                    )}
+              {/* Author Bio */}
+              {article.author && (
+                <ScrollReveal delay={0.2}>
+                  <aside className="mt-12 p-6 bg-muted rounded-lg border-l-4 border-primary">
+                    <div className="flex items-center gap-4">
+                      {article.author.avatar && (
+                        <img
+                          src={article.author.avatar}
+                          alt={article.author.name}
+                          className="w-16 h-16 rounded-full object-cover"
+                          loading="lazy"
+                          width={64}
+                          height={64}
+                        />
+                      )}
+                      <div>
+                        <p className="font-semibold text-foreground mb-1">
+                          {article.author.name}
+                        </p>
+                        {article.author.role && (
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {article.author.role}
+                          </p>
+                        )}
+                        {article.author.bio && (
+                          <p className="text-sm text-muted-foreground">
+                            {article.author.bio}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </aside>
+                </ScrollReveal>
+              )}
+
+              {/* Tags Section */}
+              {article.tags.length > 0 && (
+                <ScrollReveal>
+                  <div className="mt-12 pt-8 border-t border-border">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">
+                      Tags do Artigo
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {article.tags.map((tag) => (
+                        <Link
+                          key={tag.id}
+                          to={`/blog?tag=${encodeURIComponent(tag.name)}`}
+                        >
+                          <Badge
+                            variant="secondary"
+                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                          >
+                            {tag.name}
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </aside>
-            </ScrollReveal>
-          )}
+                </ScrollReveal>
+              )}
 
-          {/* Tags Section */}
-          {article.tags.length > 0 && (
-            <ScrollReveal>
-              <div className="mt-12 pt-8 border-t border-border">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  Tags do Artigo
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag) => (
-                    <Link
-                      key={tag.id}
-                      to={`/blog?tag=${encodeURIComponent(tag.name)}`}
-                    >
-                      <Badge
-                        variant="secondary"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                      >
-                        {tag.name}
-                      </Badge>
-                    </Link>
-                  ))}
-                </div>
+              {/* Related Pages - Horizontal Style (inside content area) */}
+              {relatedArticles && relatedArticles.length > 0 && (
+                <ScrollReveal delay={0.3}>
+                  <div className="mt-12">
+                    <RelatedPages
+                      articles={relatedArticles}
+                      title="Páginas Relacionadas"
+                      variant="horizontal"
+                    />
+                  </div>
+                </ScrollReveal>
+              )}
+            </div>
+
+            {/* Sidebar - Sticky */}
+            <div className="lg:w-80 flex-shrink-0">
+              <div className="lg:sticky lg:top-24">
+                <BlogSidebar currentArticleId={article.id} />
               </div>
-            </ScrollReveal>
-          )}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Related Posts */}
+      {/* More Related Articles - Full Width Grid */}
       {relatedArticles && relatedArticles.length > 0 && (
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-6">
             <ScrollReveal>
               <h2 className="text-3xl font-light tracking-kinexys text-foreground mb-8 text-center">
-                Artigos Relacionados
+                Você Também Pode Gostar
               </h2>
             </ScrollReveal>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {relatedArticles.map((related, index) => (
-                <ScrollReveal key={related.id} delay={index * 0.1}>
-                  <article
-                    onClick={() => navigate(`/blog/${related.slug}`)}
-                    className="cursor-pointer group"
-                  >
-                    <div className="aspect-video overflow-hidden bg-muted mb-4 rounded-lg">
-                      <img
-                        src={related.featured_image || "/placeholder.svg"}
-                        alt={related.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        loading="lazy"
-                        width={400}
-                        height={225}
-                      />
-                    </div>
-                    {related.category && (
-                      <Badge className="mb-2">{related.category.name}</Badge>
-                    )}
-                    <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                      {related.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      {related.reading_time || 5} min de leitura
-                    </p>
-                  </article>
-                </ScrollReveal>
-              ))}
+            <div className="max-w-6xl mx-auto">
+              <RelatedPages
+                articles={relatedArticles}
+                title=""
+                variant="vertical"
+              />
             </div>
           </div>
         </section>
