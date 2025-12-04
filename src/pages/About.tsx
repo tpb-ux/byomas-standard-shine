@@ -2,10 +2,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Breadcrumb from "@/components/Breadcrumb";
 import { SEOHead } from "@/components/SEOHead";
-import Timeline from "@/components/Timeline";
 import ValueCard from "@/components/ValueCard";
 import ScrollReveal from "@/components/ScrollReveal";
-import { Target, Eye, Heart, Lightbulb, TrendingUp, Leaf } from "lucide-react";
+import { Target, Eye, Heart, Lightbulb, TrendingUp, Leaf, ChevronRight } from "lucide-react";
 
 const About = () => {
   const breadcrumbItems = [{ label: "Sobre" }];
@@ -22,30 +21,38 @@ const About = () => {
 
       <Navbar />
       
-      <section className="pt-32 pb-20 bg-gradient-hero text-primary-foreground">
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 bg-gradient-hero">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            {/* Breadcrumb */}
-            <Breadcrumb items={breadcrumbItems} className="mb-6 text-primary-foreground/70" />
+            <Breadcrumb items={breadcrumbItems} className="mb-6 text-muted-foreground" />
             
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">SOBRE O BYOMA RESEARCH</h1>
-            <p className="text-xl max-w-3xl text-primary-foreground/90">
-              Sua fonte de inteligência e insights sobre o mercado de finanças sustentáveis, tokenização verde e economia regenerativa
-            </p>
+            <div className="max-w-4xl">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
+                BYOMA RESEARCH
+              </span>
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
+                Sobre <span className="text-primary">Nós</span>
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl">
+                Sua fonte de inteligência e insights sobre o mercado de finanças sustentáveis, tokenização verde e economia regenerativa
+              </p>
+            </div>
           </ScrollReveal>
         </div>
       </section>
 
+      {/* Nossa História */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <ScrollReveal>
             <div className="max-w-4xl mx-auto">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
                 NOSSA HISTÓRIA
-              </h2>
-              <h3 className="text-3xl font-bold text-foreground mb-6">
+              </span>
+              <h2 className="text-3xl font-bold text-foreground mb-6">
                 Democratizando o Conhecimento em Finanças Verdes
-              </h3>
+              </h2>
               <p className="text-lg text-muted-foreground mb-4">
                 O Byoma Research nasceu da necessidade de criar uma fonte confiável e acessível de 
                 informações sobre o mercado de finanças sustentáveis. Em um cenário onde a economia 
@@ -63,61 +70,94 @@ const About = () => {
         </div>
       </section>
 
+      {/* Áreas de Cobertura */}
       <section className="py-20 bg-muted">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-center text-muted-foreground mb-4">
-              O QUE COBRIMOS
-            </h2>
-            <h3 className="text-3xl font-bold text-center text-foreground mb-16">
-              Áreas de Cobertura
-            </h3>
+            <div className="text-center mb-16">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
+                O QUE COBRIMOS
+              </span>
+              <h2 className="text-3xl font-bold text-foreground">
+                Áreas de Cobertura
+              </h2>
+            </div>
           </ScrollReveal>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ScrollReveal delay={0.1}>
-              <div className="bg-card border border-border p-6 h-full">
-                <Leaf className="h-10 w-10 text-primary mb-4" />
-                <h4 className="text-xl font-semibold text-foreground mb-2">Créditos de Carbono</h4>
-                <p className="text-muted-foreground">
+              <div className="bg-card border border-border p-8 h-full hover:border-primary/50 transition-all group">
+                <span className="text-xs font-medium tracking-widest text-primary mb-4 block">BYOMA</span>
+                <div className="inline-flex bg-primary/10 p-4 mb-6">
+                  <Leaf className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
+                  Créditos de Carbono
+                </h3>
+                <p className="text-muted-foreground text-sm mb-4">
                   Análises do mercado voluntário e regulado, metodologias de certificação, 
                   preços e tendências globais.
                 </p>
+                <span className="flex items-center text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                  SABER MAIS
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </span>
               </div>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <div className="bg-card border border-border p-6 h-full">
-                <TrendingUp className="h-10 w-10 text-primary mb-4" />
-                <h4 className="text-xl font-semibold text-foreground mb-2">Tokenização Verde</h4>
-                <p className="text-muted-foreground">
+              <div className="bg-card border border-border p-8 h-full hover:border-primary/50 transition-all group">
+                <span className="text-xs font-medium tracking-widest text-primary mb-4 block">BYOMA</span>
+                <div className="inline-flex bg-primary/10 p-4 mb-6">
+                  <TrendingUp className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
+                  Tokenização Verde
+                </h3>
+                <p className="text-muted-foreground text-sm mb-4">
                   Green tokens, ativos digitais sustentáveis, blockchain para rastreabilidade 
                   ambiental e novos modelos de financiamento.
                 </p>
+                <span className="flex items-center text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                  SABER MAIS
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </span>
               </div>
             </ScrollReveal>
             <ScrollReveal delay={0.3}>
-              <div className="bg-card border border-border p-6 h-full">
-                <Heart className="h-10 w-10 text-primary mb-4" />
-                <h4 className="text-xl font-semibold text-foreground mb-2">Finanças Regenerativas</h4>
-                <p className="text-muted-foreground">
+              <div className="bg-card border border-border p-8 h-full hover:border-primary/50 transition-all group">
+                <span className="text-xs font-medium tracking-widest text-primary mb-4 block">BYOMA</span>
+                <div className="inline-flex bg-primary/10 p-4 mb-6">
+                  <Heart className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-3 group-hover:text-primary transition-colors">
+                  Finanças Regenerativas
+                </h3>
+                <p className="text-muted-foreground text-sm mb-4">
                   ReFi, DeFi verde, protocolos de impacto positivo e a interseção entre 
                   tecnologia e sustentabilidade.
                 </p>
+                <span className="flex items-center text-xs font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                  SABER MAIS
+                  <ChevronRight className="ml-1 h-3 w-3" />
+                </span>
               </div>
             </ScrollReveal>
           </div>
         </div>
       </section>
 
+      {/* Valores */}
       <section className="py-20">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-center text-muted-foreground mb-4">
-              NOSSOS VALORES
-            </h2>
-            <h3 className="text-3xl font-bold text-center text-foreground mb-16">
-              Missão, Visão e Valores
-            </h3>
+            <div className="text-center mb-16">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
+                NOSSOS VALORES
+              </span>
+              <h2 className="text-3xl font-bold text-foreground">
+                Missão, Visão e Valores
+              </h2>
+            </div>
           </ScrollReveal>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">

@@ -111,18 +111,20 @@ const Blog = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
+      <section className="pt-32 pb-16 bg-gradient-hero">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            {/* Breadcrumb */}
-            <Breadcrumb items={breadcrumbItems} className="mb-6 justify-center" />
+            <Breadcrumb items={breadcrumbItems} className="mb-6 justify-center text-muted-foreground" />
             
             <div className="max-w-3xl mx-auto text-center">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
+                BYOMA RESEARCH
+              </span>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                Byoma Research
+                Insights e <span className="text-primary">Análises</span>
               </h1>
               <p className="text-xl text-muted-foreground">
-                Insights sobre sustentabilidade, mercado de carbono, tokenização e finanças regenerativas
+                Sustentabilidade, mercado de carbono, tokenização e finanças regenerativas
               </p>
             </div>
           </ScrollReveal>
@@ -130,7 +132,7 @@ const Blog = () => {
       </section>
 
       {/* Search and Filters */}
-      <section className="py-8 bg-muted/30">
+      <section className="py-8 bg-card border-y border-border">
         <div className="container mx-auto px-6 space-y-6">
           <ScrollReveal>
             {/* Search Bar */}
@@ -146,6 +148,7 @@ const Blog = () => {
                     key={category}
                     variant={selectedCategory === category ? "default" : "outline"}
                     onClick={() => setSelectedCategory(category)}
+                    className={selectedCategory !== category ? "border-border text-muted-foreground hover:text-foreground hover:border-primary/50" : ""}
                   >
                     {category}
                   </Button>
@@ -172,13 +175,14 @@ const Blog = () => {
 
             {/* Active Filters Summary */}
             {(searchQuery || selectedTags.length > 0 || selectedCategory !== "Todas") && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
                 <span>
                   {filteredArticles.length} artigo{filteredArticles.length !== 1 ? "s" : ""} encontrado{filteredArticles.length !== 1 ? "s" : ""}
                 </span>
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="text-muted-foreground hover:text-primary"
                   onClick={() => {
                     setSearchQuery("");
                     setSelectedTags([]);
@@ -214,7 +218,7 @@ const Blog = () => {
                 <p className="text-lg text-destructive mb-4">
                   Erro ao carregar artigos. Tente novamente.
                 </p>
-                <Button onClick={() => window.location.reload()}>
+                <Button variant="outline" onClick={() => window.location.reload()}>
                   Recarregar
                 </Button>
               </div>
@@ -233,6 +237,7 @@ const Blog = () => {
                 </p>
                 {articles && articles.length > 0 && (
                   <Button
+                    variant="outline"
                     onClick={() => {
                       setSearchQuery("");
                       setSelectedTags([]);

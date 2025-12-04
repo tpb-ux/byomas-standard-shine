@@ -130,7 +130,12 @@ const ContactForm = () => {
           )}
         />
 
-        <Button type="submit" size="lg" className="w-full md:w-auto">
+        <Button 
+          type="submit" 
+          size="lg" 
+          variant="outline"
+          className="w-full md:w-auto border-foreground text-foreground hover:bg-foreground hover:text-background"
+        >
           Enviar Mensagem
         </Button>
       </form>

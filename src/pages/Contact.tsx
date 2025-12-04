@@ -21,58 +21,76 @@ const Contact = () => {
 
       <Navbar />
       
-      <section className="pt-32 pb-20 bg-gradient-hero text-primary-foreground">
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 bg-gradient-hero">
         <div className="container mx-auto px-6">
           <ScrollReveal>
-            {/* Breadcrumb */}
-            <Breadcrumb items={breadcrumbItems} className="mb-6 text-primary-foreground/70" />
+            <Breadcrumb items={breadcrumbItems} className="mb-6 text-muted-foreground" />
             
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">ENTRE EM CONTATO</h1>
-            <p className="text-xl max-w-3xl text-primary-foreground/90">
-              Quer contribuir, sugerir pautas ou saber mais sobre o Byoma Research? Fale conosco
-            </p>
+            <div className="max-w-4xl">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
+                BYOMA RESEARCH
+              </span>
+              <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
+                Entre em <span className="text-primary">Contato</span>
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-3xl">
+                Quer contribuir, sugerir pautas ou saber mais sobre o Byoma Research? Fale conosco
+              </p>
+            </div>
           </ScrollReveal>
         </div>
       </section>
 
+      {/* Contact Info Cards */}
       <section className="py-20">
         <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-3 gap-12 mb-16">
+          <div className="grid lg:grid-cols-3 gap-8 mb-16">
             <ScrollReveal delay={0.1}>
-              <div className="text-center p-6">
-                <div className="inline-flex bg-primary/10 p-4 mb-4">
+              <div className="bg-card border border-border p-8 text-center hover:border-primary/50 transition-all group">
+                <div className="inline-flex bg-primary/10 p-4 mb-6">
                   <Mail className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Email</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  Email
+                </h3>
                 <p className="text-muted-foreground">contato@byomaresearch.com</p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={0.2}>
-              <div className="text-center p-6">
-                <div className="inline-flex bg-primary/10 p-4 mb-4">
+              <div className="bg-card border border-border p-8 text-center hover:border-primary/50 transition-all group">
+                <div className="inline-flex bg-primary/10 p-4 mb-6">
                   <MessageSquare className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Sugestões de Pauta</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  Sugestões de Pauta
+                </h3>
                 <p className="text-muted-foreground">Envie suas ideias de temas para cobertura</p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={0.3}>
-              <div className="text-center p-6">
-                <div className="inline-flex bg-primary/10 p-4 mb-4">
+              <div className="bg-card border border-border p-8 text-center hover:border-primary/50 transition-all group">
+                <div className="inline-flex bg-primary/10 p-4 mb-6">
                   <Linkedin className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">LinkedIn</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  LinkedIn
+                </h3>
                 <p className="text-muted-foreground">Siga-nos para atualizações diárias</p>
               </div>
             </ScrollReveal>
           </div>
 
+          {/* Contact Form */}
           <ScrollReveal delay={0.4}>
-            <div className="max-w-3xl mx-auto bg-card border border-border p-8 shadow-card">
+            <div className="max-w-3xl mx-auto bg-card border border-border p-8">
+              <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
+                FORMULÁRIO
+              </span>
               <h2 className="text-3xl font-bold text-foreground mb-2">Envie sua Mensagem</h2>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-muted-foreground mb-8">
                 Interessado em parcerias, contribuições ou tem alguma dúvida? Preencha o formulário abaixo.
               </p>
               <ContactForm />
