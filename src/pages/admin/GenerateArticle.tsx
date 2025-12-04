@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -158,6 +159,9 @@ export default function GenerateArticle() {
   const [seoAnalysis, setSeoAnalysis] = useState<SEOAnalysis | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState<GeneratedContent | null>(null);
+  const [autoGenerateImage, setAutoGenerateImage] = useState(true);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
   // Image upload state
   const [featuredImage, setFeaturedImage] = useState<File | null>(null);
@@ -253,6 +257,26 @@ export default function GenerateArticle() {
     }
   };
 
+  const generateImageMutation = useMutation({
+    mutationFn: async (articleKeyword: string) => {
+      const { data, error } = await supabase.functions.invoke("generate-image", {
+        body: { keyword: articleKeyword },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      return data as { url: string; alt: string };
+    },
+    onSuccess: (data) => {
+      setGeneratedImageUrl(data.url);
+      setFeaturedImagePreview(data.url);
+      toast.success("Imagem gerada com sucesso!");
+    },
+    onError: (error: Error) => {
+      console.error("Image generation error:", error);
+      toast.error(error.message || "Erro ao gerar imagem");
+    },
+  });
+
   const generateMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("generate-article", {
@@ -266,12 +290,17 @@ export default function GenerateArticle() {
       if (data.error) throw new Error(data.error);
       return data as GeneratedContent;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setGeneratedContent(data);
       setEditedContent(data);
       const analysis = analyzeSEO(data);
       setSeoAnalysis(analysis);
       toast.success("Artigo gerado com sucesso!");
+
+      // Auto-generate image if enabled
+      if (autoGenerateImage && !featuredImage) {
+        generateImageMutation.mutate(keyword);
+      }
     },
     onError: (error: Error) => {
       console.error("Generation error:", error);
@@ -284,7 +313,7 @@ export default function GenerateArticle() {
       const content = editedContent || generatedContent;
       if (!content) throw new Error("Nenhum conteúdo para salvar");
 
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = generatedImageUrl;
       if (featuredImage) {
         imageUrl = await handleImageUpload(featuredImage);
       }
@@ -301,7 +330,7 @@ export default function GenerateArticle() {
           main_keyword: content.main_keyword,
           reading_time: content.reading_time,
           featured_image: imageUrl,
-          featured_image_alt: content.featured_image_alt,
+          featured_image_alt: content.featured_image_alt || `Imagem sobre ${keyword}`,
           status: "draft",
           ai_generated: true,
           category_id: categoryId || null,
@@ -326,9 +355,14 @@ export default function GenerateArticle() {
       const content = editedContent || generatedContent;
       if (!content) throw new Error("Nenhum conteúdo para publicar");
 
-      let imageUrl: string | null = null;
+      let imageUrl: string | null = generatedImageUrl;
       if (featuredImage) {
         imageUrl = await handleImageUpload(featuredImage);
+      }
+
+      // Validate: must have image to publish
+      if (!imageUrl) {
+        throw new Error("Artigos publicados precisam de uma imagem destacada");
       }
 
       const { data, error } = await supabase
@@ -343,7 +377,7 @@ export default function GenerateArticle() {
           main_keyword: content.main_keyword,
           reading_time: content.reading_time,
           featured_image: imageUrl,
-          featured_image_alt: content.featured_image_alt,
+          featured_image_alt: content.featured_image_alt || `Imagem sobre ${keyword}`,
           status: "published",
           published_at: new Date().toISOString(),
           ai_generated: true,
@@ -373,6 +407,7 @@ export default function GenerateArticle() {
     setIsEditing(false);
     setFeaturedImage(null);
     setFeaturedImagePreview(null);
+    setGeneratedImageUrl(null);
   };
 
   const handleGenerate = () => {
@@ -444,84 +479,103 @@ export default function GenerateArticle() {
             </div>
           </div>
 
-          {/* Featured Image Upload */}
-          <div className="space-y-2">
-            <Label>Imagem Destacada</Label>
-            <div
-              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
-                isDragging 
-                  ? 'border-primary bg-primary/5' 
-                  : 'border-border hover:border-primary/50'
-              }`}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileSelect(file);
-                }}
-              />
-              
-              {featuredImagePreview ? (
-                <div className="relative inline-block">
-                  <img
-                    src={featuredImagePreview}
-                    alt="Preview"
-                    className="max-h-48 rounded-lg mx-auto"
-                  />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage();
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex justify-center">
-                    {uploadingImage ? (
-                      <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
-                    ) : (
-                      <Upload className="h-10 w-10 text-muted-foreground" />
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Arraste uma imagem ou clique para selecionar
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    JPG, PNG, WebP ou GIF (máx. 5MB)
-                  </p>
-                </div>
-              )}
+          {/* Auto Generate Image Toggle */}
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/30">
+            <div className="space-y-0.5">
+              <Label htmlFor="auto-image" className="text-sm font-medium">
+                Gerar imagem automaticamente com IA
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Uma imagem será gerada automaticamente após o artigo
+              </p>
             </div>
+            <Switch
+              id="auto-image"
+              checked={autoGenerateImage}
+              onCheckedChange={setAutoGenerateImage}
+            />
           </div>
+
+          {/* Featured Image Upload - only show if auto-generate is off */}
+          {!autoGenerateImage && (
+            <div className="space-y-2">
+              <Label>Imagem Destacada (Manual)</Label>
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                  isDragging 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary/50'
+                }`}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileSelect(file);
+                  }}
+                />
+                
+                {featuredImagePreview ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={featuredImagePreview}
+                      alt="Preview"
+                      className="max-h-48 rounded-lg mx-auto"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage();
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-center">
+                      {uploadingImage ? (
+                        <Loader2 className="h-10 w-10 text-muted-foreground animate-spin" />
+                      ) : (
+                        <Upload className="h-10 w-10 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Arraste uma imagem ou clique para selecionar
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      JPG, PNG, WebP ou GIF (máx. 5MB)
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <Button 
             onClick={handleGenerate} 
-            disabled={generateMutation.isPending || !keyword.trim()}
+            disabled={generateMutation.isPending || generateImageMutation.isPending || !keyword.trim()}
             className="w-full md:w-auto"
           >
-            {generateMutation.isPending ? (
+            {generateMutation.isPending || generateImageMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando artigo...
+                {generateImageMutation.isPending ? "Gerando imagem..." : "Gerando artigo..."}
               </>
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Gerar com IA
+                Gerar com IA {autoGenerateImage && "+ Imagem"}
               </>
             )}
           </Button>
@@ -615,13 +669,23 @@ export default function GenerateArticle() {
                 ) : (
                   <div className="space-y-4">
                     {/* Image Preview */}
-                    {featuredImagePreview && (
+                    {(featuredImagePreview || generatedImageUrl) && (
                       <div className="aspect-video overflow-hidden rounded-lg bg-muted">
                         <img
-                          src={featuredImagePreview}
+                          src={featuredImagePreview || generatedImageUrl || ""}
                           alt="Preview"
                           className="w-full h-full object-cover"
                         />
+                      </div>
+                    )}
+                    
+                    {/* Loading state for image generation */}
+                    {generateImageMutation.isPending && (
+                      <div className="aspect-video flex items-center justify-center rounded-lg bg-muted">
+                        <div className="text-center">
+                          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
+                          <p className="text-sm text-muted-foreground">Gerando imagem com IA...</p>
+                        </div>
                       </div>
                     )}
                     
@@ -639,10 +703,10 @@ export default function GenerateArticle() {
                         <Clock className="mr-1 h-3 w-3" />
                         {generatedContent.reading_time} min
                       </Badge>
-                      {featuredImage && (
+                      {(featuredImage || generatedImageUrl) && (
                         <Badge variant="outline" className="text-green-600">
                           <ImageIcon className="mr-1 h-3 w-3" />
-                          Imagem anexada
+                          {generatedImageUrl ? "Imagem gerada com IA" : "Imagem anexada"}
                         </Badge>
                       )}
                     </div>

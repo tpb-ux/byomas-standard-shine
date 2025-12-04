@@ -12,6 +12,8 @@ import {
   Users,
   MessageSquare,
   Bell,
+  ImageOff,
+  Wand2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +31,7 @@ interface Stats {
   curatedNews: number;
   activeSubscribers: number;
   unreadMessages: number;
+  articlesWithoutImages: number;
 }
 
 interface RecentArticle {
@@ -45,6 +48,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentArticles, setRecentArticles] = useState<RecentArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFixingImages, setIsFixingImages] = useState(false);
   const [newNotifications, setNewNotifications] = useState<{subscribers: number; messages: number}>({
     subscribers: 0,
     messages: 0
@@ -152,6 +156,13 @@ export default function AdminDashboard() {
           .select("*", { count: "exact", head: true })
           .is("read_at", null);
 
+        // Fetch articles without images count
+        const { count: noImageCount } = await supabase
+          .from("articles")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "published")
+          .or("featured_image.is.null,featured_image.eq.");
+
         setStats({
           totalArticles,
           publishedArticles,
@@ -161,6 +172,7 @@ export default function AdminDashboard() {
           curatedNews: curatedCount || 0,
           activeSubscribers: subscribersCount || 0,
           unreadMessages: messagesCount || 0,
+          articlesWithoutImages: noImageCount || 0,
         });
 
         // Fetch recent articles
@@ -180,6 +192,40 @@ export default function AdminDashboard() {
 
     fetchStats();
   }, [user]);
+
+  const handleFixMissingImages = async () => {
+    setIsFixingImages(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fix-missing-images", {
+        body: { limit: 10 },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(`${data.fixed} imagens geradas com sucesso!`, {
+          description: data.failed?.length > 0 
+            ? `${data.failed.length} falharam` 
+            : undefined,
+        });
+        
+        // Update stats
+        if (stats) {
+          setStats({
+            ...stats,
+            articlesWithoutImages: Math.max(0, stats.articlesWithoutImages - data.fixed),
+          });
+        }
+      } else {
+        throw new Error(data?.error || "Erro desconhecido");
+      }
+    } catch (error: any) {
+      console.error("Error fixing images:", error);
+      toast.error(error.message || "Erro ao gerar imagens");
+    } finally {
+      setIsFixingImages(false);
+    }
+  };
 
   if (authLoading || isLoading) {
     return (
@@ -327,6 +373,41 @@ export default function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Alert for articles without images */}
+      {stats?.articlesWithoutImages && stats.articlesWithoutImages > 0 && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-destructive font-normal">
+              <ImageOff className="h-5 w-5" />
+              Artigos sem Imagem Destacada
+            </CardTitle>
+            <CardDescription>
+              {stats.articlesWithoutImages} {stats.articlesWithoutImages === 1 ? 'artigo publicado está' : 'artigos publicados estão'} sem imagem
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleFixMissingImages}
+              disabled={isFixingImages}
+              variant="outline"
+              className="w-full border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              {isFixingImages ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Gerando imagens com IA...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Gerar Imagens Faltantes com IA
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Articles & Quick Actions */}
       <div className="grid gap-6 lg:grid-cols-2">

@@ -13,6 +13,8 @@ import {
   Link2,
   Image as ImageIcon,
   RefreshCw,
+  AlertTriangle,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -94,6 +97,7 @@ export default function ArticleEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
   const [regeneratingSection, setRegeneratingSection] = useState<RegeneratingSection>('none');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -234,6 +238,14 @@ export default function ArticleEditor() {
   };
 
   const onSubmit = async (data: ArticleFormData) => {
+    // Validate: published articles MUST have featured image
+    if (data.status === "published" && !data.featured_image) {
+      toast.error("Artigos publicados precisam de uma imagem destacada", {
+        description: "Adicione uma imagem ou clique em 'Gerar Imagem com IA' na aba Mídia",
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -279,6 +291,39 @@ export default function ArticleEditor() {
       }
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const generateImageWithAI = async () => {
+    const title = form.getValues("title");
+    const keyword = form.getValues("main_keyword");
+
+    if (!title && !keyword) {
+      toast.error("Defina um título ou palavra-chave primeiro");
+      return;
+    }
+
+    setIsGeneratingImage(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-image", {
+        body: { title, keyword },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        form.setValue("featured_image", data.url);
+        form.setValue("featured_image_alt", data.alt || `Imagem sobre ${keyword || title}`);
+        toast.success("Imagem gerada com sucesso!");
+      } else {
+        throw new Error("Nenhuma imagem retornada");
+      }
+    } catch (error: any) {
+      console.error("Error generating image:", error);
+      toast.error(error.message || "Erro ao gerar imagem");
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -659,8 +704,45 @@ export default function ArticleEditor() {
                         <ImageIcon className="h-5 w-5" />
                         Imagem Destacada
                       </CardTitle>
+                      <CardDescription>
+                        Artigos publicados precisam obrigatoriamente de uma imagem
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      {/* Warning if no image and status is published */}
+                      {!form.watch("featured_image") && form.watch("status") === "published" && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            Artigos publicados precisam de uma imagem destacada.
+                            Adicione uma URL ou gere automaticamente com IA.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Generate Image Button */}
+                      {!form.watch("featured_image") && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={generateImageWithAI}
+                          disabled={isGeneratingImage || (!form.getValues("title") && !form.getValues("main_keyword"))}
+                          className="w-full border-dashed border-2 h-auto py-6"
+                        >
+                          {isGeneratingImage ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Gerando imagem com IA...
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="mr-2 h-5 w-5" />
+                              Gerar Imagem com IA
+                            </>
+                          )}
+                        </Button>
+                      )}
+
                       <FormField
                         control={form.control}
                         name="featured_image"
@@ -696,12 +778,26 @@ export default function ArticleEditor() {
                       />
 
                       {form.watch("featured_image") && (
-                        <div className="mt-4">
+                        <div className="mt-4 space-y-2">
                           <img
                             src={form.watch("featured_image")}
                             alt={form.watch("featured_image_alt") || "Preview"}
                             className="rounded-lg max-h-48 object-cover"
                           />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={generateImageWithAI}
+                            disabled={isGeneratingImage}
+                          >
+                            {isGeneratingImage ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                            )}
+                            Regenerar Imagem
+                          </Button>
                         </div>
                       )}
                     </CardContent>
