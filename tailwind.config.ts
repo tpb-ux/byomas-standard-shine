@@ -80,6 +80,54 @@ export default {
       transitionProperty: {
         'smooth': 'var(--transition-smooth)',
       },
+      letterSpacing: {
+        'kinexys': '0.02em',
+        'label': '0.15em',
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            '--tw-prose-body': 'hsl(0 0% 100% / 0.9)',
+            '--tw-prose-headings': 'hsl(0 0% 100%)',
+            '--tw-prose-lead': 'hsl(220 10% 60%)',
+            '--tw-prose-links': 'hsl(165 100% 42%)',
+            '--tw-prose-bold': 'hsl(0 0% 100%)',
+            '--tw-prose-counters': 'hsl(220 10% 60%)',
+            '--tw-prose-bullets': 'hsl(165 100% 42%)',
+            '--tw-prose-hr': 'hsl(220 15% 24%)',
+            '--tw-prose-quotes': 'hsl(0 0% 100%)',
+            '--tw-prose-quote-borders': 'hsl(165 100% 42%)',
+            '--tw-prose-captions': 'hsl(220 10% 60%)',
+            '--tw-prose-code': 'hsl(165 100% 42%)',
+            '--tw-prose-pre-code': 'hsl(0 0% 100%)',
+            '--tw-prose-pre-bg': 'hsl(220 18% 10%)',
+            '--tw-prose-th-borders': 'hsl(220 15% 24%)',
+            '--tw-prose-td-borders': 'hsl(220 15% 24%)',
+            'h1': {
+              fontWeight: '300',
+              letterSpacing: '0.02em',
+              marginTop: '2em',
+              marginBottom: '0.8em',
+            },
+            'h2': {
+              fontWeight: '300',
+              letterSpacing: '0.02em',
+              marginTop: '1.8em',
+              marginBottom: '0.6em',
+            },
+            'h3': {
+              fontWeight: '400',
+              letterSpacing: '0.01em',
+              marginTop: '1.5em',
+              marginBottom: '0.5em',
+            },
+            'p': {
+              marginTop: '1.25em',
+              marginBottom: '1.25em',
+            },
+          },
+        },
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
@@ -109,5 +157,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
