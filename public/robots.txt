@@ -1,8 +1,12 @@
+# Byoma Research - robots.txt
+
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +14,16 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
 Allow: /
+
+# Bloquear área administrativa
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /auth
+
+# Sitemap
+Sitemap: https://byomaresearch.com/sitemap.xml

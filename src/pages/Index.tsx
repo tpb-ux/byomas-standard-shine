@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
+import { SEOHead, OrganizationSchema } from "@/components/SEOHead";
 import { useBlogArticles } from "@/hooks/useBlogArticles";
 import BlogCard from "@/components/BlogCard";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      {/* SEO */}
+      <SEOHead
+        title="Byoma Research - Insights de Finanças Sustentáveis e Mercado Verde"
+        description="Sua fonte de inteligência sobre crédito de carbono, tokenização verde, finanças regenerativas e economia sustentável. Análises, tendências e insights do mercado verde."
+        url="/"
+        keywords={["crédito de carbono", "green tokens", "tokenização verde", "finanças regenerativas", "ReFi", "sustentabilidade", "mercado de carbono", "economia verde"]}
+      />
+      <OrganizationSchema />
+
       <Navbar />
       <Hero />
       

@@ -1,6 +1,8 @@
 import { useState, useMemo } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Breadcrumb from "@/components/Breadcrumb";
+import { SEOHead } from "@/components/SEOHead";
 import BlogCard from "@/components/BlogCard";
 import BlogSearch from "@/components/BlogSearch";
 import BlogSort, { SortOption } from "@/components/BlogSort";
@@ -93,14 +95,28 @@ const Blog = () => {
     );
   };
 
+  // Breadcrumb items
+  const breadcrumbItems = [{ label: "Blog" }];
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* SEO */}
+      <SEOHead
+        title="Blog - Insights sobre Finanças Sustentáveis"
+        description="Artigos e análises sobre crédito de carbono, tokenização verde, finanças regenerativas e mercado de sustentabilidade. Mantenha-se atualizado com as tendências do mercado verde."
+        url="/blog"
+        keywords={["blog finanças sustentáveis", "crédito de carbono", "green tokens", "ReFi", "mercado verde", "tokenização"]}
+      />
+
       <Navbar />
 
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-6">
           <ScrollReveal>
+            {/* Breadcrumb */}
+            <Breadcrumb items={breadcrumbItems} className="mb-6 justify-center" />
+            
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 Byoma Research
