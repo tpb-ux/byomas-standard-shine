@@ -79,8 +79,8 @@ const PillarPageComponent = () => {
         .select(`
           id, title, slug, excerpt, content, featured_image, featured_image_alt,
           published_at, reading_time, views, meta_title, meta_description, main_keyword,
-          category:categories(name, slug),
-          author:authors(name, avatar)
+          category:categories(id, name, slug, color),
+          author:authors(id, name, avatar, bio, role)
         `)
         .in("id", page.featured_articles)
         .eq("status", "published");
@@ -92,12 +92,12 @@ const PillarPageComponent = () => {
         (data || []).map(async (article) => {
           const { data: tags } = await supabase
             .from("article_tags")
-            .select("tag:tags(name, slug)")
+            .select("tag:tags(id, name, slug)")
             .eq("article_id", article.id);
 
           return {
             ...article,
-            tags: tags?.map((t: { tag: { name: string; slug: string } }) => t.tag) || [],
+            tags: tags?.map((t: { tag: { id: string; name: string; slug: string } }) => t.tag) || [],
           };
         })
       );
