@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronRight, Leaf, TrendingUp, Globe, Zap, BookOpen, Clock, Eye } from "lucide-react";
 
 const Index = () => {
+  console.log("[Index] Rendering Index page");
   const { data: articles, isLoading } = useBlogArticles();
   const latestArticles = articles?.slice(0, 6) || [];
 
@@ -61,7 +62,7 @@ const Index = () => {
       <Navbar />
       <Hero />
 
-      {/* Metrics Section - Estilo Kinexys */}
+      {/* Metrics Section */}
       <ScrollReveal>
         <section className="py-16 md:py-20 bg-card border-y border-border">
           <div className="container mx-auto px-6">
