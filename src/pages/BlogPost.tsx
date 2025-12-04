@@ -136,7 +136,7 @@ const BlogPost = () => {
               </Badge>
             )}
 
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+            <h1 className="text-4xl md:text-5xl font-light tracking-kinexys text-foreground mb-6">
               {article.title}
             </h1>
 
@@ -193,7 +193,17 @@ const BlogPost = () => {
         <div className="container mx-auto px-6 max-w-4xl">
           <ScrollReveal>
             <article
-              className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-foreground/90 prose-li:text-foreground/90 prose-strong:text-foreground"
+              className="prose prose-lg max-w-none
+                prose-headings:text-foreground prose-headings:font-light prose-headings:tracking-kinexys
+                prose-h1:text-4xl prose-h1:mt-12 prose-h1:mb-6
+                prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4
+                prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-normal
+                prose-p:text-foreground/90 prose-p:my-6
+                prose-li:text-foreground/90
+                prose-strong:text-foreground
+                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                prose-blockquote:border-l-primary prose-blockquote:text-foreground/80
+                prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded"
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
           </ScrollReveal>
@@ -266,7 +276,7 @@ const BlogPost = () => {
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-6">
             <ScrollReveal>
-              <h2 className="text-3xl font-bold text-foreground mb-8 text-center">
+              <h2 className="text-3xl font-light tracking-kinexys text-foreground mb-8 text-center">
                 Artigos Relacionados
               </h2>
             </ScrollReveal>
