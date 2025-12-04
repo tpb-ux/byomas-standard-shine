@@ -26,7 +26,8 @@ import {
   Settings,
   ListOrdered,
   Beaker,
-  Save
+  Save,
+  Link2
 } from "lucide-react";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -67,6 +68,8 @@ export default function Automation() {
   const [isFetching, setIsFetching] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [isLinking, setIsLinking] = useState(false);
+  const [linkingResult, setLinkingResult] = useState<{linksCreated: number; articlesProcessed: number} | null>(null);
   
   // Settings state
   const [dailyTarget, setDailyTarget] = useState(15);
@@ -245,6 +248,32 @@ export default function Automation() {
     },
     onSettled: () => {
       setIsPublishing(false);
+    },
+  });
+
+  // Auto internal linking mutation
+  const autoLinkingMutation = useMutation({
+    mutationFn: async (mode: 'all' | 'recent') => {
+      setIsLinking(true);
+      setLinkingResult(null);
+      const { data, error } = await supabase.functions.invoke("auto-internal-linking", {
+        body: { mode },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setLinkingResult({ 
+        linksCreated: data?.linksCreated || 0,
+        articlesProcessed: data?.articlesProcessed || 0
+      });
+      toast.success(`Links SEO criados: ${data?.linksCreated || 0} novos links`);
+    },
+    onError: (error: any) => {
+      toast.error(`Erro ao gerar links: ${error.message}`);
+    },
+    onSettled: () => {
+      setIsLinking(false);
     },
   });
 
@@ -476,6 +505,54 @@ export default function Automation() {
                       <RefreshCw className="h-4 w-4 animate-spin" />
                     ) : (
                       "5"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Auto Internal Linking */}
+            <Card className="border border-border hover:border-primary/50 transition-all">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-normal flex items-center gap-2">
+                  <Link2 className="h-5 w-5 text-primary" />
+                  Links Internos SEO
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Gerar links internos automaticamente entre artigos relacionados
+                </p>
+                {linkingResult && (
+                  <div className="mb-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                      <span>{linkingResult.linksCreated} links criados</span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => autoLinkingMutation.mutate('recent')}
+                    disabled={isLinking}
+                    variant="outline"
+                    className="flex-1 border-border hover:border-primary/50"
+                  >
+                    {isLinking ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Recentes"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => autoLinkingMutation.mutate('all')}
+                    disabled={isLinking}
+                    className="flex-1"
+                  >
+                    {isLinking ? (
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Todos"
                     )}
                   </Button>
                 </div>
