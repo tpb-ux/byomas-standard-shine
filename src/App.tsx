@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,37 +9,45 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { initWebVitals } from "@/lib/webVitals";
 import Index from "./pages/Index";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Blog from "./pages/Blog";
-import BlogPost from "./pages/BlogPost";
-import Tag from "./pages/Tag";
-import Tags from "./pages/Tags";
-import Topic from "./pages/Topic";
-import PillarPage from "./pages/PillarPage";
-import Guides from "./pages/Guides";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminArticles from "./pages/admin/Articles";
-import AdminArticleEditor from "./pages/admin/ArticleEditor";
-import AdminCurator from "./pages/admin/Curator";
-import AdminAutomation from "./pages/admin/Automation";
-import AdminCategories from "./pages/admin/Categories";
-import AdminSources from "./pages/admin/Sources";
-import AdminSEOAnalytics from "./pages/admin/SEOAnalytics";
-import AdminPerformance from "./pages/admin/Performance";
-import AdminSettings from "./pages/admin/Settings";
-import AdminSubscribers from "./pages/admin/Subscribers";
-import AdminMessages from "./pages/admin/Messages";
-import AdminTopicClusters from "./pages/admin/TopicClustersAdmin";
-import AdminPillarPages from "./pages/admin/PillarPagesAdmin";
 import NotFound from "./pages/NotFound";
+
+// Lazy load other pages
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Tag = lazy(() => import("./pages/Tag"));
+const Tags = lazy(() => import("./pages/Tags"));
+const Topic = lazy(() => import("./pages/Topic"));
+const PillarPage = lazy(() => import("./pages/PillarPage"));
+const Guides = lazy(() => import("./pages/Guides"));
+const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminArticles = lazy(() => import("./pages/admin/Articles"));
+const AdminArticleEditor = lazy(() => import("./pages/admin/ArticleEditor"));
+const AdminCurator = lazy(() => import("./pages/admin/Curator"));
+const AdminAutomation = lazy(() => import("./pages/admin/Automation"));
+const AdminCategories = lazy(() => import("./pages/admin/Categories"));
+const AdminSources = lazy(() => import("./pages/admin/Sources"));
+const AdminSEOAnalytics = lazy(() => import("./pages/admin/SEOAnalytics"));
+const AdminPerformance = lazy(() => import("./pages/admin/Performance"));
+const AdminSettings = lazy(() => import("./pages/admin/Settings"));
+const AdminSubscribers = lazy(() => import("./pages/admin/Subscribers"));
+const AdminMessages = lazy(() => import("./pages/admin/Messages"));
+const AdminTopicClusters = lazy(() => import("./pages/admin/TopicClustersAdmin"));
+const AdminPillarPages = lazy(() => import("./pages/admin/PillarPagesAdmin"));
 
 const queryClient = new QueryClient();
 
+// Loading fallback
+const PageLoader = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="text-primary">Carregando...</div>
+  </div>
+);
+
 const App = () => {
-  // Initialize Web Vitals monitoring after React mounts
   useEffect(() => {
     initWebVitals();
   }, []);
@@ -51,105 +59,106 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/sobre" element={<About />} />
-              <Route path="/contato" element={<Contact />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPost />} />
-              <Route path="/guias" element={<Guides />} />
-              
-              {/* SEO Routes - Tags, Topics, Pillar Pages */}
-              <Route path="/tag/:slug" element={<Tag />} />
-              <Route path="/tags" element={<Tags />} />
-              <Route path="/topico/:slug" element={<Topic />} />
-              <Route path="/guia/:slug" element={<PillarPage />} />
-              
-              {/* Auth routes */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              
-              {/* Admin routes - Protected */}
-              <Route path="/admin" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminDashboard /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/articles" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminArticles /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/articles/new" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminArticleEditor /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/articles/:id" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminArticleEditor /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/curator" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminCurator /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/automation" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminAutomation /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/topics" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminTopicClusters /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/pillar-pages" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminPillarPages /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/categories" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminCategories /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/sources" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminSources /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/seo" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminSEOAnalytics /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/performance" element={
-                <ProtectedRoute requiredRole="editor">
-                  <AppLayout><AdminPerformance /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/settings" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminSettings /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/subscribers" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminSubscribers /></AppLayout>
-                </ProtectedRoute>
-              } />
-              <Route path="/admin/messages" element={
-                <ProtectedRoute requiredRole="admin">
-                  <AppLayout><AdminMessages /></AppLayout>
-                </ProtectedRoute>
-              } />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/sobre" element={<About />} />
+                <Route path="/contato" element={<Contact />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/guias" element={<Guides />} />
+                
+                {/* SEO Routes */}
+                <Route path="/tag/:slug" element={<Tag />} />
+                <Route path="/tags" element={<Tags />} />
+                <Route path="/topico/:slug" element={<Topic />} />
+                <Route path="/guia/:slug" element={<PillarPage />} />
+                
+                {/* Auth routes */}
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Admin routes - Protected */}
+                <Route path="/admin" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminDashboard /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/articles" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminArticles /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/articles/new" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminArticleEditor /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/articles/:id" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminArticleEditor /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/curator" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminCurator /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/automation" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminAutomation /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/topics" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminTopicClusters /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/pillar-pages" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminPillarPages /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/categories" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminCategories /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/sources" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminSources /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/seo" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminSEOAnalytics /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/performance" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminPerformance /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminSettings /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/subscribers" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminSubscribers /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/messages" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminMessages /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
