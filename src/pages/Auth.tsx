@@ -168,9 +168,9 @@ export default function Auth() {
       <Card className="w-full max-w-md shadow-card">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary">
-            <span className="text-2xl font-bold text-primary-foreground">BR</span>
+            <span className="text-2xl font-bold text-primary-foreground">AR</span>
           </div>
-          <CardTitle className="text-2xl font-bold">Byoma Research</CardTitle>
+          <CardTitle className="text-2xl font-bold">Amazonia Research</CardTitle>
           <CardDescription>
             Acesse sua conta para gerenciar o conteúdo
           </CardDescription>

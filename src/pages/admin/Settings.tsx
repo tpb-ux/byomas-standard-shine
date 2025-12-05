@@ -265,7 +265,7 @@ const Settings = () => {
             Configurações do Blog
           </CardTitle>
           <CardDescription>
-            Configurações gerais do Byoma Research
+            Configurações gerais do Amazonia Research
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -13,10 +13,10 @@ const Contact = () => {
     <div className="min-h-screen">
       {/* SEO */}
       <SEOHead
-        title="Contato - Fale com o Byoma Research"
-        description="Entre em contato com o Byoma Research. Envie sugestões de pauta, dúvidas ou propostas de parceria. Estamos prontos para ajudar."
+        title="Contato - Fale com o Amazonia Research"
+        description="Entre em contato com o Amazonia Research. Envie sugestões de pauta, dúvidas ou propostas de parceria. Estamos prontos para ajudar."
         url="/contact"
-        keywords={["contato byoma research", "fale conosco", "sugestões de pauta", "parceria finanças sustentáveis"]}
+        keywords={["contato amazonia research", "fale conosco", "sugestões de pauta", "parceria finanças sustentáveis"]}
       />
 
       <Navbar />
@@ -29,13 +29,13 @@ const Contact = () => {
             
             <div className="max-w-4xl">
               <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
-                BYOMA RESEARCH
+                AMAZONIA RESEARCH
               </span>
               <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
                 Entre em <span className="text-primary">Contato</span>
               </h1>
               <p className="text-xl text-muted-foreground max-w-3xl">
-                Quer contribuir, sugerir pautas ou saber mais sobre o Byoma Research? Fale conosco
+                Quer contribuir, sugerir pautas ou saber mais sobre o Amazonia Research? Fale conosco
               </p>
             </div>
           </ScrollReveal>
@@ -54,7 +54,7 @@ const Contact = () => {
                 <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
                   Email
                 </h3>
-                <p className="text-muted-foreground">contato@byomaresearch.com</p>
+                <p className="text-muted-foreground">contato@amazonia.news</p>
               </div>
             </ScrollReveal>
 

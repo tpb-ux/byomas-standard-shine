@@ -234,7 +234,7 @@ export default function AdminCurator() {
         <Card className="border border-border">
           <CardContent className="py-12 text-center">
             <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
-              BYOMA RESEARCH
+              AMAZONIA RESEARCH
             </span>
             <Newspaper className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
             <h3 className="text-lg font-normal mb-2">

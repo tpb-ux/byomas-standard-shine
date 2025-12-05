@@ -7,8 +7,8 @@ const PrivacyPolicy = () => {
   return (
     <>
       <SEOHead
-        title="Política de Privacidade | Byoma Research"
-        description="Política de Privacidade do Byoma Research. Saiba como coletamos, usamos e protegemos seus dados pessoais."
+        title="Política de Privacidade | Amazonia Research"
+        description="Política de Privacidade do Amazonia Research. Saiba como coletamos, usamos e protegemos seus dados pessoais."
         url="/privacidade"
       />
       
@@ -30,9 +30,9 @@ const PrivacyPolicy = () => {
                 <section className="mb-12">
                   <h2 className="text-2xl font-semibold text-foreground mb-4">1. Introdução</h2>
                   <p className="text-muted-foreground mb-4">
-                    A Byoma Research ("nós", "nosso" ou "nossa") está comprometida em proteger sua privacidade. 
+                    A Amazonia Research ("nós", "nosso" ou "nossa") está comprometida em proteger sua privacidade. 
                     Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas 
-                    informações quando você visita nosso site byomaresearch.com.
+                    informações quando você visita nosso site amazonia.news.
                   </p>
                 </section>
                 
@@ -142,8 +142,8 @@ const PrivacyPolicy = () => {
                     entre em contato conosco:
                   </p>
                   <ul className="list-none text-muted-foreground space-y-2">
-                    <li><strong>E-mail:</strong> contato@byomaresearch.com</li>
-                    <li><strong>Página de contato:</strong> <a href="/contato" className="text-primary hover:underline">byomaresearch.com/contato</a></li>
+                    <li><strong>E-mail:</strong> contato@amazonia.news</li>
+                    <li><strong>Página de contato:</strong> <a href="/contato" className="text-primary hover:underline">amazonia.news/contato</a></li>
                   </ul>
                 </section>
               </div>

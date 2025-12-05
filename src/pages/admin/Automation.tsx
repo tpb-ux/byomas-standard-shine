@@ -27,7 +27,10 @@ import {
   ListOrdered,
   Beaker,
   Save,
-  Link2
+  Link2,
+  Activity,
+  AlertTriangle,
+  BarChart3
 } from "lucide-react";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -202,6 +205,89 @@ export default function Automation() {
         .limit(5);
 
       return data || [];
+    },
+    refetchInterval: 30000,
+  });
+
+  // Articles per hour (last 24h)
+  const { data: hourlyStats, isLoading: loadingHourly } = useQuery({
+    queryKey: ["automation-hourly-stats"],
+    queryFn: async () => {
+      const hours = [];
+      const now = new Date();
+      
+      for (let i = 23; i >= 0; i--) {
+        const hourStart = new Date(now);
+        hourStart.setHours(now.getHours() - i, 0, 0, 0);
+        const hourEnd = new Date(hourStart);
+        hourEnd.setHours(hourStart.getHours() + 1);
+
+        const { count } = await supabase
+          .from("articles")
+          .select("id", { count: "exact" })
+          .gte("published_at", hourStart.toISOString())
+          .lt("published_at", hourEnd.toISOString())
+          .eq("status", "published");
+
+        hours.push({
+          hour: format(hourStart, "HH:mm"),
+          count: count || 0,
+        });
+      }
+      return hours;
+    },
+    refetchInterval: 60000,
+  });
+
+  // System health check
+  const { data: systemHealth, isLoading: loadingHealth } = useQuery({
+    queryKey: ["automation-system-health"],
+    queryFn: async () => {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+
+      // Check if articles were published in last 6 hours
+      const { count: recentArticles } = await supabase
+        .from("articles")
+        .select("id", { count: "exact" })
+        .gte("published_at", sixHoursAgo.toISOString())
+        .eq("status", "published");
+
+      // Check if news was fetched in last hour
+      const { count: recentNews } = await supabase
+        .from("curated_news")
+        .select("id", { count: "exact" })
+        .gte("fetched_at", oneHourAgo.toISOString());
+
+      // Get last published article time
+      const { data: lastArticle } = await supabase
+        .from("articles")
+        .select("published_at")
+        .eq("status", "published")
+        .order("published_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      // Check for articles without images today
+      const startOfToday = startOfDay(now).toISOString();
+      const { count: articlesWithoutImages } = await supabase
+        .from("articles")
+        .select("id", { count: "exact" })
+        .gte("published_at", startOfToday)
+        .eq("status", "published")
+        .is("featured_image", null);
+
+      const isHealthy = (recentArticles || 0) > 0 && (recentNews || 0) > 0;
+      const hasWarnings = (articlesWithoutImages || 0) > 0;
+
+      return {
+        status: isHealthy ? (hasWarnings ? "warning" : "healthy") : "error",
+        lastPublished: lastArticle?.published_at,
+        recentArticles: recentArticles || 0,
+        recentNews: recentNews || 0,
+        articlesWithoutImages: articlesWithoutImages || 0,
+      };
     },
     refetchInterval: 30000,
   });
@@ -433,6 +519,131 @@ export default function Automation() {
               )}
             </CardContent>
           </Card>
+
+          {/* System Health, Hourly Stats, and Alerts */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* System Health Card */}
+            <Card className="border border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-normal flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Saúde do Sistema
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingHealth ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full ${
+                        systemHealth?.status === "healthy" 
+                          ? "bg-green-500" 
+                          : systemHealth?.status === "warning"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                      } animate-pulse`} />
+                      <span className="text-lg font-light">
+                        {systemHealth?.status === "healthy" 
+                          ? "Operacional" 
+                          : systemHealth?.status === "warning"
+                            ? "Atenção"
+                            : "Problema Detectado"}
+                      </span>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Última publicação:</span>
+                        <span>{systemHealth?.lastPublished 
+                          ? format(new Date(systemHealth.lastPublished), "HH:mm") 
+                          : "-"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Artigos (6h):</span>
+                        <span>{systemHealth?.recentArticles}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Busca (1h):</span>
+                        <span>{systemHealth?.recentNews}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Hourly Stats Card */}
+            <Card className="border border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-normal flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Artigos por Hora (24h)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingHourly ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
+                  <div className="flex items-end gap-0.5 h-20">
+                    {hourlyStats?.map((hour, i) => {
+                      const maxCount = Math.max(...(hourlyStats?.map(h => h.count) || [1]), 1);
+                      const heightPercent = (hour.count / maxCount) * 100;
+                      return (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                          <div 
+                            className={`w-full rounded-t transition-all ${hour.count > 0 ? 'bg-primary' : 'bg-muted'}`}
+                            style={{ height: `${Math.max(heightPercent, 4)}%` }}
+                            title={`${hour.hour}: ${hour.count} artigos`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                  <span>24h atrás</span>
+                  <span>Total: {hourlyStats?.reduce((acc, h) => acc + h.count, 0) || 0}</span>
+                  <span>Agora</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Alerts Card */}
+            <Card className="border border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-normal flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-primary" />
+                  Alertas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loadingHealth ? (
+                  <Skeleton className="h-24 w-full" />
+                ) : (
+                  <div className="space-y-2">
+                    {(systemHealth?.articlesWithoutImages || 0) > 0 && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm">{systemHealth?.articlesWithoutImages} artigos sem imagem</span>
+                      </div>
+                    )}
+                    {systemHealth?.status === "error" && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-red-500/10 border border-red-500/20">
+                        <XCircle className="h-4 w-4 text-red-500" />
+                        <span className="text-sm">Sistema inativo há mais de 6h</span>
+                      </div>
+                    )}
+                    {(systemHealth?.articlesWithoutImages || 0) === 0 && systemHealth?.status !== "error" && (
+                      <div className="flex items-center gap-2 p-2 rounded bg-green-500/10 border border-green-500/20">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">Nenhum alerta</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -834,7 +1045,7 @@ export default function Automation() {
               ) : pendingNews?.items.length === 0 ? (
                 <div className="text-center py-12">
                   <span className="text-xs font-medium uppercase tracking-widest text-primary mb-4 block">
-                    BYOMA RESEARCH
+                    AMAZONIA RESEARCH
                   </span>
                   <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                   <p className="text-sm text-muted-foreground">Nenhuma notícia na fila</p>

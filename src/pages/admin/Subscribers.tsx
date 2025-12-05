@@ -177,7 +177,7 @@ export default function AdminSubscribers() {
             Lista de Subscribers
           </CardTitle>
           <CardDescription>
-            Gerencie os inscritos na newsletter do Byoma Research
+            Gerencie os inscritos na newsletter do Amazonia Research
           </CardDescription>
         </CardHeader>
         <CardContent>
