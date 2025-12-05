@@ -41,6 +41,7 @@ const AdminTopicClusters = lazy(() => import("./pages/admin/TopicClustersAdmin")
 const AdminPillarPages = lazy(() => import("./pages/admin/PillarPagesAdmin"));
 const AdminGenerateArticle = lazy(() => import("./pages/admin/GenerateArticle"));
 const AdminTags = lazy(() => import("./pages/admin/Tags"));
+const AdminEducation = lazy(() => import("./pages/admin/EducationAdmin"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Glossary = lazy(() => import("./pages/Glossary"));
@@ -203,6 +204,11 @@ const App = () => {
                 <Route path="/admin/messages" element={
                   <ProtectedRoute requiredRole="admin">
                     <AppLayout><AdminMessages /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/education" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminEducation /></AppLayout>
                   </ProtectedRoute>
                 } />
                 

@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Users,
   Sparkles,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -64,6 +65,7 @@ const adminNavItems = [
   { title: "Artigos", url: "/admin/articles", icon: FileText },
   { title: "Curadoria", url: "/admin/curator", icon: Newspaper },
   { title: "Automação", url: "/admin/automation", icon: Zap },
+  { title: "Educacional", url: "/admin/education", icon: GraduationCap },
   { title: "Topic Clusters", url: "/admin/topics", icon: FolderTree },
   { title: "Pillar Pages", url: "/admin/pillar-pages", icon: FileText },
   { title: "Categorias", url: "/admin/categories", icon: Tag },
