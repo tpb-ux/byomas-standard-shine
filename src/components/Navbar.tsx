@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, User, LogOut, LayoutDashboard, Trophy } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -11,11 +11,21 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [eduOpen, setEduOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
 
   const navLinks = [
     { to: "/blog", label: "BLOG" },
@@ -102,6 +112,50 @@ const Navbar = () => {
           <Button variant="outline" size="sm" className="hidden md:flex border-border text-muted-foreground hover:text-foreground hover:border-foreground">
             PT
           </Button>
+          
+          {/* User Menu */}
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="hidden md:flex gap-2">
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      {profile?.full_name?.[0] || user.email?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-[100px] truncate text-sm">
+                    {profile?.full_name || "Minha Conta"}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/minha-conta" className="flex items-center gap-2">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Meu Dashboard
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/educacional/ranking" className="flex items-center gap-2">
+                    <Trophy className="h-4 w-4" />
+                    Ranking
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} className="text-destructive">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link to="/auth" className="hidden md:block">
+              <Button variant="outline" size="sm" className="gap-2">
+                <User className="h-4 w-4" />
+                Entrar
+              </Button>
+            </Link>
+          )}
           
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>

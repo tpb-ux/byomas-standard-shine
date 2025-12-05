@@ -246,6 +246,48 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          category: string | null
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points: number | null
+          requirement_type: string
+          requirement_value: number | null
+        }
+        Insert: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points?: number | null
+          requirement_type: string
+          requirement_value?: number | null
+        }
+        Update: {
+          category?: string | null
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points?: number | null
+          requirement_type?: string
+          requirement_value?: number | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string | null
@@ -951,6 +993,110 @@ export type Database = {
           key?: string
           updated_at?: string | null
           value?: string | null
+        }
+        Relationships: []
+      }
+      student_activity_log: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          points_earned: number | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          points_earned?: number | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          points_earned?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string | null
+          id: string
+          shared_at: string | null
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string | null
+          id?: string
+          shared_at?: string | null
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string | null
+          id?: string
+          shared_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_points: {
+        Row: {
+          courses_completed: number | null
+          id: string
+          last_activity_at: string | null
+          lessons_completed: number | null
+          level: number | null
+          login_streak: number | null
+          modules_completed: number | null
+          quizzes_passed: number | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          courses_completed?: number | null
+          id?: string
+          last_activity_at?: string | null
+          lessons_completed?: number | null
+          level?: number | null
+          login_streak?: number | null
+          modules_completed?: number | null
+          quizzes_passed?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          courses_completed?: number | null
+          id?: string
+          last_activity_at?: string | null
+          lessons_completed?: number | null
+          level?: number | null
+          login_streak?: number | null
+          modules_completed?: number | null
+          quizzes_passed?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
