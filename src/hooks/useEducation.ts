@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface Badge {
   id: string;
@@ -652,7 +653,7 @@ export function useLogActivity() {
           activity_type: activityType,
           description,
           points_earned: pointsEarned,
-          metadata,
+          metadata: metadata as Json,
         })
         .select()
         .single();
