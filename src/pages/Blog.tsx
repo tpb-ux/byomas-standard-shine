@@ -119,7 +119,7 @@ const Blog = () => {
             
             <div className="max-w-3xl mx-auto text-center">
               <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
-                BYOMA RESEARCH
+                AMAZONIA RESEARCH
               </span>
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                 Insights e <span className="text-primary">Análises</span>
