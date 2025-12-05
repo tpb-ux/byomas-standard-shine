@@ -30,7 +30,7 @@ const TRUSTED_SOURCES = [
 async function parseRSS(url: string): Promise<RSSItem[]> {
   try {
     const response = await fetch(url, {
-      headers: { "User-Agent": "Byoma Research Bot/1.0" },
+      headers: { "User-Agent": "Amazonia Research Bot/1.0" },
     });
     
     if (!response.ok) {
