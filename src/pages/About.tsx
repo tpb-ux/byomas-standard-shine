@@ -13,10 +13,10 @@ const About = () => {
     <div className="min-h-screen">
       {/* SEO */}
       <SEOHead
-        title="Sobre o Byoma Research - Nossa Missão e Valores"
-        description="Conheça o Byoma Research: sua fonte de inteligência sobre finanças sustentáveis, crédito de carbono, tokenização verde e economia regenerativa. Saiba mais sobre nossa missão."
+        title="Sobre o Amazonia Research - Nossa Missão e Valores"
+        description="Conheça o Amazonia Research: sua fonte de inteligência sobre finanças sustentáveis, crédito de carbono, tokenização verde e economia regenerativa. Saiba mais sobre nossa missão."
         url="/about"
-        keywords={["sobre byoma research", "missão finanças sustentáveis", "economia verde", "finanças regenerativas"]}
+        keywords={["sobre amazonia research", "missão finanças sustentáveis", "economia verde", "finanças regenerativas"]}
       />
 
       <Navbar />
@@ -29,7 +29,7 @@ const About = () => {
             
             <div className="max-w-4xl">
               <span className="text-xs font-medium tracking-widest text-primary mb-4 block">
-                BYOMA RESEARCH
+                AMAZONIA RESEARCH
               </span>
               <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
                 Sobre <span className="text-primary">Nós</span>
@@ -54,7 +54,7 @@ const About = () => {
                 Democratizando o Conhecimento em Finanças Verdes
               </h2>
               <p className="text-lg text-muted-foreground mb-4">
-                O Byoma Research nasceu da necessidade de criar uma fonte confiável e acessível de 
+                O Amazonia Research nasceu da necessidade de criar uma fonte confiável e acessível de 
                 informações sobre o mercado de finanças sustentáveis. Em um cenário onde a economia 
                 verde cresce exponencialmente, entendemos que investidores, empresas e profissionais 
                 precisam de análises aprofundadas e atualizadas.

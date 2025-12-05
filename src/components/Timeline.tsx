@@ -11,7 +11,7 @@ const Timeline = () => {
     {
       year: "2005",
       title: "Fundação",
-      description: "Byomas Standard foi estabelecida como pioneira em padrões de certificação ambiental."
+      description: "Amazonia Research foi estabelecida como pioneira em análise e pesquisa sobre mercados sustentáveis."
     },
     {
       year: "2010",

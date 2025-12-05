@@ -230,7 +230,7 @@ export default function AdminArticles() {
           {filteredArticles.length === 0 ? (
             <div className="text-center py-12">
               <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
-                BYOMA RESEARCH
+                AMAZONIA RESEARCH
               </span>
               <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-lg font-normal mb-2">Nenhum artigo encontrado</h3>

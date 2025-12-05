@@ -400,7 +400,7 @@ const Sources = () => {
           ) : (
             <div className="text-center py-12">
               <span className="text-xs font-medium uppercase tracking-widest text-primary block mb-4">
-                BYOMA RESEARCH
+                AMAZONIA RESEARCH
               </span>
               <Rss className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
               <h3 className="text-lg font-normal mb-2">Nenhuma fonte encontrada</h3>

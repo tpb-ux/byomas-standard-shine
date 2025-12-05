@@ -79,7 +79,7 @@ const Guides = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Guias Completos | Byoma Research"
+        title="Guias Completos | Amazonia Research"
         description="Guias definitivos e completos sobre crédito de carbono, tokenização de ativos verdes, finanças regenerativas (ReFi) e mercado voluntário de carbono. Aprenda do básico ao avançado."
         url="/guias"
         keywords={[
