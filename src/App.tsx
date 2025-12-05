@@ -47,6 +47,14 @@ const Glossary = lazy(() => import("./pages/Glossary"));
 const GlossaryTerm = lazy(() => import("./pages/GlossaryTerm"));
 const CarbonCalculator = lazy(() => import("./pages/CarbonCalculator"));
 
+// Educational pages
+const Education = lazy(() => import("./pages/education/Education"));
+const EducationCourse = lazy(() => import("./pages/education/Course"));
+const EducationModule = lazy(() => import("./pages/education/Module"));
+const EducationLesson = lazy(() => import("./pages/education/Lesson"));
+const EducationQuiz = lazy(() => import("./pages/education/Quiz"));
+const EducationCertificate = lazy(() => import("./pages/education/Certificate"));
+
 const queryClient = new QueryClient();
 
 // Loading fallback
@@ -93,6 +101,14 @@ const App = () => {
                 <Route path="/glossario" element={<Glossary />} />
                 <Route path="/glossario/:slug" element={<GlossaryTerm />} />
                 <Route path="/calculadora-carbono" element={<CarbonCalculator />} />
+                
+                {/* Educational routes */}
+                <Route path="/educacional" element={<Education />} />
+                <Route path="/educacional/curso/:slug" element={<EducationCourse />} />
+                <Route path="/educacional/modulo/:courseSlug/:moduleSlug" element={<EducationModule />} />
+                <Route path="/educacional/licao/:courseSlug/:moduleSlug/:lessonSlug" element={<EducationLesson />} />
+                <Route path="/educacional/quiz/:courseSlug/:moduleSlug" element={<EducationQuiz />} />
+                <Route path="/educacional/certificado/:code" element={<EducationCertificate />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />

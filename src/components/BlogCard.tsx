@@ -14,8 +14,11 @@ const BlogCard = ({ article }: BlogCardProps) => {
   const formattedDate = article.published_at 
     ? new Date(article.published_at).toLocaleDateString('pt-BR', {
         day: '2-digit',
-        month: 'long',
+        month: 'short',
         year: 'numeric'
+      }) + ' às ' + new Date(article.published_at).toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
       })
     : '';
 
@@ -44,9 +47,9 @@ const BlogCard = ({ article }: BlogCardProps) => {
           )}
         </div>
         <CardContent className="p-6">
-          {/* Label BYOMA estilo Kinexys */}
+          {/* Label AMAZONIA estilo Kinexys */}
           <span className="text-xs font-medium tracking-widest text-primary mb-3 block">
-            BYOMA
+            AMAZONIA
           </span>
           
           {article.category?.name && (
