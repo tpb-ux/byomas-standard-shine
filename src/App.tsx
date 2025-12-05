@@ -40,6 +40,7 @@ const AdminMessages = lazy(() => import("./pages/admin/Messages"));
 const AdminTopicClusters = lazy(() => import("./pages/admin/TopicClustersAdmin"));
 const AdminPillarPages = lazy(() => import("./pages/admin/PillarPagesAdmin"));
 const AdminGenerateArticle = lazy(() => import("./pages/admin/GenerateArticle"));
+const AdminTags = lazy(() => import("./pages/admin/Tags"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Glossary = lazy(() => import("./pages/Glossary"));
@@ -146,6 +147,11 @@ const App = () => {
                 <Route path="/admin/categories" element={
                   <ProtectedRoute requiredRole="admin">
                     <AppLayout><AdminCategories /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/tags" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AppLayout><AdminTags /></AppLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/sources" element={

@@ -3,7 +3,8 @@ import { useLocation, Link } from "react-router-dom";
 import {
   Home,
   FileText,
-  Tags,
+  Tag,
+  Hash,
   BarChart3,
   FolderTree,
   Mail,
@@ -65,7 +66,8 @@ const adminNavItems = [
   { title: "Automação", url: "/admin/automation", icon: Zap },
   { title: "Topic Clusters", url: "/admin/topics", icon: FolderTree },
   { title: "Pillar Pages", url: "/admin/pillar-pages", icon: FileText },
-  { title: "Categorias", url: "/admin/categories", icon: Tags },
+  { title: "Categorias", url: "/admin/categories", icon: Tag },
+  { title: "Tags", url: "/admin/tags", icon: Hash },
   { title: "SEO", url: "/admin/seo", icon: TrendingUp },
   { title: "Performance", url: "/admin/performance", icon: Activity },
   { title: "Fontes", url: "/admin/sources", icon: Search },
@@ -98,7 +100,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="text-xs font-medium uppercase tracking-widest text-primary">BYOMA</span>
+              <span className="text-xs font-medium uppercase tracking-widest text-primary">AMAZONIA</span>
               <span className="text-lg font-light tracking-wide text-foreground">Research</span>
             </div>
           )}
