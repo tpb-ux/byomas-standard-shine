@@ -21,7 +21,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Pencil, Trash2, RefreshCw, Hash, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Plus, Pencil, Trash2, RefreshCw, Hash, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Tag {
@@ -31,12 +33,21 @@ interface Tag {
   article_count?: number;
 }
 
+interface ProcessingResult {
+  articleId: string;
+  title: string;
+  tagsAdded: string[];
+}
+
 export default function AdminTags() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [formData, setFormData] = useState({ name: "", slug: "" });
-  const [isReprocessing, setIsReprocessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMethod, setProcessingMethod] = useState<"keyword" | "ai" | null>(null);
+  const [processingResults, setProcessingResults] = useState<ProcessingResult[]>([]);
+  const [processingStats, setProcessingStats] = useState<{ processed: number; associations: number } | null>(null);
 
   // Fetch tags with article count
   const { data: tags, isLoading } = useQuery({
@@ -152,47 +163,76 @@ export default function AdminTags() {
     });
   };
 
-  const handleReprocessTags = async () => {
-    setIsReprocessing(true);
+  const handleReprocessTags = async (useAI: boolean) => {
+    setIsProcessing(true);
+    setProcessingMethod(useAI ? "ai" : "keyword");
+    setProcessingResults([]);
+    setProcessingStats(null);
+
     try {
       const { data, error } = await supabase.functions.invoke("process-article-tags", {
-        body: { processAll: true },
+        body: { processAll: true, useAI },
       });
 
       if (error) throw error;
 
-      toast.success(
-        `Reprocessamento concluído! ${data.articlesProcessed} artigos processados, ${data.totalAssociations} tags associadas.`
-      );
+      setProcessingStats({
+        processed: data.articlesProcessed,
+        associations: data.totalAssociations,
+      });
+      setProcessingResults(data.results || []);
+
+      if (data.totalAssociations > 0) {
+        toast.success(
+          `${data.totalAssociations} tags associadas a ${data.results?.length || 0} artigos usando ${useAI ? "análise com IA" : "correspondência simples"}!`
+        );
+      } else {
+        toast.info("Nenhuma nova associação de tag foi necessária.");
+      }
+
       queryClient.invalidateQueries({ queryKey: ["admin-tags"] });
     } catch (error) {
       toast.error(`Erro ao reprocessar tags: ${error instanceof Error ? error.message : "Erro desconhecido"}`);
     } finally {
-      setIsReprocessing(false);
+      setIsProcessing(false);
+      setProcessingMethod(null);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tags</h1>
           <p className="text-muted-foreground">
             Gerencie as tags do blog para melhor categorização de conteúdo
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={handleReprocessTags}
-            disabled={isReprocessing}
+            onClick={() => handleReprocessTags(false)}
+            disabled={isProcessing}
           >
-            {isReprocessing ? (
+            {isProcessing && processingMethod === "keyword" ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw className="mr-2 h-4 w-4" />
             )}
             Reprocessar Tags
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => handleReprocessTags(true)}
+            disabled={isProcessing}
+            className="bg-gradient-to-r from-primary/80 to-primary text-primary-foreground hover:from-primary hover:to-primary/90"
+          >
+            {isProcessing && processingMethod === "ai" ? (
+              <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" />
+            )}
+            Reprocessar com IA
           </Button>
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -201,19 +241,122 @@ export default function AdminTags() {
         </div>
       </div>
 
-      {/* Reprocess Info Card */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center gap-2">
+      {/* Processing Results Card */}
+      {(isProcessing || processingStats) && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              {isProcessing ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  Processando artigos...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  Processamento concluído
+                </>
+              )}
+            </CardTitle>
+            <CardDescription>
+              {processingMethod === "ai" 
+                ? "Usando análise semântica com IA (Gemini)" 
+                : "Usando correspondência de palavras-chave"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isProcessing && (
+              <Progress value={100} className="h-2 animate-pulse" />
+            )}
+            
+            {processingStats && (
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-primary">{processingStats.processed}</p>
+                  <p className="text-xs text-muted-foreground">Artigos analisados</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-500">{processingStats.associations}</p>
+                  <p className="text-xs text-muted-foreground">Tags associadas</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-amber-500">{processingResults.length}</p>
+                  <p className="text-xs text-muted-foreground">Artigos atualizados</p>
+                </div>
+              </div>
+            )}
+
+            {processingResults.length > 0 && (
+              <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border bg-background p-3">
+                {processingResults.slice(0, 10).map((result, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm">
+                    <Hash className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <div>
+                      <span className="font-medium">{result.title.length > 50 ? `${result.title.substring(0, 50)}...` : result.title}</span>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {result.tagsAdded.map((tag, tagIdx) => (
+                          <Badge key={tagIdx} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {processingResults.length > 10 && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    + {processingResults.length - 10} artigos adicionais
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!isProcessing && processingStats && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full"
+                onClick={() => {
+                  setProcessingStats(null);
+                  setProcessingResults([]);
+                }}
+              >
+                Fechar
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info Card */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
             <RefreshCw className="h-5 w-5" />
-            Reprocessamento Automático de Tags
+            Métodos de Reprocessamento
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <CardDescription>
-            Clique em "Reprocessar Tags" para associar automaticamente as tags aos artigos existentes 
-            baseado no conteúdo, título e palavras-chave. Isso é útil após adicionar novas tags ao sistema.
-          </CardDescription>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center gap-2 font-medium">
+                <RefreshCw className="h-4 w-4" />
+                Correspondência Simples
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Busca exata de palavras-chave no texto. Rápido mas detecta apenas correspondências diretas.
+              </p>
+            </div>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+              <div className="flex items-center gap-2 font-medium text-primary">
+                <Sparkles className="h-4 w-4" />
+                Análise com IA
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Usa Gemini para entender contexto e sinônimos. Mais preciso para categorização semântica.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -246,9 +389,7 @@ export default function AdminTags() {
                     <TableCell className="font-medium">{tag.name}</TableCell>
                     <TableCell className="text-muted-foreground">{tag.slug}</TableCell>
                     <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center rounded-full bg-primary/10 px-2.5 py-0.5 text-sm font-medium text-primary">
-                        {tag.article_count}
-                      </span>
+                      <Badge variant="secondary">{tag.article_count}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
