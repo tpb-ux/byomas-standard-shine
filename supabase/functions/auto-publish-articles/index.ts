@@ -273,9 +273,9 @@ async function generateArticleContent(
   existingArticlesList: string,
   apiKey: string
 ): Promise<GeneratedArticle | null> {
-  const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
+const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
 
-Sua tarefa é criar um artigo completo e otimizado para SEO para o blog "Byoma Research".
+Sua tarefa é criar um artigo completo e otimizado para SEO para o blog "Amazonia Research".
 
 REGRAS DE SEO OBRIGATÓRIAS:
 1. Título (H1): máximo 60 caracteres, incluir palavra-chave principal
