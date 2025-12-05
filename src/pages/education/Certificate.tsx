@@ -6,36 +6,25 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Award, Download, Share2, CheckCircle2 } from "lucide-react";
+import { Award, Download, CheckCircle2 } from "lucide-react";
 import { useCertificate } from "@/hooks/useEducation";
 import { toast } from "sonner";
+import { SocialShareButtons } from "@/components/education/SocialShareButtons";
 
 const Certificate = () => {
   const { code } = useParams<{ code: string }>();
   const { data: certificate, isLoading, error } = useCertificate(code || "");
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Certificado Amazonia Research",
-          text: `${certificate?.student_name} completou o curso ${(certificate as any)?.courses?.title}`,
-          url,
-        });
-      } catch (err) {
-        // User cancelled or error
-      }
-    } else {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copiado para a área de transferência!");
-    }
-  };
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const shareTitle = certificate 
+    ? `🎓 Certificado: ${certificate.student_name} - ${(certificate as any)?.courses?.title} | Amazonia Research`
+    : "Certificado Amazonia Research";
+  const shareDescription = certificate
+    ? `${certificate.student_name} completou com sucesso o curso "${(certificate as any)?.courses?.title}" na Amazonia Research`
+    : "";
 
   const handleDownload = () => {
-    // In a real implementation, this would generate a PDF
-    toast.info("Funcionalidade de download em desenvolvimento");
+    toast.info("Funcionalidade de download PDF em desenvolvimento");
   };
 
   if (isLoading) {
@@ -163,12 +152,21 @@ const Certificate = () => {
             </Card>
             
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-              <Button variant="outline" onClick={handleShare} className="gap-2">
-                <Share2 className="h-4 w-4" />
-                Compartilhar
-              </Button>
-              <Button onClick={handleDownload} className="gap-2">
+            <div className="flex flex-col items-center gap-6 mt-8">
+              {/* Social Share Buttons */}
+              <div>
+                <p className="text-sm text-muted-foreground mb-3 text-center">
+                  Compartilhe sua conquista
+                </p>
+                <SocialShareButtons
+                  url={shareUrl}
+                  title={shareTitle}
+                  description={shareDescription}
+                  hashtags={["CreditoCarbono", "Sustentabilidade", "AmazoniaResearch", "Certificado"]}
+                />
+              </div>
+              
+              <Button onClick={handleDownload} variant="outline" className="gap-2">
                 <Download className="h-4 w-4" />
                 Baixar PDF
               </Button>

@@ -1,6 +1,51 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface Badge {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  color: string;
+  category: string;
+  requirement_type: string;
+  requirement_value: number;
+  points: number;
+  is_active: boolean | null;
+}
+
+export interface StudentBadge {
+  id: string;
+  user_id: string;
+  badge_id: string;
+  earned_at: string | null;
+  shared_at: string | null;
+}
+
+export interface StudentPoints {
+  id: string;
+  user_id: string;
+  total_points: number;
+  level: number;
+  lessons_completed: number;
+  quizzes_passed: number;
+  modules_completed: number;
+  courses_completed: number;
+  login_streak: number;
+  last_activity_at: string | null;
+  updated_at: string | null;
+}
+
+export interface ActivityLog {
+  id: string;
+  user_id: string;
+  activity_type: string;
+  description: string | null;
+  points_earned: number;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
 export interface Course {
   id: string;
   title: string;
@@ -402,5 +447,221 @@ export function useUserCertificates(userId: string | undefined) {
       return data;
     },
     enabled: !!userId,
+  });
+}
+
+// ============ GAMIFICATION HOOKS ============
+
+// Fetch all badges
+export function useBadges() {
+  return useQuery({
+    queryKey: ["badges"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("badges")
+        .select("*")
+        .eq("is_active", true)
+        .order("points", { ascending: true });
+      
+      if (error) throw error;
+      return data as Badge[];
+    },
+  });
+}
+
+// Fetch student badges
+export function useStudentBadges(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["student-badges", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_badges")
+        .select("*")
+        .eq("user_id", userId!);
+      
+      if (error) throw error;
+      return data as StudentBadge[];
+    },
+    enabled: !!userId,
+  });
+}
+
+// Fetch student points
+export function useStudentPoints(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["student-points", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_points")
+        .select("*")
+        .eq("user_id", userId!)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      return data as StudentPoints | null;
+    },
+    enabled: !!userId,
+  });
+}
+
+// Fetch leaderboard
+export function useLeaderboard(limit: number = 50) {
+  return useQuery({
+    queryKey: ["leaderboard", limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_points")
+        .select(`
+          *,
+          profiles:user_id (full_name, avatar_url)
+        `)
+        .order("total_points", { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// Fetch student activity log
+export function useStudentActivityLog(userId: string | undefined, limit: number = 50) {
+  return useQuery({
+    queryKey: ["student-activity", userId, limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_activity_log")
+        .select("*")
+        .eq("user_id", userId!)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      return data as ActivityLog[];
+    },
+    enabled: !!userId,
+  });
+}
+
+// Award a badge to a student
+export function useAwardBadge() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ userId, badgeId }: { userId: string; badgeId: string }) => {
+      const { data, error } = await supabase
+        .from("student_badges")
+        .upsert({
+          user_id: userId,
+          badge_id: badgeId,
+          earned_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-badges"] });
+    },
+  });
+}
+
+// Add or update student points
+export function useUpdatePoints() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      pointsToAdd,
+      statsToUpdate,
+    }: {
+      userId: string;
+      pointsToAdd: number;
+      statsToUpdate?: Partial<Omit<StudentPoints, "id" | "user_id" | "total_points">>;
+    }) => {
+      // First check if record exists
+      const { data: existing } = await supabase
+        .from("student_points")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
+
+      if (existing) {
+        // Update existing
+        const { data, error } = await supabase
+          .from("student_points")
+          .update({
+            total_points: existing.total_points + pointsToAdd,
+            ...statsToUpdate,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", userId)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } else {
+        // Insert new
+        const { data, error } = await supabase
+          .from("student_points")
+          .insert({
+            user_id: userId,
+            total_points: pointsToAdd,
+            ...statsToUpdate,
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-points"] });
+      queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
+    },
+  });
+}
+
+// Log an activity
+export function useLogActivity() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      activityType,
+      description,
+      pointsEarned = 0,
+      metadata = {},
+    }: {
+      userId: string;
+      activityType: string;
+      description: string;
+      pointsEarned?: number;
+      metadata?: Record<string, unknown>;
+    }) => {
+      const { data, error } = await supabase
+        .from("student_activity_log")
+        .insert({
+          user_id: userId,
+          activity_type: activityType,
+          description,
+          points_earned: pointsEarned,
+          metadata,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-activity"] });
+    },
   });
 }

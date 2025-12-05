@@ -54,6 +54,8 @@ const EducationCourse = lazy(() => import("./pages/education/Course"));
 const EducationModule = lazy(() => import("./pages/education/Module"));
 const EducationLesson = lazy(() => import("./pages/education/Lesson"));
 const EducationQuiz = lazy(() => import("./pages/education/Quiz"));
+const EducationLeaderboard = lazy(() => import("./pages/education/Leaderboard"));
+const StudentDashboard = lazy(() => import("./pages/education/StudentDashboard"));
 const EducationCertificate = lazy(() => import("./pages/education/Certificate"));
 
 const queryClient = new QueryClient();
@@ -110,6 +112,8 @@ const App = () => {
                 <Route path="/educacional/licao/:courseSlug/:moduleSlug/:lessonSlug" element={<EducationLesson />} />
                 <Route path="/educacional/quiz/:courseSlug/:moduleSlug" element={<EducationQuiz />} />
                 <Route path="/educacional/certificado/:code" element={<EducationCertificate />} />
+                <Route path="/educacional/ranking" element={<EducationLeaderboard />} />
+                <Route path="/minha-conta" element={<StudentDashboard />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />
