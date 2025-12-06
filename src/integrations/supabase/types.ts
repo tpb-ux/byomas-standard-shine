@@ -919,6 +919,83 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      search_console_data: {
+        Row: {
+          article_id: string | null
+          clicks: number | null
+          ctr: number | null
+          date: string
+          fetched_at: string | null
+          id: string
+          impressions: number | null
+          position: number | null
+          query: string | null
+          url: string
+        }
+        Insert: {
+          article_id?: string | null
+          clicks?: number | null
+          ctr?: number | null
+          date: string
+          fetched_at?: string | null
+          id?: string
+          impressions?: number | null
+          position?: number | null
+          query?: string | null
+          url: string
+        }
+        Update: {
+          article_id?: string | null
+          clicks?: number | null
+          ctr?: number | null
+          date?: string
+          fetched_at?: string | null
+          id?: string
+          impressions?: number | null
+          position?: number | null
+          query?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_console_data_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_metrics: {
         Row: {
           analyzed_at: string | null
@@ -1054,6 +1131,47 @@ export type Database = {
             columns: ["badge_id"]
             isOneToOne: false
             referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_challenges: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          created_at: string | null
+          current_progress: number | null
+          id: string
+          is_completed: boolean | null
+          reward_claimed: boolean | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          current_progress?: number | null
+          id?: string
+          is_completed?: boolean | null
+          reward_claimed?: boolean | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          current_progress?: number | null
+          id?: string
+          is_completed?: boolean | null
+          reward_claimed?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_challenges"
             referencedColumns: ["id"]
           },
         ]
@@ -1326,6 +1444,62 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      weekly_challenges: {
+        Row: {
+          challenge_type: string
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          reward_badge_id: string | null
+          reward_points: number
+          target_value: number
+          title: string
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          challenge_type: string
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          reward_badge_id?: string | null
+          reward_points?: number
+          target_value?: number
+          title: string
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          challenge_type?: string
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          reward_badge_id?: string | null
+          reward_points?: number
+          target_value?: number
+          title?: string
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_challenges_reward_badge_id_fkey"
+            columns: ["reward_badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
