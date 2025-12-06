@@ -64,9 +64,9 @@ serve(async (req: Request): Promise<Response> => {
 
     // Send notification email to admin
     const adminEmail = await resend.emails.send({
-      from: "Byoma Research <onboarding@resend.dev>",
-      to: ["contato@byoma.com.br"], // Replace with your actual admin email
-      subject: `[Byoma Research] Nova mensagem de contato: ${inquiryTypeLabels[inquiryType] || inquiryType}`,
+      from: "Amazonia Research <onboarding@resend.dev>",
+      to: ["contato@amazonia.research"],
+      subject: `[Amazonia Research] Nova mensagem de contato: ${inquiryTypeLabels[inquiryType] || inquiryType}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #36454F;">Nova Mensagem de Contato</h2>
@@ -81,7 +81,7 @@ serve(async (req: Request): Promise<Response> => {
             <p style="white-space: pre-wrap;">${message}</p>
           </div>
           <p style="color: #888; font-size: 12px; margin-top: 20px;">
-            Esta mensagem foi enviada através do formulário de contato do Byoma Research.
+            Esta mensagem foi enviada através do formulário de contato do Amazonia Research.
           </p>
         </div>
       `,
@@ -91,9 +91,9 @@ serve(async (req: Request): Promise<Response> => {
 
     // Send confirmation email to user
     const userEmail = await resend.emails.send({
-      from: "Byoma Research <onboarding@resend.dev>",
+      from: "Amazonia Research <onboarding@resend.dev>",
       to: [email],
-      subject: "Recebemos sua mensagem - Byoma Research",
+      subject: "Recebemos sua mensagem - Amazonia Research",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #36454F;">Olá ${name}!</h2>
@@ -104,11 +104,11 @@ serve(async (req: Request): Promise<Response> => {
             <p style="white-space: pre-wrap; font-style: italic;">"${message.substring(0, 200)}${message.length > 200 ? "..." : ""}"</p>
           </div>
           <p>Normalmente respondemos dentro de 1-2 dias úteis.</p>
-          <p>Atenciosamente,<br><strong>Equipe Byoma Research</strong></p>
+          <p>Atenciosamente,<br><strong>Equipe Amazonia Research</strong></p>
           <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
           <p style="color: #888; font-size: 12px;">
-            Byoma Research - Insights sobre mercado verde e sustentabilidade<br>
-            <a href="https://byoma.com.br" style="color: #36454F;">byoma.com.br</a>
+            Amazonia Research - Insights sobre mercado verde e sustentabilidade<br>
+            <a href="https://amazonia.research" style="color: #36454F;">amazonia.research</a>
           </p>
         </div>
       `,

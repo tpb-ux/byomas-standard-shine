@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.fix-missing-images]
 verify_jwt = false
+
+[functions.send-education-notification]
+verify_jwt = false
