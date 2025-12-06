@@ -1,10 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
-import { Loader2, TrendingUp, AlertTriangle, CheckCircle, Link as LinkIcon, BookOpen, FolderTree, Eye, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, TrendingUp, AlertTriangle, CheckCircle, Link as LinkIcon, BookOpen, FolderTree, Eye, BarChart3, MousePointerClick, Target, Percent, RefreshCw, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -15,8 +18,11 @@ import {
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
 import SEOEvolutionChart from "@/components/admin/SEOEvolutionChart";
+import SearchConsoleCharts from "@/components/admin/SearchConsoleCharts";
 
 const SEOAnalytics = () => {
+  const queryClient = useQueryClient();
+  const [isSyncing, setIsSyncing] = useState(false);
   const { data: seoData, isLoading } = useQuery({
     queryKey: ["admin-seo-analytics"],
     queryFn: async () => {
@@ -60,6 +66,59 @@ const SEOAnalytics = () => {
         .from("pillar_pages")
         .select("id, title, slug, status, views, reading_time, main_keyword")
         .order("views", { ascending: false });
+
+      // Fetch Search Console data
+      const { data: searchConsoleData } = await supabase
+        .from("search_console_data")
+        .select(`
+          *,
+          article:articles(id, title, slug)
+        `)
+        .order("clicks", { ascending: false });
+
+      // Calculate Search Console stats
+      const gscTotalClicks = searchConsoleData?.reduce((acc, item) => acc + (item.clicks || 0), 0) || 0;
+      const gscTotalImpressions = searchConsoleData?.reduce((acc, item) => acc + (item.impressions || 0), 0) || 0;
+      const gscAvgPosition = searchConsoleData && searchConsoleData.length > 0
+        ? searchConsoleData.reduce((acc, item) => acc + (item.position || 0), 0) / searchConsoleData.length
+        : 0;
+      const gscAvgCtr = searchConsoleData && searchConsoleData.length > 0
+        ? searchConsoleData.reduce((acc, item) => acc + (item.ctr || 0), 0) / searchConsoleData.length
+        : 0;
+
+      // Aggregate GSC data by article
+      const gscByArticle = searchConsoleData?.reduce((acc, item) => {
+        if (!item.article_id) return acc;
+        if (!acc[item.article_id]) {
+          acc[item.article_id] = {
+            article: item.article,
+            clicks: 0,
+            impressions: 0,
+            positionSum: 0,
+            ctrSum: 0,
+            count: 0,
+            keywords: new Set<string>(),
+          };
+        }
+        acc[item.article_id].clicks += item.clicks || 0;
+        acc[item.article_id].impressions += item.impressions || 0;
+        acc[item.article_id].positionSum += item.position || 0;
+        acc[item.article_id].ctrSum += item.ctr || 0;
+        acc[item.article_id].count += 1;
+        if (item.query) acc[item.article_id].keywords.add(item.query);
+        return acc;
+      }, {} as Record<string, { article: any; clicks: number; impressions: number; positionSum: number; ctrSum: number; count: number; keywords: Set<string> }>) || {};
+
+      const gscArticleStats = Object.values(gscByArticle)
+        .map(item => ({
+          article: item.article,
+          clicks: item.clicks,
+          impressions: item.impressions,
+          avgPosition: item.count > 0 ? item.positionSum / item.count : 0,
+          avgCtr: item.count > 0 ? item.ctrSum / item.count : 0,
+          topKeywords: Array.from(item.keywords).slice(0, 3),
+        }))
+        .sort((a, b) => b.clicks - a.clicks);
 
       // Calculate stats
       const totalArticles = allArticles?.length || 0;
@@ -114,6 +173,12 @@ const SEOAnalytics = () => {
         avgExternalLinks,
         internalLinksData: internalLinks || [],
         externalLinksData: externalLinks || [],
+        searchConsoleData: searchConsoleData || [],
+        gscTotalClicks,
+        gscTotalImpressions,
+        gscAvgPosition,
+        gscAvgCtr,
+        gscArticleStats,
       };
     },
   });
@@ -304,11 +369,15 @@ const SEOAnalytics = () => {
 
       {/* Tabs for different tables */}
       <Tabs defaultValue="articles" className="space-y-4">
-        <TabsList className="bg-card border border-border">
+        <TabsList className="bg-card border border-border flex-wrap">
           <TabsTrigger value="articles">Artigos SEO</TabsTrigger>
           <TabsTrigger value="topic-clusters">Topic Clusters</TabsTrigger>
           <TabsTrigger value="pillar-pages">Pillar Pages</TabsTrigger>
           <TabsTrigger value="no-keyword">Sem Keyword</TabsTrigger>
+          <TabsTrigger value="search-console" className="flex items-center gap-1">
+            <Search className="h-3 w-3" />
+            Search Console
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="articles">
@@ -537,6 +606,199 @@ const SEOAnalytics = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="search-console" className="space-y-6">
+          {/* GSC Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border border-border hover:border-primary/50 transition-all">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-normal">Total de Cliques</CardTitle>
+                <MousePointerClick className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-light tracking-wide text-primary">
+                  {(seoData?.gscTotalClicks || 0).toLocaleString('pt-BR')}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  últimos 30 dias
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-border hover:border-primary/50 transition-all">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-normal">Total de Impressões</CardTitle>
+                <Eye className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-light tracking-wide">
+                  {(seoData?.gscTotalImpressions || 0).toLocaleString('pt-BR')}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  últimos 30 dias
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-border hover:border-primary/50 transition-all">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-normal">Posição Média</CardTitle>
+                <Target className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-3xl font-light tracking-wide ${(seoData?.gscAvgPosition || 0) <= 10 ? 'text-primary' : (seoData?.gscAvgPosition || 0) <= 20 ? 'text-yellow-500' : 'text-destructive'}`}>
+                  {(seoData?.gscAvgPosition || 0).toFixed(1)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  no Google
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border border-border hover:border-primary/50 transition-all">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-normal">CTR Médio</CardTitle>
+                <Percent className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-3xl font-light tracking-wide ${(seoData?.gscAvgCtr || 0) >= 5 ? 'text-primary' : (seoData?.gscAvgCtr || 0) >= 2 ? 'text-yellow-500' : 'text-muted-foreground'}`}>
+                  {(seoData?.gscAvgCtr || 0).toFixed(2)}%
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  taxa de cliques
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sync Button */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-normal">Dados do Google Search Console</h3>
+              <p className="text-sm text-muted-foreground">
+                {seoData?.searchConsoleData?.length || 0} registros · Última sincronização: dados de exemplo
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                setIsSyncing(true);
+                try {
+                  const { error } = await supabase.functions.invoke('fetch-search-console');
+                  if (error) throw error;
+                  toast.success('Dados sincronizados com sucesso!');
+                  queryClient.invalidateQueries({ queryKey: ['admin-seo-analytics'] });
+                } catch (error) {
+                  console.error('Error syncing GSC data:', error);
+                  toast.error('Erro ao sincronizar. Verifique as credenciais.');
+                } finally {
+                  setIsSyncing(false);
+                }
+              }}
+              disabled={isSyncing}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? 'Sincronizando...' : 'Sincronizar Dados'}
+            </Button>
+          </div>
+
+          {/* Charts */}
+          {seoData?.searchConsoleData && seoData.searchConsoleData.length > 0 ? (
+            <SearchConsoleCharts data={seoData.searchConsoleData} />
+          ) : (
+            <Card className="border border-dashed border-primary/50 bg-primary/5">
+              <CardContent className="py-12 text-center">
+                <Search className="h-12 w-12 mx-auto text-primary/50 mb-4" />
+                <h3 className="text-lg font-normal mb-2">Nenhum dado do Search Console</h3>
+                <p className="text-muted-foreground text-sm mb-4">
+                  Clique em "Sincronizar Dados" para gerar dados de exemplo ou configure as credenciais do GSC para dados reais.
+                </p>
+                <Button
+                  onClick={async () => {
+                    setIsSyncing(true);
+                    try {
+                      const { error } = await supabase.functions.invoke('fetch-search-console');
+                      if (error) throw error;
+                      toast.success('Dados de exemplo gerados com sucesso!');
+                      queryClient.invalidateQueries({ queryKey: ['admin-seo-analytics'] });
+                    } catch (error) {
+                      console.error('Error generating mock GSC data:', error);
+                      toast.error('Erro ao gerar dados de exemplo.');
+                    } finally {
+                      setIsSyncing(false);
+                    }
+                  }}
+                  disabled={isSyncing}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                  Gerar Dados de Exemplo
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Performance by Article Table */}
+          {seoData?.gscArticleStats && seoData.gscArticleStats.length > 0 && (
+            <Card className="border border-border">
+              <CardHeader>
+                <CardTitle className="font-normal">Performance por Artigo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-normal">Artigo</TableHead>
+                      <TableHead className="font-normal">Posição</TableHead>
+                      <TableHead className="font-normal">Cliques</TableHead>
+                      <TableHead className="font-normal">Impressões</TableHead>
+                      <TableHead className="font-normal">CTR</TableHead>
+                      <TableHead className="font-normal">Top Keywords</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {seoData.gscArticleStats.map((stat, index) => (
+                      <TableRow key={stat.article?.id || index} className="hover:bg-accent/50">
+                        <TableCell>
+                          {stat.article ? (
+                            <Link
+                              to={`/admin/articles/${stat.article.id}`}
+                              className="font-normal hover:text-primary transition-colors line-clamp-1"
+                            >
+                              {stat.article.title}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">URL externa</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className={stat.avgPosition <= 10 ? 'text-primary' : stat.avgPosition <= 20 ? 'text-yellow-500' : 'text-muted-foreground'}>
+                            {stat.avgPosition.toFixed(1)}
+                          </span>
+                        </TableCell>
+                        <TableCell>{stat.clicks.toLocaleString('pt-BR')}</TableCell>
+                        <TableCell>{stat.impressions.toLocaleString('pt-BR')}</TableCell>
+                        <TableCell>
+                          <span className={stat.avgCtr >= 5 ? 'text-primary' : stat.avgCtr >= 2 ? 'text-yellow-500' : 'text-muted-foreground'}>
+                            {stat.avgCtr.toFixed(2)}%
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {stat.topKeywords.map((kw, i) => (
+                              <Badge key={i} variant="outline" className="text-xs">
+                                {kw}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
