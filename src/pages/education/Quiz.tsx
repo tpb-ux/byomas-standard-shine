@@ -17,8 +17,11 @@ import {
   RotateCcw,
   ChevronRight
 } from "lucide-react";
-import { useCourse, useModule, useModuleQuiz, useSubmitQuizAttempt, useQuizAttempts, QuizQuestion } from "@/hooks/useEducation";
+import { useCourse, useModule, useModuleQuiz, useSubmitQuizAttempt, useQuizAttempts, useStudentPoints, Badge } from "@/hooks/useEducation";
 import { useAuth } from "@/hooks/useAuth";
+import { useBadgeSystem } from "@/hooks/useBadgeSystem";
+import { BadgeUnlockModal } from "@/components/education/BadgeUnlockModal";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const Quiz = () => {
@@ -30,12 +33,16 @@ const Quiz = () => {
   const { data: module, isLoading: moduleLoading } = useModule(course?.id, moduleSlug || "");
   const { data: quiz, isLoading: quizLoading } = useModuleQuiz(module?.id);
   const { data: attempts } = useQuizAttempts(user?.id, quiz?.id);
+  const { data: studentPoints } = useStudentPoints(user?.id);
   const submitAttempt = useSubmitQuizAttempt();
+  const { checkAndAwardBadges, updateStudentStats, awardPerfectScoreBadge } = useBadgeSystem();
   
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);
   const [score, setScore] = useState(0);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [earnedBadge, setEarnedBadge] = useState<Badge | null>(null);
   
   const isLoading = moduleLoading || quizLoading;
   const questions = quiz?.questions || [];
@@ -65,6 +72,7 @@ const Quiz = () => {
     
     const finalScore = Math.round((correct / questions.length) * 100);
     const passed = finalScore >= passingScore;
+    const isPerfectScore = finalScore === 100;
     
     setScore(finalScore);
     setShowResults(true);
@@ -80,6 +88,55 @@ const Quiz = () => {
       
       if (passed) {
         toast.success("Parabéns! Você passou na avaliação!");
+        
+        // Update student stats
+        const pointsEarned = isPerfectScore ? 100 : 50;
+        await updateStudentStats(user.id, {
+          quizzes_passed: 1,
+          total_points: pointsEarned,
+        });
+        
+        // Check for perfect score badge
+        const userEmail = user.email || "";
+        const userName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Aluno";
+        
+        if (isPerfectScore) {
+          const perfectBadge = await awardPerfectScoreBadge(user.id, userEmail, userName);
+          if (perfectBadge) {
+            setEarnedBadge(perfectBadge);
+            setShowBadgeModal(true);
+          }
+        }
+        
+        // Check for other badges
+        const { newBadges } = await checkAndAwardBadges(
+          user.id,
+          userEmail,
+          userName,
+          studentPoints || null
+        );
+        
+        // Show first earned badge if not showing perfect badge
+        if (!isPerfectScore && newBadges.length > 0) {
+          setEarnedBadge(newBadges[0]);
+          setShowBadgeModal(true);
+        }
+        
+        // Send quiz passed notification
+        supabase.functions.invoke("send-education-notification", {
+          body: {
+            type: "quiz_passed",
+            userEmail,
+            userName,
+            data: {
+              moduleName: module?.title,
+              courseName: course?.title,
+              quizScore: finalScore,
+              pointsEarned,
+            },
+          },
+        }).catch(err => console.error("Failed to send quiz notification:", err));
+        
       } else {
         toast.error(`Você não atingiu a nota mínima de ${passingScore}%`);
       }
@@ -93,6 +150,11 @@ const Quiz = () => {
     setCurrentQuestion(0);
     setShowResults(false);
     setScore(0);
+  };
+
+  const handleBadgeModalClose = () => {
+    setShowBadgeModal(false);
+    setEarnedBadge(null);
   };
 
   if (isLoading) {
@@ -141,6 +203,13 @@ const Quiz = () => {
         
         <Navbar />
         
+        {/* Badge Unlock Modal */}
+        <BadgeUnlockModal 
+          badge={earnedBadge} 
+          open={showBadgeModal} 
+          onClose={handleBadgeModalClose} 
+        />
+        
         <section className="pt-32 pb-16 flex-1">
           <div className="container mx-auto px-6 max-w-2xl">
             <ScrollReveal>
@@ -172,6 +241,12 @@ const Quiz = () => {
                   }}>
                     {score}%
                   </div>
+                  
+                  {passed && (
+                    <p className="text-primary mb-8">
+                      +{score === 100 ? "100" : "50"} pontos conquistados!
+                    </p>
+                  )}
                   
                   <div className="space-y-4">
                     {passed ? (

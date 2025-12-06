@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -12,12 +13,13 @@ import {
   CheckCircle2, 
   ChevronLeft,
   ChevronRight,
-  BookOpen
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useCourse, useModule, useModuleLessons, useLesson, useMarkLessonComplete, useStudentProgress } from "@/hooks/useEducation";
+import { useCourse, useModule, useModuleLessons, useLesson, useMarkLessonComplete, useStudentProgress, useStudentPoints, Badge } from "@/hooks/useEducation";
 import { useAuth } from "@/hooks/useAuth";
+import { useBadgeSystem } from "@/hooks/useBadgeSystem";
+import { BadgeUnlockModal } from "@/components/education/BadgeUnlockModal";
 import { toast } from "sonner";
 
 const Lesson = () => {
@@ -34,7 +36,12 @@ const Lesson = () => {
   const { data: lessons } = useModuleLessons(module?.id);
   const { data: lesson, isLoading } = useLesson(module?.id, lessonSlug || "");
   const { data: progress } = useStudentProgress(user?.id, course?.id);
+  const { data: studentPoints } = useStudentPoints(user?.id);
   const markComplete = useMarkLessonComplete();
+  const { checkAndAwardBadges, updateStudentStats } = useBadgeSystem();
+  
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [earnedBadge, setEarnedBadge] = useState<Badge | null>(null);
   
   const completedLessonIds = new Set(progress?.map(p => p.lesson_id) || []);
   const isCompleted = lesson ? completedLessonIds.has(lesson.id) : false;
@@ -60,15 +67,62 @@ const Lesson = () => {
     }
     
     try {
+      // 1. Mark the lesson as complete
       await markComplete.mutateAsync({ userId: user.id, lessonId: lesson.id });
-      toast.success("Lição marcada como concluída!");
       
-      // Navigate to next lesson or back to module
-      if (nextLesson) {
+      // 2. Update student stats
+      await updateStudentStats(user.id, {
+        lessons_completed: 1, // Will be incremented
+        total_points: 10, // Points for completing a lesson
+      });
+      
+      // 3. Check if this completes the module
+      const completedAfter = completedLessonIds.size + 1;
+      const totalLessons = lessons?.length || 0;
+      const moduleComplete = completedAfter >= totalLessons;
+      
+      if (moduleComplete) {
+        await updateStudentStats(user.id, {
+          modules_completed: 1,
+          total_points: 50, // Bonus points for module completion
+        });
+      }
+      
+      // 4. Check and award badges
+      const userEmail = user.email || "";
+      const userName = user.user_metadata?.full_name || user.email?.split("@")[0] || "Aluno";
+      
+      const { newBadges } = await checkAndAwardBadges(
+        user.id,
+        userEmail,
+        userName,
+        studentPoints || null
+      );
+      
+      // 5. Show badge modal if earned
+      if (newBadges.length > 0) {
+        setEarnedBadge(newBadges[0]);
+        setShowBadgeModal(true);
+      } else {
+        toast.success("Lição marcada como concluída! +10 pontos");
+      }
+      
+      // 6. Navigate to next lesson after modal or immediately
+      if (nextLesson && newBadges.length === 0) {
         navigate(`/educacional/licao/${courseSlug}/${moduleSlug}/${nextLesson.slug}`);
       }
     } catch (error) {
       toast.error("Erro ao salvar progresso");
+    }
+  };
+
+  const handleBadgeModalClose = () => {
+    setShowBadgeModal(false);
+    setEarnedBadge(null);
+    
+    // Navigate to next lesson after closing modal
+    if (nextLesson) {
+      navigate(`/educacional/licao/${courseSlug}/${moduleSlug}/${nextLesson.slug}`);
     }
   };
 
@@ -114,6 +168,13 @@ const Lesson = () => {
       />
       
       <Navbar />
+      
+      {/* Badge Unlock Modal */}
+      <BadgeUnlockModal 
+        badge={earnedBadge} 
+        open={showBadgeModal} 
+        onClose={handleBadgeModalClose} 
+      />
       
       {/* Header */}
       <section className="pt-32 pb-8 bg-gradient-hero">
