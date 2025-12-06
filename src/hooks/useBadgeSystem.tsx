@@ -2,6 +2,8 @@ import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge, StudentPoints } from "./useEducation";
+import { toast } from "sonner";
+import { CelebrationToast } from "@/components/education/CelebrationToast";
 
 interface CheckBadgesResult {
   newBadges: Badge[];
@@ -14,6 +16,26 @@ const log = (message: string, data?: unknown) => {
   if (DEBUG) {
     console.log(`🎖️ [BadgeSystem] ${message}`, data ?? "");
   }
+};
+
+// Show celebration toast for badge
+const showCelebrationToast = (badge: Badge) => {
+  log(`🎉 Showing celebration toast for badge: ${badge.name}`);
+  toast.custom(
+    (t) => (
+      <CelebrationToast
+        badgeName={badge.name}
+        badgeIcon={badge.icon || "award"}
+        badgeColor={badge.color || "#10b981"}
+        points={badge.points || 0}
+        onDismiss={() => toast.dismiss(t)}
+      />
+    ),
+    {
+      duration: 6000,
+      position: "top-center",
+    }
+  );
 };
 
 export function useBadgeSystem() {
@@ -134,8 +156,12 @@ export function useBadgeSystem() {
             log(`❌ Error awarding badge: ${awardError.message}`);
           } else {
             log(`🏆 Badge "${badge.name}" awarded successfully!`);
-            newBadges.push(badge as Badge);
+            const awardedBadge = badge as Badge;
+            newBadges.push(awardedBadge);
             totalPointsEarned += badge.points || 0;
+
+            // Show celebration toast immediately
+            showCelebrationToast(awardedBadge);
 
             // Log the activity
             const { error: activityError } = await supabase.from("student_activity_log").insert({
@@ -339,6 +365,11 @@ export function useBadgeSystem() {
       if (error) throw error;
 
       log(`🏆 Perfect score badge "${perfectBadge.name}" awarded!`);
+      
+      const awardedBadge = perfectBadge as Badge;
+      
+      // Show celebration toast
+      showCelebrationToast(awardedBadge);
 
       // Log activity
       await supabase.from("student_activity_log").insert({
@@ -373,7 +404,7 @@ export function useBadgeSystem() {
       queryClient.invalidateQueries({ queryKey: ["student-badges"] });
       queryClient.invalidateQueries({ queryKey: ["student-points"] });
 
-      return perfectBadge as Badge;
+      return awardedBadge;
     } catch (error) {
       log("❌ Error awarding perfect score badge", error);
       console.error("Error awarding perfect score badge:", error);
