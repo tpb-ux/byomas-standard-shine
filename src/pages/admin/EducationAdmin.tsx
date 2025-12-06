@@ -21,9 +21,11 @@ import {
   BookOpen, 
   FileQuestion,
   Save,
-  X
+  X,
+  Award
 } from "lucide-react";
 import type { Course, CourseModule, ModuleLesson, ModuleQuiz, QuizQuestion } from "@/hooks/useEducation";
+import BadgeAdminTab from "@/components/admin/BadgeAdminTab";
 
 // Admin hooks
 function useAdminCourses() {
@@ -214,6 +216,10 @@ export default function EducationAdmin() {
           <TabsTrigger value="modules" disabled={!selectedCourseId}>Módulos</TabsTrigger>
           <TabsTrigger value="lessons" disabled={!selectedModuleId}>Lições</TabsTrigger>
           <TabsTrigger value="quizzes" disabled={!selectedModuleId}>Quizzes</TabsTrigger>
+          <TabsTrigger value="badges">
+            <Award className="h-4 w-4 mr-1" />
+            Badges
+          </TabsTrigger>
         </TabsList>
 
         {/* COURSES TAB */}
@@ -502,6 +508,11 @@ export default function EducationAdmin() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* BADGES TAB */}
+        <TabsContent value="badges">
+          <BadgeAdminTab />
         </TabsContent>
       </Tabs>
     </div>
