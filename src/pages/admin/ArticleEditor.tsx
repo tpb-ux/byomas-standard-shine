@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import {
   Plus,
   Trash2,
   Tag,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -553,6 +554,26 @@ export default function ArticleEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {isEditing && seoAnalysis && (
+            <Button variant="outline" asChild>
+              <Link to={`/admin/seo/${id}`}>
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Análise SEO
+                <Badge
+                  variant={
+                    seoAnalysis.score >= 80
+                      ? "default"
+                      : seoAnalysis.score >= 50
+                      ? "secondary"
+                      : "destructive"
+                  }
+                  className="ml-2 h-5 px-1.5 text-[10px]"
+                >
+                  {seoAnalysis.score}
+                </Badge>
+              </Link>
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={generateWithAI}
@@ -1164,6 +1185,15 @@ export default function ArticleEditor() {
                           ))}
                         </ul>
                       </div>
+                    )}
+
+                    {isEditing && (
+                      <Button variant="outline" className="w-full" asChild>
+                        <Link to={`/admin/seo/${id}`}>
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          Ver Análise Completa
+                        </Link>
+                      </Button>
                     )}
                   </CardContent>
                 </Card>
