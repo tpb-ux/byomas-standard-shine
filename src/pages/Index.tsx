@@ -42,12 +42,6 @@ const Index = () => {
     { name: "Sustentabilidade", icon: Globe, slug: "sustentabilidade" },
   ];
 
-  const metrics = [
-    { value: "4+", label: "anos", description: "De análise do mercado de carbono" },
-    { value: "500+", label: "artigos", description: "Publicados sobre economia verde" },
-    { value: "50K+", label: "leitores", description: "Mensais engajados" },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       {/* SEO */}
@@ -61,31 +55,6 @@ const Index = () => {
 
       <Navbar />
       <Hero />
-
-      {/* Metrics Section */}
-      <ScrollReveal>
-        <section className="py-16 md:py-20 bg-card border-y border-border">
-          <div className="container mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-              {metrics.map((metric, index) => (
-                <div key={index} className="text-center md:text-left">
-                  <div className="flex items-baseline justify-center md:justify-start gap-2 mb-2">
-                    <span className="text-5xl md:text-6xl font-bold text-primary">
-                      {metric.value}
-                    </span>
-                    <span className="text-lg text-muted-foreground">
-                      {metric.label}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {metric.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
       
       {/* Latest Articles Section */}
       <ScrollReveal>
