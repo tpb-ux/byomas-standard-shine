@@ -32,6 +32,7 @@ const AdminAutomation = lazy(() => import("./pages/admin/Automation"));
 const AdminCategories = lazy(() => import("./pages/admin/Categories"));
 const AdminSources = lazy(() => import("./pages/admin/Sources"));
 const AdminSEOAnalytics = lazy(() => import("./pages/admin/SEOAnalytics"));
+const AdminArticleSEO = lazy(() => import("./pages/admin/ArticleSEO"));
 const AdminPerformance = lazy(() => import("./pages/admin/Performance"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
 const AdminSiteSettings = lazy(() => import("./pages/admin/SiteSettings"));
@@ -183,6 +184,11 @@ const App = () => {
                 <Route path="/admin/seo" element={
                   <ProtectedRoute requiredRole="editor">
                     <AppLayout><AdminSEOAnalytics /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/seo/:articleId" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminArticleSEO /></AppLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/performance" element={
