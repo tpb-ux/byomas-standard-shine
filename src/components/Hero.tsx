@@ -1,10 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import heroForest from "@/assets/hero-forest.jpg";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen w-full bg-background pt-20">
+    <section className="relative min-h-screen w-full bg-background pt-20 overflow-hidden">
+      {/* Background image with parallax effect - Aerial forest view */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: `url(${heroForest})`,
+          transform: 'translateZ(0) scale(1.1)',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden'
+        }}
+        aria-hidden="true"
+      />
+      
+      {/* Overlay for text legibility */}
+      <div className="absolute inset-0 bg-background/70" />
+      
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-hero" />
       
       <div className="relative z-10 flex min-h-screen items-center">

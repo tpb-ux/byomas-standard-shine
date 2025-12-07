@@ -59,7 +59,7 @@ const Footer = () => {
       />
       
       {/* Overlay with transparency for text legibility */}
-      <div className="absolute inset-0 bg-background/50" />
+      <div className="absolute inset-0 bg-background/80" />
       
       {/* Content */}
       <div className="relative z-10 container mx-auto px-6 py-16">
