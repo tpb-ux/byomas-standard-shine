@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSocialLinks } from "@/hooks/useSiteSettings";
-
+import amazonForest from "@/assets/amazon-forest.jpg";
 const Footer = () => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,11 +46,11 @@ const Footer = () => {
 
   return (
     <footer className="relative overflow-hidden border-t border-border">
-      {/* Background image - Amazon rainforest */}
+      {/* Background image with parallax effect - Amazon rainforest */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
         style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1920&q=80")'
+          backgroundImage: `url(${amazonForest})`
         }}
       />
       
