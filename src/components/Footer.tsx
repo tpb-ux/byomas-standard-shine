@@ -45,8 +45,20 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-card border-t border-border">
-      <div className="container mx-auto px-6 py-16">
+    <footer className="relative overflow-hidden border-t border-border">
+      {/* Background image - Amazon rainforest */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=1920&q=80")'
+        }}
+      />
+      
+      {/* Overlay with transparency for text legibility */}
+      <div className="absolute inset-0 bg-card/90" />
+      
+      {/* Content */}
+      <div className="relative z-10 container mx-auto px-6 py-16">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
             <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-primary">
