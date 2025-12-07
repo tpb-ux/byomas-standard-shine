@@ -47,16 +47,15 @@ const Footer = () => {
   return (
     <footer className="relative overflow-hidden border-t border-border">
       {/* Background image with parallax effect - Amazon rainforest */}
-      <img 
-        src={amazonForest}
-        alt="Amazon rainforest background"
-        className="absolute inset-0 w-full h-full object-cover"
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
+          backgroundImage: `url(${amazonForest})`,
           transform: 'translateZ(0) scale(1.1)',
           willChange: 'transform',
           backfaceVisibility: 'hidden'
         }}
-        loading="lazy"
+        aria-hidden="true"
       />
       
       {/* Overlay with transparency for text legibility */}
