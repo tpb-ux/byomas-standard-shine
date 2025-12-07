@@ -51,11 +51,16 @@ const Footer = () => {
         src={amazonForest}
         alt="Amazon rainforest background"
         className="absolute inset-0 w-full h-full object-cover"
+        style={{ 
+          transform: 'translateZ(0) scale(1.1)',
+          willChange: 'transform',
+          backfaceVisibility: 'hidden'
+        }}
         loading="lazy"
       />
       
       {/* Overlay with transparency for text legibility */}
-      <div className="absolute inset-0 bg-background/70" />
+      <div className="absolute inset-0 bg-background/50" />
       
       {/* Content */}
       <div className="relative z-10 container mx-auto px-6 py-16">
