@@ -62,7 +62,7 @@ const Hero = () => {
       <div 
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
         style={{
-          background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--card)) 100%)'
+          background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
         }}
         aria-hidden="true"
       />
