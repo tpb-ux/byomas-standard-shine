@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.fetch-search-console]
 verify_jwt = false
+
+[functions.analyze-seo-article]
+verify_jwt = false

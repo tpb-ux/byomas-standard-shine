@@ -407,7 +407,7 @@ const SEOAnalytics = () => {
                         <TableCell>
                           {metric.article ? (
                             <Link
-                              to={`/admin/articles/${metric.article.id}`}
+                              to={`/admin/seo/${metric.article.id}`}
                               className="font-normal hover:text-primary transition-colors line-clamp-1"
                             >
                               {metric.article.title}
