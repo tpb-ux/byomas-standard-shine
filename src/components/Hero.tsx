@@ -18,11 +18,13 @@ const Hero = () => {
         aria-hidden="true"
       />
       
-      {/* Overlay for text legibility */}
-      <div className="absolute inset-0 bg-background/70" />
-      
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-hero" />
+      {/* Overlay with dark blue transparency */}
+      <div 
+        className="absolute inset-0"
+        style={{ 
+          background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.85), hsla(220, 18%, 14%, 0.75))'
+        }}
+      />
       
       <div className="relative z-10 flex min-h-screen items-center">
         <div className="container mx-auto px-6">
