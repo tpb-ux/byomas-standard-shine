@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useMemo } from "react";
 import { ArrowLeft, Calendar, Clock, User, Eye, HelpCircle, ChevronDown } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,6 +7,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import BlogSidebar from "@/components/BlogSidebar";
 import RelatedPages from "@/components/RelatedPages";
 import InArticleLinks from "@/components/InArticleLinks";
+import TableOfContents from "@/components/TableOfContents";
 import { SEOHead, ArticleSchema, FAQSchema } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +101,31 @@ const BlogPost = () => {
 
   // Check if article has FAQs
   const hasFaqs = article.faqs && article.faqs.length > 0;
+
+  // Extract headings from content for Table of Contents
+  const tocItems = useMemo(() => {
+    if (!article.content) return [];
+    
+    const headingRegex = /<h([2-3])[^>]*(?:id="([^"]*)")?[^>]*>(.*?)<\/h\1>/gi;
+    const items: { id: string; title: string; level: number }[] = [];
+    let match;
+    let counter = 0;
+    
+    while ((match = headingRegex.exec(article.content)) !== null) {
+      const level = parseInt(match[1]);
+      const existingId = match[2];
+      const titleHtml = match[3];
+      // Remove HTML tags from title
+      const title = titleHtml.replace(/<[^>]*>/g, '').trim();
+      const id = existingId || `heading-${counter++}`;
+      
+      if (title) {
+        items.push({ id, title, level });
+      }
+    }
+    
+    return items;
+  }, [article.content]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -217,6 +244,13 @@ const BlogPost = () => {
           <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
             {/* Main Content */}
             <div className="flex-1 max-w-4xl">
+              {/* Table of Contents - SEO 2025 */}
+              {tocItems.length > 0 && (
+                <ScrollReveal>
+                  <TableOfContents items={tocItems} className="mb-8" />
+                </ScrollReveal>
+              )}
+
               <ScrollReveal>
                 <article
                   className="prose prose-lg max-w-none

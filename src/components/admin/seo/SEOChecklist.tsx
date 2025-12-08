@@ -176,14 +176,14 @@ function generateChecklist(article: any, seoMetrics: any, internalLinks: any[], 
     recommendation: "Use números, power words ou perguntas para tornar o título mais atrativo."
   });
 
-  // META
+  // META - SEO 2025: 140-155 caracteres ideal
   items.push({
     id: "meta-description-length",
     category: "meta",
-    label: "Meta description entre 120-160 caracteres",
-    status: description.length >= 120 && description.length <= 160 ? "pass" : description.length > 0 ? "warning" : "fail",
+    label: "Meta description entre 140-155 caracteres",
+    status: description.length >= 140 && description.length <= 155 ? "pass" : description.length >= 120 && description.length <= 160 ? "warning" : "fail",
     value: `${description.length} chars`,
-    recommendation: "A meta description ideal tem entre 120 e 160 caracteres."
+    recommendation: "A meta description ideal tem entre 140 e 155 caracteres para exibição completa no Google."
   });
 
   items.push({
@@ -202,15 +202,15 @@ function generateChecklist(article: any, seoMetrics: any, internalLinks: any[], 
     recommendation: "Adicione um call-to-action como 'Saiba mais', 'Descubra', 'Confira'."
   });
 
-  // CONTENT
+  // CONTENT - SEO 2025: 850-2500 palavras
   const wordCount = seoMetrics?.word_count || content.split(/\s+/).length;
   items.push({
     id: "content-length",
     category: "content",
-    label: "Conteúdo com mais de 1500 palavras",
-    status: wordCount >= 1500 ? "pass" : wordCount >= 1000 ? "warning" : "fail",
+    label: "Conteúdo entre 850-2500 palavras",
+    status: wordCount >= 850 && wordCount <= 2500 ? "pass" : wordCount >= 600 && wordCount <= 3000 ? "warning" : "fail",
     value: `${wordCount} palavras`,
-    recommendation: "Artigos com mais de 1500 palavras tendem a rankear melhor no Google."
+    recommendation: "Artigos devem ter entre 850 e 2500 palavras. Faixa ideal: 1200-2000 palavras."
   });
 
   items.push({
@@ -222,32 +222,35 @@ function generateChecklist(article: any, seoMetrics: any, internalLinks: any[], 
     recommendation: "Use apenas um H1 por página, que deve conter a palavra-chave principal."
   });
 
+  // SEO 2025: Mínimo 4 H2
   items.push({
     id: "content-h2",
     category: "content",
-    label: "Pelo menos 3 subtítulos H2",
-    status: (seoMetrics?.h2_count || 0) >= 3 ? "pass" : (seoMetrics?.h2_count || 0) >= 1 ? "warning" : "fail",
+    label: "Pelo menos 4 subtítulos H2",
+    status: (seoMetrics?.h2_count || 0) >= 4 ? "pass" : (seoMetrics?.h2_count || 0) >= 2 ? "warning" : "fail",
     value: seoMetrics?.h2_count || 0,
-    recommendation: "Use H2 para estruturar o conteúdo em seções lógicas."
+    recommendation: "Use pelo menos 4 H2 para estruturar o conteúdo em seções lógicas."
   });
 
+  // SEO 2025: Mínimo 3 H3
   items.push({
     id: "content-h3",
     category: "content",
-    label: "Subtítulos H3 para subseções",
-    status: (seoMetrics?.h3_count || 0) >= 2 ? "pass" : (seoMetrics?.h3_count || 0) >= 1 ? "warning" : "fail",
+    label: "Pelo menos 3 subtítulos H3",
+    status: (seoMetrics?.h3_count || 0) >= 3 ? "pass" : (seoMetrics?.h3_count || 0) >= 1 ? "warning" : "fail",
     value: seoMetrics?.h3_count || 0,
-    recommendation: "Use H3 dentro de seções H2 para melhor hierarquia."
+    recommendation: "Use pelo menos 3 H3 dentro de seções H2 para melhor hierarquia."
   });
 
+  // SEO 2025: Densidade 0.8-1.3%
   const density = seoMetrics?.keyword_density || 0;
   items.push({
     id: "content-density",
     category: "content",
-    label: "Densidade de palavra-chave entre 1-2.5%",
-    status: density >= 1 && density <= 2.5 ? "pass" : density > 0 && density < 4 ? "warning" : "fail",
+    label: "Densidade de palavra-chave entre 0.8-1.3%",
+    status: density >= 0.8 && density <= 1.3 ? "pass" : density > 0.5 && density < 2 ? "warning" : "fail",
     value: `${density.toFixed(2)}%`,
-    recommendation: "A densidade ideal é entre 1% e 2.5%. Muito baixa ou muito alta prejudica o ranking."
+    recommendation: "A densidade ideal é entre 0.8% e 1.3%. Nunca ultrapassar 2%."
   });
 
   items.push({
