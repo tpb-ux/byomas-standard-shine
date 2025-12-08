@@ -238,7 +238,7 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center space-x-1">
           <span className="text-xl font-bold text-primary">AMAZONIA</span>
-          <span className="text-xl font-bold text-foreground italic">RESEARCH</span>
+          <span className="text-xl font-bold text-foreground italic bg-primary/30 px-1.5 py-0.5 rounded">RESEARCH</span>
         </Link>
         
         {/* Desktop Navigation */}
@@ -332,7 +332,7 @@ const Navbar = () => {
               <div className="flex flex-col gap-4 mt-8">
                 <Link to="/" className="flex items-center space-x-1 mb-4" onClick={() => setIsOpen(false)}>
                   <span className="text-xl font-bold text-primary">AMAZONIA</span>
-                  <span className="text-xl font-bold text-foreground">RESEARCH</span>
+                  <span className="text-xl font-bold text-foreground italic bg-primary/30 px-1.5 py-0.5 rounded">RESEARCH</span>
                 </Link>
                 
                 {renderMobileDropdown("PARA VOCÊ", paraVoceLinks, paraVoceOpen, setParaVoceOpen)}
