@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { TrendingUp, ArrowRight, Leaf, Factory, Building2, Plane, ShoppingBag, Zap } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
+import ScrollReveal from "@/components/ScrollReveal";
+import RelatedPages from "@/components/RelatedPages";
+import { useBlogArticles } from "@/hooks/useBlogArticles";
 
 const casosSucesso = [
   {
@@ -88,7 +92,16 @@ const casosSucesso = [
   }
 ];
 
+const RELATED_TAGS = ["sustentabilidade", "carbono-neutro", "empresas-verdes", "esg", "economia-circular"];
+
 const CasosDeSucesso = () => {
+  const { data: articles, isLoading } = useBlogArticles();
+  
+  // Filtrar artigos que tenham tags relacionadas a casos de sucesso/sustentabilidade
+  const relatedArticles = articles?.filter(article => 
+    article.tags?.some(tag => RELATED_TAGS.includes(tag.slug))
+  ).slice(0, 4) || [];
+
   return (
     <>
       <SEOHead
@@ -100,22 +113,32 @@ const CasosDeSucesso = () => {
       <Navbar />
       
       <main className="min-h-screen bg-background pt-20">
+        {/* Breadcrumb */}
+        <div className="container mx-auto px-6 pt-4">
+          <Breadcrumb items={[
+            { label: "Para sua Empresa", href: "#" },
+            { label: "Casos de Sucesso" }
+          ]} />
+        </div>
+
         {/* Hero Section */}
-        <section className="relative py-20 bg-gradient-to-b from-muted/50 to-background">
+        <section className="relative py-16 bg-gradient-to-b from-muted/50 to-background">
           <div className="container mx-auto px-6">
-            <div className="max-w-3xl">
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Inspiração
-              </Badge>
-              <h1 className="text-4xl md:text-5xl font-light text-foreground mb-6">
-                Casos de <span className="text-primary">Sucesso</span>
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Empresas brasileiras que estão liderando a transformação sustentável 
-                e provando que é possível lucrar enquanto se protege o planeta.
-              </p>
-            </div>
+            <ScrollReveal>
+              <div className="max-w-3xl">
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  Inspiração
+                </Badge>
+                <h1 className="text-4xl md:text-5xl font-light text-foreground mb-6">
+                  Casos de <span className="text-primary">Sucesso</span>
+                </h1>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  Empresas brasileiras que estão liderando a transformação sustentável 
+                  e provando que é possível lucrar enquanto se protege o planeta.
+                </p>
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -123,65 +146,85 @@ const CasosDeSucesso = () => {
         <section className="py-16">
           <div className="container mx-auto px-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {casosSucesso.map((caso) => (
-                <Card key={caso.empresa} className={`group hover:border-primary/30 transition-all duration-300 ${caso.cor}`}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="p-3 rounded-lg bg-background/50">
-                        <caso.icon className="h-6 w-6 text-primary" />
+              {casosSucesso.map((caso, index) => (
+                <ScrollReveal key={caso.empresa} delay={index * 0.1}>
+                  <Card className={`group hover:border-primary/30 transition-all duration-300 h-full ${caso.cor}`}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="p-3 rounded-lg bg-background/50">
+                          <caso.icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <Badge variant="secondary" className="text-xs">
+                          {caso.setor}
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        {caso.setor}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-xl mt-4">{caso.empresa}</CardTitle>
-                    <p className="text-sm font-medium text-primary">{caso.destaque}</p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {caso.descricao}
-                    </p>
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-foreground">Resultados:</p>
-                      <ul className="space-y-1">
-                        {caso.resultados.map((resultado) => (
-                          <li key={resultado} className="flex items-start gap-2 text-xs text-muted-foreground">
-                            <ArrowRight className="h-3 w-3 text-primary mt-0.5 shrink-0" />
-                            {resultado}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <CardTitle className="text-xl mt-4">{caso.empresa}</CardTitle>
+                      <p className="text-sm font-medium text-primary">{caso.destaque}</p>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {caso.descricao}
+                      </p>
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-foreground">Resultados:</p>
+                        <ul className="space-y-1">
+                          {caso.resultados.map((resultado) => (
+                            <li key={resultado} className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <ArrowRight className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                              {resultado}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </ScrollReveal>
               ))}
             </div>
           </div>
         </section>
 
+        {/* Artigos Relacionados */}
+        {(relatedArticles.length > 0 || isLoading) && (
+          <section className="py-16 bg-muted/20">
+            <div className="container mx-auto px-6">
+              <ScrollReveal>
+                <RelatedPages 
+                  articles={relatedArticles}
+                  isLoading={isLoading}
+                  title="Artigos Relacionados"
+                  variant="vertical"
+                />
+              </ScrollReveal>
+            </div>
+          </section>
+        )}
+
         {/* CTA Section */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-6 text-center">
-            <h2 className="text-2xl md:text-3xl font-light text-foreground mb-4">
-              Sua empresa pode ser o próximo caso de sucesso
-            </h2>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Descubra como implementar práticas sustentáveis que geram resultados 
-              reais para o seu negócio e para o planeta.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/contato">
-                <Button size="lg" className="gap-2">
-                  Iniciar Transformação
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/guias">
-                <Button variant="outline" size="lg">
-                  Ver Guias Práticos
-                </Button>
-              </Link>
-            </div>
+            <ScrollReveal>
+              <h2 className="text-2xl md:text-3xl font-light text-foreground mb-4">
+                Sua empresa pode ser o próximo caso de sucesso
+              </h2>
+              <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Descubra como implementar práticas sustentáveis que geram resultados 
+                reais para o seu negócio e para o planeta.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/contato">
+                  <Button size="lg" className="gap-2">
+                    Iniciar Transformação
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/guias">
+                  <Button variant="outline" size="lg">
+                    Ver Guias Práticos
+                  </Button>
+                </Link>
+              </div>
+            </ScrollReveal>
           </div>
         </section>
       </main>
