@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Menu, ChevronDown, User, LogOut, LayoutDashboard, Trophy, BookOpen, Calculator, FileText, GraduationCap, Building2, Leaf, Award, TrendingUp, BarChart3, Globe, DollarSign, Lightbulb, Mail } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -28,6 +28,7 @@ const Navbar = () => {
   const [paraEmpresaOpen, setParaEmpresaOpen] = useState(false);
   const [relatorioOpen, setRelatorioOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const location = useLocation();
 
   const paraVoceLinks = [
     { 
@@ -76,13 +77,13 @@ const Navbar = () => {
       icon: Leaf
     },
     { 
-      to: "/blog?tag=certificacoes", 
+      to: "/certificacoes-ambientais", 
       label: "Certificações Ambientais",
       description: "Certificações e selos para empresas sustentáveis",
       icon: Award
     },
     { 
-      to: "/blog?tag=casos-de-sucesso", 
+      to: "/casos-de-sucesso", 
       label: "Casos de Sucesso",
       description: "Empresas que transformaram seus negócios com sustentabilidade",
       icon: TrendingUp
@@ -128,68 +129,93 @@ const Navbar = () => {
     },
   ];
 
+  // Check if any link in the menu matches current route
+  const isMenuActive = (links: typeof paraVoceLinks) => {
+    return links.some(link => {
+      const linkPath = link.to.split('?')[0];
+      return location.pathname === linkPath || location.pathname.startsWith(linkPath + '/');
+    });
+  };
+
   const renderDropdownMenu = (
     label: string,
     links: typeof paraVoceLinks
-  ) => (
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuTrigger className="text-sm font-medium text-muted-foreground bg-transparent hover:text-foreground hover:bg-transparent data-[state=open]:bg-transparent">
-            {label}
-          </NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[350px] gap-1 p-2 bg-card border border-border">
-              {links.map((link) => (
-                <li key={link.to + link.label}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      to={link.to}
-                      className={cn(
-                        "flex items-start gap-3 select-none p-3 leading-none no-underline outline-none transition-colors hover:bg-accent/10 hover:text-accent-foreground focus:bg-accent/10 focus:text-accent-foreground rounded-md"
-                      )}
-                    >
-                      <link.icon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                      <div className="space-y-1">
-                        <div className="text-sm font-medium text-foreground leading-none">
-                          {link.label}
+  ) => {
+    const isActive = isMenuActive(links);
+    
+    return (
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger 
+              className={cn(
+                "text-sm font-medium bg-transparent hover:text-foreground hover:bg-transparent data-[state=open]:bg-transparent transition-colors",
+                isActive 
+                  ? "text-primary border-b-2 border-primary" 
+                  : "text-muted-foreground"
+              )}
+            >
+              {label}
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <ul className="grid w-[350px] gap-1 p-2 bg-card border border-border">
+                {links.map((link) => (
+                  <li key={link.to + link.label}>
+                    <NavigationMenuLink asChild>
+                      <Link
+                        to={link.to}
+                        className={cn(
+                          "flex items-start gap-3 select-none p-3 leading-none no-underline outline-none rounded-md",
+                          "transition-all duration-200 ease-out",
+                          "hover:translate-x-2 hover:bg-accent/10 hover:text-accent-foreground",
+                          "focus:translate-x-2 focus:bg-accent/10 focus:text-accent-foreground"
+                        )}
+                      >
+                        <link.icon className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-foreground leading-none">
+                            {link.label}
+                          </div>
+                          <p className="line-clamp-2 text-xs text-muted-foreground mt-1">
+                            {link.description}
+                          </p>
                         </div>
-                        <p className="line-clamp-2 text-xs text-muted-foreground mt-1">
-                          {link.description}
-                        </p>
-                      </div>
-                    </Link>
-                  </NavigationMenuLink>
-                </li>
-              ))}
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
-  );
+                      </Link>
+                    </NavigationMenuLink>
+                  </li>
+                ))}
+              </ul>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
+    );
+  };
 
   const renderMobileDropdown = (
     label: string,
     links: typeof paraVoceLinks,
-    isOpen: boolean,
+    isDropdownOpen: boolean,
     setOpen: (open: boolean) => void
   ) => (
     <div className="border-b border-border pb-2">
       <button
-        onClick={() => setOpen(!isOpen)}
-        className="flex items-center justify-between w-full text-lg font-medium text-muted-foreground transition-colors hover:text-foreground py-2"
+        onClick={() => setOpen(!isDropdownOpen)}
+        className={cn(
+          "flex items-center justify-between w-full text-lg font-medium transition-colors py-2",
+          isMenuActive(links) ? "text-primary" : "text-muted-foreground hover:text-foreground"
+        )}
       >
         {label}
-        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+        <ChevronDown className={cn("h-4 w-4 transition-transform", isDropdownOpen && "rotate-180")} />
       </button>
-      {isOpen && (
+      {isDropdownOpen && (
         <div className="pl-4 mt-2 space-y-2">
           {links.map((link) => (
             <Link
               key={link.to + link.label}
               to={link.to}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-2"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary py-2 transition-all duration-200 hover:translate-x-2"
               onClick={() => setIsOpen(false)}
             >
               <link.icon className="h-4 w-4 text-primary" />
@@ -217,13 +243,23 @@ const Navbar = () => {
 
           <Link 
             to="/sobre" 
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground px-4"
+            className={cn(
+              "text-sm font-medium transition-colors px-4",
+              location.pathname === "/sobre" 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             SOBRE
           </Link>
           <Link 
             to="/contato" 
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground px-4"
+            className={cn(
+              "text-sm font-medium transition-colors px-4",
+              location.pathname === "/contato" 
+                ? "text-primary border-b-2 border-primary" 
+                : "text-muted-foreground hover:text-foreground"
+            )}
           >
             CONTATO
           </Link>
@@ -299,14 +335,20 @@ const Navbar = () => {
                 
                 <Link 
                   to="/sobre" 
-                  className="text-lg font-medium text-muted-foreground transition-colors hover:text-foreground py-2 border-b border-border"
+                  className={cn(
+                    "text-lg font-medium transition-colors py-2 border-b border-border",
+                    location.pathname === "/sobre" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
                   onClick={() => setIsOpen(false)}
                 >
                   SOBRE
                 </Link>
                 <Link 
                   to="/contato" 
-                  className="text-lg font-medium text-muted-foreground transition-colors hover:text-foreground py-2 border-b border-border"
+                  className={cn(
+                    "text-lg font-medium transition-colors py-2 border-b border-border",
+                    location.pathname === "/contato" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
                   onClick={() => setIsOpen(false)}
                 >
                   CONTATO
