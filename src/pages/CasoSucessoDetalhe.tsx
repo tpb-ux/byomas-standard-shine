@@ -6,227 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  ArrowRight, ArrowLeft, Leaf, Factory, Building2, Plane, ShoppingBag, Zap,
-  TrendingUp, Target, Calendar, ExternalLink, Award, Recycle, Globe
+  ArrowRight, ArrowLeft, Globe, ExternalLink, Award, Calendar
 } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import ScrollReveal from "@/components/ScrollReveal";
 import { SocialShareButtons } from "@/components/SocialShareButtons";
-import { LucideIcon } from "lucide-react";
-
-interface Metrica {
-  label: string;
-  valor: string;
-  unidade: string;
-  icon: LucideIcon;
-}
-
-interface TimelineItem {
-  ano: string;
-  titulo: string;
-  descricao: string;
-}
-
-interface Iniciativa {
-  titulo: string;
-  descricao: string;
-  icon: LucideIcon;
-}
-
-interface CasoDetalhe {
-  slug: string;
-  empresa: string;
-  setor: string;
-  icon: LucideIcon;
-  destaque: string;
-  descricaoCompleta: string;
-  cor: string;
-  metricas: Metrica[];
-  timeline: TimelineItem[];
-  iniciativas: Iniciativa[];
-  certificacoes: string[];
-  website?: string;
-}
-
-const casosDetalhe: Record<string, CasoDetalhe> = {
-  natura: {
-    slug: "natura",
-    empresa: "Natura",
-    setor: "Cosméticos",
-    icon: Leaf,
-    destaque: "Carbono Negativo desde 2007",
-    descricaoCompleta: "A Natura é uma das maiores empresas de cosméticos do Brasil e foi pioneira mundial ao se tornar carbono negativa em 2007. A empresa compensa mais emissões de gases de efeito estufa do que produz, através de investimentos em conservação florestal na Amazônia e programas de bioeconomia com comunidades tradicionais. Sua abordagem integra sustentabilidade em toda a cadeia de valor, desde a extração responsável de ingredientes até embalagens eco-eficientes.",
-    cor: "bg-green-500/10 border-green-500/20",
-    metricas: [
-      { label: "CO2 Removido", valor: "500k", unidade: "ton/ano", icon: Leaf },
-      { label: "Energia Renovável", valor: "100", unidade: "%", icon: Zap },
-      { label: "Redução de Emissões", valor: "33", unidade: "% desde 2013", icon: TrendingUp },
-      { label: "Comunidades Parceiras", valor: "40+", unidade: "na Amazônia", icon: Globe }
-    ],
-    timeline: [
-      { ano: "2007", titulo: "Carbono Neutro", descricao: "Primeira empresa de cosméticos do mundo a se tornar carbono neutra." },
-      { ano: "2013", titulo: "Programa Carbono Neutro", descricao: "Início do programa estruturado de redução e compensação de emissões." },
-      { ano: "2020", titulo: "Carbono Negativo", descricao: "Passa a remover mais carbono da atmosfera do que emite em suas operações." },
-      { ano: "2024", titulo: "Bioeconomia Amazônica", descricao: "Expansão da rede de comunidades fornecedoras de bioingredientes." }
-    ],
-    iniciativas: [
-      { titulo: "Bioingredientes Amazônicos", descricao: "Parceria com 40+ comunidades para extração sustentável de ingredientes.", icon: Leaf },
-      { titulo: "Embalagens Ecoeficientes", descricao: "Redução de plástico e aumento de conteúdo reciclado nas embalagens.", icon: Recycle },
-      { titulo: "Logística Verde", descricao: "Frota de veículos elétricos e otimização de rotas de distribuição.", icon: TrendingUp }
-    ],
-    certificacoes: ["B Corp", "Carbono Neutro", "UEBT"],
-    website: "https://www.natura.com.br"
-  },
-  suzano: {
-    slug: "suzano",
-    empresa: "Suzano",
-    setor: "Papel e Celulose",
-    icon: Factory,
-    destaque: "Maior produtora de celulose do mundo",
-    descricaoCompleta: "A Suzano é a maior produtora de celulose de eucalipto do mundo e um exemplo global de como a indústria pode ser parte da solução climática. A empresa remove mais carbono da atmosfera do que emite, sendo carbono positiva. Com mais de 2,4 milhões de hectares de florestas plantadas e áreas de conservação, a Suzano demonstra que produção e preservação podem andar juntas.",
-    cor: "bg-emerald-500/10 border-emerald-500/20",
-    metricas: [
-      { label: "CO2 Capturado", valor: "15M", unidade: "ton/ano", icon: Leaf },
-      { label: "Florestas Plantadas", valor: "2.4M", unidade: "hectares", icon: Factory },
-      { label: "Meta 2030", valor: "40M", unidade: "ton CO2", icon: Target },
-      { label: "Biodiversidade", valor: "1M+", unidade: "ha preservados", icon: Globe }
-    ],
-    timeline: [
-      { ano: "2019", titulo: "Fusão Suzano-Fibria", descricao: "Criação da maior produtora de celulose do mundo." },
-      { ano: "2020", titulo: "Compromisso Climático", descricao: "Anúncio da meta de capturar 40 milhões de toneladas de CO2 até 2030." },
-      { ano: "2022", titulo: "Carbono Positivo", descricao: "Reconhecimento oficial como empresa carbono positiva." },
-      { ano: "2024", titulo: "Bioprodutos", descricao: "Expansão do portfólio de produtos de base biológica." }
-    ],
-    iniciativas: [
-      { titulo: "Florestas do Futuro", descricao: "Programa de restauração de áreas degradadas com espécies nativas.", icon: Leaf },
-      { titulo: "Lignina Verde", descricao: "Desenvolvimento de bioprodutos a partir de resíduos da celulose.", icon: Recycle },
-      { titulo: "Comunidades Florestais", descricao: "Programas sociais em comunidades vizinhas às operações.", icon: Globe }
-    ],
-    certificacoes: ["FSC", "PEFC", "ISO 14001"],
-    website: "https://www.suzano.com.br"
-  },
-  ambev: {
-    slug: "ambev",
-    empresa: "Ambev",
-    setor: "Bebidas",
-    icon: Building2,
-    destaque: "100% energia renovável até 2025",
-    descricaoCompleta: "A Ambev, maior cervejaria do Brasil e uma das maiores do mundo, está transformando suas operações com uma agenda ambiciosa de sustentabilidade. A empresa se comprometeu a operar com 100% de energia renovável até 2025 e tem investido pesadamente em economia circular, redução do uso de água e logística verde.",
-    cor: "bg-blue-500/10 border-blue-500/20",
-    metricas: [
-      { label: "Redução de Água", valor: "22", unidade: "% por litro", icon: Factory },
-      { label: "Embalagens Circulares", valor: "85", unidade: "%", icon: Recycle },
-      { label: "Meta Energia", valor: "100", unidade: "% renovável", icon: Zap },
-      { label: "Garrafas Retornáveis", valor: "1B+", unidade: "/ano", icon: Globe }
-    ],
-    timeline: [
-      { ano: "2018", titulo: "Meta 2025", descricao: "Anúncio das metas de sustentabilidade para 2025." },
-      { ano: "2020", titulo: "Frota Elétrica", descricao: "Início da eletrificação da frota de distribuição." },
-      { ano: "2022", titulo: "Cerveja Carbono Neutro", descricao: "Lançamento de produtos com pegada neutra de carbono." },
-      { ano: "2024", titulo: "Economia Circular", descricao: "85% das embalagens já são retornáveis ou recicláveis." }
-    ],
-    iniciativas: [
-      { titulo: "Água: Cada Gota Conta", descricao: "Programa de eficiência hídrica em todas as cervejarias.", icon: Factory },
-      { titulo: "Retornáveis", descricao: "Incentivo ao uso de garrafas retornáveis com desconto ao consumidor.", icon: Recycle },
-      { titulo: "VOA", descricao: "Programa de logística inteligente com veículos elétricos.", icon: TrendingUp }
-    ],
-    certificacoes: ["ISO 14001", "Water Stewardship", "CDP A List"],
-    website: "https://www.ambev.com.br"
-  },
-  "latam-airlines": {
-    slug: "latam-airlines",
-    empresa: "LATAM Airlines",
-    setor: "Aviação",
-    icon: Plane,
-    destaque: "Net Zero até 2050",
-    descricaoCompleta: "O grupo LATAM Airlines, maior grupo de aviação da América Latina, está liderando a transição para uma aviação mais sustentável. A empresa foi pioneira no uso de combustíveis sustentáveis de aviação (SAF) na região e oferece programas de compensação de carbono para seus passageiros.",
-    cor: "bg-sky-500/10 border-sky-500/20",
-    metricas: [
-      { label: "Meta Net Zero", valor: "2050", unidade: "", icon: Target },
-      { label: "Eficiência", valor: "30", unidade: "% mais eficiente", icon: TrendingUp },
-      { label: "SAF", valor: "1º", unidade: "voo LATAM 2022", icon: Plane },
-      { label: "Compensação", valor: "5M+", unidade: "ton CO2", icon: Leaf }
-    ],
-    timeline: [
-      { ano: "2019", titulo: "Estratégia Climática", descricao: "Lançamento da estratégia de descarbonização." },
-      { ano: "2022", titulo: "Primeiro Voo SAF", descricao: "Primeiro voo com combustível sustentável de aviação na América do Sul." },
-      { ano: "2023", titulo: "Frota Renovada", descricao: "Incorporação de aeronaves mais eficientes." },
-      { ano: "2024", titulo: "Expansão SAF", descricao: "Ampliação do uso de combustíveis sustentáveis." }
-    ],
-    iniciativas: [
-      { titulo: "Programa de Compensação", descricao: "Passageiros podem compensar suas emissões no momento da compra.", icon: Leaf },
-      { titulo: "SAF - Combustível Sustentável", descricao: "Pioneirismo no uso de SAF na América Latina.", icon: Plane },
-      { titulo: "Operações Eficientes", descricao: "Otimização de rotas e redução de peso nas aeronaves.", icon: TrendingUp }
-    ],
-    certificacoes: ["IATA Environmental Assessment", "ISO 14001"],
-    website: "https://www.latamairlines.com"
-  },
-  magalu: {
-    slug: "magalu",
-    empresa: "Magalu",
-    setor: "Varejo",
-    icon: ShoppingBag,
-    destaque: "Logística Verde",
-    descricaoCompleta: "O Magazine Luiza está revolucionando o varejo brasileiro com iniciativas de logística sustentável e economia circular. A empresa investe em frota elétrica para entregas, embalagens 100% recicláveis e programas de reciclagem de eletrônicos para consumidores.",
-    cor: "bg-purple-500/10 border-purple-500/20",
-    metricas: [
-      { label: "Entregas Verdes", valor: "30", unidade: "% da frota", icon: TrendingUp },
-      { label: "Embalagens", valor: "100", unidade: "% recicláveis", icon: Recycle },
-      { label: "Reciclagem", valor: "50k+", unidade: "eletrônicos/ano", icon: Globe },
-      { label: "CDs Solares", valor: "15", unidade: "instalações", icon: Zap }
-    ],
-    timeline: [
-      { ano: "2020", titulo: "Logística Verde", descricao: "Início do programa de eletrificação da frota." },
-      { ano: "2021", titulo: "Embalagens Sustentáveis", descricao: "Transição para embalagens 100% recicláveis." },
-      { ano: "2023", titulo: "Reciclagem", descricao: "Lançamento do programa de reciclagem de eletrônicos." },
-      { ano: "2024", titulo: "Energia Solar", descricao: "Expansão de painéis solares nos centros de distribuição." }
-    ],
-    iniciativas: [
-      { titulo: "Frota Elétrica", descricao: "Veículos elétricos para entregas de última milha.", icon: TrendingUp },
-      { titulo: "Programa Recicla", descricao: "Coleta de eletrônicos usados nas lojas.", icon: Recycle },
-      { titulo: "Energia Solar", descricao: "Instalação de painéis solares nos centros de distribuição.", icon: Zap }
-    ],
-    certificacoes: ["B Corp", "ISO 14001"],
-    website: "https://www.magazineluiza.com.br"
-  },
-  raizen: {
-    slug: "raizen",
-    empresa: "Raízen",
-    setor: "Energia",
-    icon: Zap,
-    destaque: "Líder em etanol 2G",
-    descricaoCompleta: "A Raízen, joint venture entre Cosan e Shell, é uma das maiores empresas de energia do Brasil e pioneira mundial na produção de etanol de segunda geração. O etanol 2G é produzido a partir do bagaço da cana, aproveitando resíduos e gerando até 80% menos emissões que a gasolina.",
-    cor: "bg-yellow-500/10 border-yellow-500/20",
-    metricas: [
-      { label: "Produção", valor: "2ª", unidade: "maior do mundo", icon: Factory },
-      { label: "Redução CO2", valor: "80", unidade: "% vs gasolina", icon: Leaf },
-      { label: "Bioeletricidade", valor: "11M", unidade: "residências", icon: Zap },
-      { label: "Etanol 2G", valor: "82M", unidade: "litros/ano", icon: TrendingUp }
-    ],
-    timeline: [
-      { ano: "2015", titulo: "Primeira Planta 2G", descricao: "Inauguração da primeira planta de etanol 2G do Brasil." },
-      { ano: "2021", titulo: "IPO", descricao: "Abertura de capital na B3 com foco em energia renovável." },
-      { ano: "2023", titulo: "Expansão 2G", descricao: "Ampliação da capacidade de produção de etanol 2G." },
-      { ano: "2024", titulo: "Biogás", descricao: "Início da produção de biometano em escala comercial." }
-    ],
-    iniciativas: [
-      { titulo: "Etanol 2G", descricao: "Produção de combustível a partir do bagaço da cana.", icon: Leaf },
-      { titulo: "Bioeletricidade", descricao: "Geração de energia elétrica a partir da biomassa.", icon: Zap },
-      { titulo: "Biometano", descricao: "Produção de gás renovável para transporte pesado.", icon: Factory }
-    ],
-    certificacoes: ["Bonsucro", "RenovaBio", "ISO 14001"],
-    website: "https://www.raizen.com.br"
-  }
-};
-
-const outrosCasos = [
-  { slug: "natura", empresa: "Natura", setor: "Cosméticos", icon: Leaf },
-  { slug: "suzano", empresa: "Suzano", setor: "Papel e Celulose", icon: Factory },
-  { slug: "ambev", empresa: "Ambev", setor: "Bebidas", icon: Building2 },
-  { slug: "latam-airlines", empresa: "LATAM Airlines", setor: "Aviação", icon: Plane },
-  { slug: "magalu", empresa: "Magalu", setor: "Varejo", icon: ShoppingBag },
-  { slug: "raizen", empresa: "Raízen", setor: "Energia", icon: Zap }
-];
+import { casosDetalhe, casosSucesso } from "@/data/casosDetalhe";
 
 const CasoSucessoDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -253,7 +38,7 @@ const CasoSucessoDetalhe = () => {
   }
 
   const Icon = caso.icon;
-  const otherCases = outrosCasos.filter(c => c.slug !== slug).slice(0, 3);
+  const otherCases = casosSucesso.filter(c => c.slug !== slug).slice(0, 3);
 
   return (
     <>
@@ -349,26 +134,30 @@ const CasoSucessoDetalhe = () => {
           <div className="container mx-auto px-6">
             <ScrollReveal>
               <h2 className="text-2xl font-semibold mb-8 flex items-center gap-3">
-                <TrendingUp className="h-6 w-6 text-primary" />
+                <Award className="h-6 w-6 text-primary" />
                 Métricas de Impacto
               </h2>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {caso.metricas.map((metrica, index) => (
+                  <Card key={index} className="text-center">
+                    <CardContent className="pt-6">
+                      <div className="p-3 rounded-full bg-primary/10 w-fit mx-auto mb-4">
+                        <metrica.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="text-3xl font-bold text-foreground mb-1">
+                        {metrica.valor}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {metrica.unidade}
+                      </div>
+                      <div className="text-xs font-medium text-foreground mt-2">
+                        {metrica.label}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </ScrollReveal>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {caso.metricas.map((metrica, index) => {
-                const MetricIcon = metrica.icon;
-                return (
-                  <ScrollReveal key={metrica.label} delay={index * 0.1}>
-                    <Card className="text-center p-6 hover:border-primary/30 transition-colors">
-                      <MetricIcon className="h-8 w-8 text-primary mx-auto mb-4" />
-                      <p className="text-3xl font-bold text-foreground">{metrica.valor}</p>
-                      <p className="text-sm text-muted-foreground">{metrica.unidade}</p>
-                      <p className="text-xs text-muted-foreground mt-2">{metrica.label}</p>
-                    </Card>
-                  </ScrollReveal>
-                );
-              })}
-            </div>
           </div>
         </section>
 
@@ -380,40 +169,36 @@ const CasoSucessoDetalhe = () => {
                 <Calendar className="h-6 w-6 text-primary" />
                 Jornada Sustentável
               </h2>
-            </ScrollReveal>
-            
-            <div className="max-w-3xl mx-auto">
-              <div className="relative">
-                {/* Timeline Line */}
-                <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-0.5 bg-border md:-translate-x-1/2" />
-                
-                {caso.timeline.map((item, index) => (
-                  <ScrollReveal key={item.ano} delay={index * 0.15}>
-                    <div className={`relative flex items-start gap-6 mb-8 ${
-                      index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
-                    }`}>
-                      {/* Year Badge */}
-                      <div className="absolute left-0 md:left-1/2 md:-translate-x-1/2 z-10">
-                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">
-                          {item.ano.slice(2)}
+              <div className="max-w-3xl mx-auto">
+                <div className="relative">
+                  {/* Linha vertical */}
+                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+                  
+                  <div className="space-y-8">
+                    {caso.timeline.map((item, index) => (
+                      <div key={index} className="relative flex gap-6 pl-12">
+                        {/* Ponto */}
+                        <div className="absolute left-0 w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                          <div className="w-4 h-4 rounded-full bg-primary" />
                         </div>
-                      </div>
-                      
-                      {/* Content */}
-                      <div className={`ml-14 md:ml-0 md:w-[calc(50%-2rem)] ${
-                        index % 2 === 0 ? 'md:pr-8 md:text-right' : 'md:pl-8'
-                      }`}>
-                        <Card className="p-4">
-                          <p className="text-sm text-primary font-medium">{item.ano}</p>
-                          <h3 className="font-semibold text-foreground">{item.titulo}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{item.descricao}</p>
+                        
+                        <Card className="flex-1">
+                          <CardHeader className="pb-2">
+                            <div className="flex items-center gap-3">
+                              <Badge variant="outline">{item.ano}</Badge>
+                              <CardTitle className="text-lg">{item.titulo}</CardTitle>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground">{item.descricao}</p>
+                          </CardContent>
                         </Card>
                       </div>
-                    </div>
-                  </ScrollReveal>
-                ))}
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
           </div>
         </section>
 
@@ -421,32 +206,23 @@ const CasoSucessoDetalhe = () => {
         <section className="py-16 bg-muted/20">
           <div className="container mx-auto px-6">
             <ScrollReveal>
-              <h2 className="text-2xl font-semibold mb-8 flex items-center gap-3">
-                <Target className="h-6 w-6 text-primary" />
-                Principais Iniciativas
-              </h2>
+              <h2 className="text-2xl font-semibold mb-8">Principais Iniciativas</h2>
+              <div className="grid md:grid-cols-3 gap-6">
+                {caso.iniciativas.map((iniciativa, index) => (
+                  <Card key={index} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="p-3 rounded-lg bg-primary/10 w-fit mb-3">
+                        <iniciativa.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <CardTitle className="text-lg">{iniciativa.titulo}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{iniciativa.descricao}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </ScrollReveal>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              {caso.iniciativas.map((iniciativa, index) => {
-                const InicIcon = iniciativa.icon;
-                return (
-                  <ScrollReveal key={iniciativa.titulo} delay={index * 0.1}>
-                    <Card className="h-full hover:border-primary/30 transition-colors">
-                      <CardHeader>
-                        <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                          <InicIcon className="h-6 w-6 text-primary" />
-                        </div>
-                        <CardTitle className="text-lg">{iniciativa.titulo}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">{iniciativa.descricao}</p>
-                      </CardContent>
-                    </Card>
-                  </ScrollReveal>
-                );
-              })}
-            </div>
           </div>
         </section>
 
@@ -454,13 +230,11 @@ const CasoSucessoDetalhe = () => {
         <section className="py-16">
           <div className="container mx-auto px-6">
             <ScrollReveal>
-              <h2 className="text-2xl font-semibold mb-6 flex items-center gap-3">
-                <Award className="h-6 w-6 text-primary" />
-                Certificações
-              </h2>
+              <h2 className="text-2xl font-semibold mb-6">Certificações</h2>
               <div className="flex flex-wrap gap-3">
                 {caso.certificacoes.map((cert) => (
-                  <Badge key={cert} variant="outline" className="text-sm px-4 py-2">
+                  <Badge key={cert} variant="secondary" className="text-sm py-2 px-4">
+                    <Award className="h-4 w-4 mr-2" />
                     {cert}
                   </Badge>
                 ))}
@@ -474,40 +248,44 @@ const CasoSucessoDetalhe = () => {
           <div className="container mx-auto px-6">
             <ScrollReveal>
               <h2 className="text-2xl font-semibold mb-8">Outros Casos de Sucesso</h2>
-            </ScrollReveal>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              {otherCases.map((outro, index) => {
-                const OutroIcon = outro.icon;
-                return (
-                  <ScrollReveal key={outro.slug} delay={index * 0.1}>
-                    <Link to={`/casos-de-sucesso/${outro.slug}`}>
-                      <Card className="group hover:border-primary/30 transition-all cursor-pointer">
-                        <CardContent className="p-6 flex items-center gap-4">
-                          <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                            <OutroIcon className="h-6 w-6 text-primary" />
+              <div className="grid md:grid-cols-3 gap-6">
+                {otherCases.map((other) => (
+                  <Link key={other.slug} to={`/casos-de-sucesso/${other.slug}`}>
+                    <Card className={`group hover:border-primary/30 transition-all ${other.cor}`}>
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-background/50">
+                            <other.icon className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <h3 className="font-semibold group-hover:text-primary transition-colors">{outro.empresa}</h3>
-                            <p className="text-sm text-muted-foreground">{outro.setor}</p>
+                            <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                              {other.empresa}
+                            </CardTitle>
+                            <p className="text-xs text-muted-foreground">{other.setor}</p>
                           </div>
-                          <ArrowRight className="h-5 w-5 ml-auto text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  </ScrollReveal>
-                );
-              })}
-            </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-primary">{other.destaque}</p>
+                        <div className="mt-4 flex items-center text-sm text-muted-foreground group-hover:text-primary transition-colors">
+                          Ver detalhes
+                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </ScrollReveal>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="py-16 bg-gradient-to-b from-muted/30 to-background">
+        <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-6 text-center">
             <ScrollReveal>
-              <h2 className="text-2xl md:text-3xl font-semibold text-foreground mb-4">
-                Sua empresa pode ser o próximo case
+              <h2 className="text-2xl md:text-3xl font-light text-foreground mb-4">
+                Transforme sua empresa em um case de sucesso
               </h2>
               <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
                 Descubra como implementar práticas sustentáveis que geram resultados 
@@ -522,7 +300,7 @@ const CasoSucessoDetalhe = () => {
                 </Link>
                 <Link to="/casos-de-sucesso">
                   <Button variant="outline" size="lg">
-                    Ver Todos os Cases
+                    Ver Todos os Casos
                   </Button>
                 </Link>
               </div>

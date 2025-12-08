@@ -1,110 +1,30 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { TrendingUp, ArrowRight, Leaf, Factory, Building2, Plane, ShoppingBag, Zap } from "lucide-react";
+import { TrendingUp, ArrowRight, Scale, X } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import ScrollReveal from "@/components/ScrollReveal";
 import RelatedPages from "@/components/RelatedPages";
 import { useBlogArticles } from "@/hooks/useBlogArticles";
 import { SocialShareButtons } from "@/components/SocialShareButtons";
-
-const casosSucesso = [
-  {
-    slug: "natura",
-    empresa: "Natura",
-    setor: "Cosméticos",
-    icon: Leaf,
-    destaque: "Carbono Negativo desde 2007",
-    descricao: "A Natura foi a primeira empresa de cosméticos do mundo a se tornar carbono negativo, compensando mais emissões do que produz.",
-    resultados: [
-      "100% energia renovável nas operações",
-      "Redução de 33% nas emissões desde 2013",
-      "Bioingredientes de 40 comunidades amazônicas"
-    ],
-    cor: "bg-green-500/10 border-green-500/20"
-  },
-  {
-    slug: "suzano",
-    empresa: "Suzano",
-    setor: "Papel e Celulose",
-    icon: Factory,
-    destaque: "Maior produtora de celulose do mundo",
-    descricao: "A Suzano remove mais carbono da atmosfera do que emite, sendo exemplo global de indústria sustentável no setor florestal.",
-    resultados: [
-      "Carbono positivo: remove 15mi ton CO2/ano",
-      "2,4 milhões de hectares de florestas plantadas",
-      "Meta de capturar 40mi ton CO2 até 2030"
-    ],
-    cor: "bg-emerald-500/10 border-emerald-500/20"
-  },
-  {
-    slug: "ambev",
-    empresa: "Ambev",
-    setor: "Bebidas",
-    icon: Building2,
-    destaque: "100% energia renovável até 2025",
-    descricao: "A maior cervejaria do Brasil está transformando suas operações com metas ambiciosas de sustentabilidade e economia circular.",
-    resultados: [
-      "Redução de 22% no uso de água por litro",
-      "85% das embalagens já são retornáveis/recicláveis",
-      "Frota de caminhões elétricos em expansão"
-    ],
-    cor: "bg-blue-500/10 border-blue-500/20"
-  },
-  {
-    slug: "latam-airlines",
-    empresa: "LATAM Airlines",
-    setor: "Aviação",
-    icon: Plane,
-    destaque: "Net Zero até 2050",
-    descricao: "O maior grupo de aviação da América Latina lidera a transição para combustíveis sustentáveis de aviação (SAF).",
-    resultados: [
-      "1º voo SAF na América do Sul em 2022",
-      "Programa de compensação de carbono para passageiros",
-      "Investimento em aeronaves mais eficientes"
-    ],
-    cor: "bg-sky-500/10 border-sky-500/20"
-  },
-  {
-    slug: "magalu",
-    empresa: "Magalu",
-    setor: "Varejo",
-    icon: ShoppingBag,
-    destaque: "Logística Verde",
-    descricao: "O Magazine Luiza está revolucionando o varejo brasileiro com iniciativas de logística sustentável e inclusão digital.",
-    resultados: [
-      "Frota de veículos elétricos para entregas",
-      "Embalagens 100% recicláveis",
-      "Programa de reciclagem de eletrônicos"
-    ],
-    cor: "bg-purple-500/10 border-purple-500/20"
-  },
-  {
-    slug: "raizen",
-    empresa: "Raízen",
-    setor: "Energia",
-    icon: Zap,
-    destaque: "Líder em etanol 2G",
-    descricao: "Joint venture entre Cosan e Shell, a Raízen é pioneira na produção de etanol de segunda geração no Brasil.",
-    resultados: [
-      "2ª maior produtora de etanol do mundo",
-      "Etanol 2G: 80% menos emissões que gasolina",
-      "Bioeletricidade para 11 milhões de residências"
-    ],
-    cor: "bg-yellow-500/10 border-yellow-500/20"
-  }
-];
+import ComparisonModal from "@/components/ComparisonModal";
+import { casosSucesso, casosDetalhe } from "@/data/casosDetalhe";
+import { toast } from "sonner";
 
 const SETORES = ["Todos", "Cosméticos", "Papel e Celulose", "Bebidas", "Aviação", "Varejo", "Energia"];
 const RELATED_TAGS = ["sustentabilidade", "carbono-neutro", "empresas-verdes", "esg", "economia-circular"];
 
 const CasosDeSucesso = () => {
   const [setorSelecionado, setSetorSelecionado] = useState("Todos");
+  const [empresasSelecionadas, setEmpresasSelecionadas] = useState<string[]>([]);
+  const [mostrarComparacao, setMostrarComparacao] = useState(false);
   const { data: articles, isLoading } = useBlogArticles();
   
   const casosFiltrados = setorSelecionado === "Todos" 
@@ -114,6 +34,19 @@ const CasosDeSucesso = () => {
   const relatedArticles = articles?.filter(article => 
     article.tags?.some(tag => RELATED_TAGS.includes(tag.slug))
   ).slice(0, 4) || [];
+
+  const toggleSelecao = (slug: string) => {
+    setEmpresasSelecionadas(prev => {
+      if (prev.includes(slug)) {
+        return prev.filter(s => s !== slug);
+      }
+      if (prev.length >= 3) {
+        toast.warning("Máximo de 3 empresas para comparação");
+        return prev;
+      }
+      return [...prev, slug];
+    });
+  };
 
   return (
     <>
@@ -125,7 +58,7 @@ const CasosDeSucesso = () => {
       
       <Navbar />
       
-      <main className="min-h-screen bg-background pt-20">
+      <main className="min-h-screen bg-background pt-20 pb-24">
         {/* Breadcrumb */}
         <div className="container mx-auto px-6 pt-4">
           <Breadcrumb items={[
@@ -174,14 +107,17 @@ const CasosDeSucesso = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm text-muted-foreground">Filtrar por setor:</span>
                 {SETORES.map((setor) => (
-                  <Badge
-                    key={setor}
-                    variant={setorSelecionado === setor ? "default" : "outline"}
-                    className="cursor-pointer hover:bg-primary/10 transition-colors"
-                    onClick={() => setSetorSelecionado(setor)}
-                  >
-                    {setor}
-                  </Badge>
+                  <motion.div key={setor} whileTap={{ scale: 0.95 }}>
+                    <Badge
+                      variant={setorSelecionado === setor ? "default" : "outline"}
+                      className={`cursor-pointer transition-all duration-200 ${
+                        setorSelecionado === setor ? "shadow-md" : "hover:bg-primary/10"
+                      }`}
+                      onClick={() => setSetorSelecionado(setor)}
+                    >
+                      {setor}
+                    </Badge>
+                  </motion.div>
                 ))}
               </div>
             </ScrollReveal>
@@ -192,60 +128,92 @@ const CasosDeSucesso = () => {
         <section className="py-16">
           <div className="container mx-auto px-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {casosFiltrados.map((caso, index) => (
-                <ScrollReveal key={caso.empresa} delay={index * 0.1}>
-                  <Link to={`/casos-de-sucesso/${caso.slug}`}>
-                    <Card className={`group hover:border-primary/30 transition-all duration-300 h-full cursor-pointer ${caso.cor}`}>
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="p-3 rounded-lg bg-background/50">
-                            <caso.icon className="h-6 w-6 text-primary" />
+              <AnimatePresence mode="popLayout">
+                {casosFiltrados.map((caso, index) => (
+                  <motion.div
+                    key={caso.slug}
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ 
+                      duration: 0.3, 
+                      delay: index * 0.05,
+                      ease: "easeOut"
+                    }}
+                    layout
+                  >
+                    <Card className={`group relative hover:border-primary/30 transition-all duration-300 h-full ${caso.cor}`}>
+                      {/* Checkbox de seleção */}
+                      <div 
+                        className="absolute top-3 right-3 z-10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={empresasSelecionadas.includes(caso.slug)}
+                          onCheckedChange={() => toggleSelecao(caso.slug)}
+                          className="h-5 w-5 bg-background/80 border-2"
+                        />
+                      </div>
+
+                      <Link to={`/casos-de-sucesso/${caso.slug}`}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between pr-8">
+                            <div className="p-3 rounded-lg bg-background/50">
+                              <caso.icon className="h-6 w-6 text-primary" />
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {caso.setor}
+                            </Badge>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {caso.setor}
-                          </Badge>
-                        </div>
-                        <CardTitle className="text-xl mt-4 group-hover:text-primary transition-colors">{caso.empresa}</CardTitle>
-                        <p className="text-sm font-medium text-primary">{caso.destaque}</p>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {caso.descricao}
-                        </p>
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-foreground">Resultados:</p>
-                          <ul className="space-y-1">
-                            {caso.resultados.map((resultado) => (
-                              <li key={resultado} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                <ArrowRight className="h-3 w-3 text-primary mt-0.5 shrink-0" />
-                                {resultado}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="pt-2 flex items-center text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                          Ver detalhes completos
-                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </CardContent>
+                          <CardTitle className="text-xl mt-4 group-hover:text-primary transition-colors">{caso.empresa}</CardTitle>
+                          <p className="text-sm font-medium text-primary">{caso.destaque}</p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                            {caso.descricao}
+                          </p>
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-foreground">Resultados:</p>
+                            <ul className="space-y-1">
+                              {caso.resultados.map((resultado) => (
+                                <li key={resultado} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                  <ArrowRight className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                                  {resultado}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div className="pt-2 flex items-center text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                            Ver detalhes completos
+                            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </CardContent>
+                      </Link>
                     </Card>
-                  </Link>
-                </ScrollReveal>
-              ))}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
             
-            {casosFiltrados.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">Nenhum caso encontrado para o setor selecionado.</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => setSetorSelecionado("Todos")}
+            <AnimatePresence mode="wait">
+              {casosFiltrados.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center py-12"
                 >
-                  Ver todos os casos
-                </Button>
-              </div>
-            )}
+                  <p className="text-muted-foreground">Nenhum caso encontrado para o setor selecionado.</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => setSetorSelecionado("Todos")}
+                  >
+                    Ver todos os casos
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 
@@ -293,6 +261,67 @@ const CasosDeSucesso = () => {
           </div>
         </section>
       </main>
+
+      {/* Barra Fixa de Comparação */}
+      <AnimatePresence>
+        {empresasSelecionadas.length > 0 && (
+          <motion.div
+            initial={{ y: 100 }}
+            animate={{ y: 0 }}
+            exit={{ y: 100 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t shadow-lg z-50"
+          >
+            <div className="container mx-auto px-6 py-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge variant="secondary" className="shrink-0">
+                    {empresasSelecionadas.length}/3 selecionadas
+                  </Badge>
+                  <div className="flex flex-wrap gap-2">
+                    {empresasSelecionadas.map(slug => (
+                      <Badge key={slug} variant="outline" className="gap-1 pr-1">
+                        {casosDetalhe[slug]?.empresa}
+                        <button
+                          onClick={() => toggleSelecao(slug)}
+                          className="ml-1 p-0.5 hover:bg-muted rounded"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setEmpresasSelecionadas([])}
+                  >
+                    Limpar
+                  </Button>
+                  <Button 
+                    size="sm"
+                    disabled={empresasSelecionadas.length < 2}
+                    onClick={() => setMostrarComparacao(true)}
+                    className="gap-2"
+                  >
+                    <Scale className="h-4 w-4" />
+                    Comparar ({empresasSelecionadas.length})
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Comparação */}
+      <ComparisonModal
+        open={mostrarComparacao}
+        onOpenChange={setMostrarComparacao}
+        empresasSelecionadas={empresasSelecionadas}
+      />
       
       <Footer />
     </>
