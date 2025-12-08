@@ -1,9 +1,13 @@
+import { useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, Share2, ExternalLink } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Scale, ExternalLink, Download, Image, FileText, Loader2 } from "lucide-react";
 import { casosDetalhe } from "@/data/casosDetalhe";
 import { SocialShareButtons } from "@/components/SocialShareButtons";
+import { toast } from "sonner";
 
 interface ComparisonModalProps {
   open: boolean;
@@ -12,11 +16,75 @@ interface ComparisonModalProps {
 }
 
 const ComparisonModal = ({ open, onOpenChange, empresasSelecionadas }: ComparisonModalProps) => {
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const casos = empresasSelecionadas.map(slug => casosDetalhe[slug]).filter(Boolean);
 
   if (casos.length < 2) return null;
 
   const metricLabels = ["CO2", "Energia", "Redução", "Impacto"];
+
+  const exportAsImage = async () => {
+    if (!tableRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      const dataUrl = await toPng(tableRef.current, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+        style: { padding: "24px", borderRadius: "8px" }
+      });
+      
+      const link = document.createElement("a");
+      link.download = `comparacao-${casos.map(c => c.slug).join("-")}.png`;
+      link.href = dataUrl;
+      link.click();
+      
+      toast.success("Imagem exportada com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao exportar imagem");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const exportAsPDF = async () => {
+    if (!tableRef.current) return;
+    
+    setIsExporting(true);
+    try {
+      const dataUrl = await toPng(tableRef.current, {
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+      });
+      
+      const printWindow = window.open("", "_blank");
+      if (printWindow) {
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>Comparação - ${casos.map(c => c.empresa).join(" vs ")}</title>
+              <style>
+                @media print { body { margin: 0; } img { max-width: 100%; } }
+                body { display: flex; justify-content: center; padding: 20px; font-family: system-ui; }
+              </style>
+            </head>
+            <body>
+              <img src="${dataUrl}" />
+              <script>window.onload = () => { window.print(); }</script>
+            </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+      
+      toast.success("PDF aberto para impressão!");
+    } catch (error) {
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -28,8 +96,20 @@ const ComparisonModal = ({ open, onOpenChange, empresasSelecionadas }: Compariso
           </DialogTitle>
         </DialogHeader>
 
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full">
+        {/* Área capturável para exportação */}
+        <div ref={tableRef} className="bg-white dark:bg-slate-900 rounded-lg">
+          {/* Cabeçalho para exportação */}
+          <div className="text-center pb-4 border-b mb-4">
+            <h2 className="text-xl font-bold text-foreground">
+              Comparação: {casos.map(c => c.empresa).join(" vs ")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Byoma Research • {new Date().toLocaleDateString("pt-BR")}
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
             {/* Header com nomes das empresas */}
             <thead>
               <tr className="border-b">
@@ -131,6 +211,7 @@ const ComparisonModal = ({ open, onOpenChange, empresasSelecionadas }: Compariso
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <DialogFooter className="mt-6 flex-col sm:flex-row gap-4">
@@ -144,6 +225,30 @@ const ComparisonModal = ({ open, onOpenChange, empresasSelecionadas }: Compariso
               compact
             />
           </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={isExporting}>
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {isExporting ? "Exportando..." : "Exportar"}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={exportAsImage}>
+                <Image className="h-4 w-4 mr-2" />
+                Exportar como PNG
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportAsPDF}>
+                <FileText className="h-4 w-4 mr-2" />
+                Exportar como PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fechar
           </Button>
