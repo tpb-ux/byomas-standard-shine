@@ -34,7 +34,7 @@ const Hero = () => {
             <h1 className="mb-8 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               <span className="text-foreground">Libere o poder do conhecimento da </span>
               <span className="text-primary">Amazonia</span>
-              <span className="italic bg-primary/30 px-2 py-1 rounded text-foreground"> Insight, Research & Relatórios ESG</span>
+              <span className="italic bg-primary/30 px-2 py-1 rounded text-foreground">Insight, Research & Relatórios ESG</span>
             </h1>
             <p className="mb-10 max-w-2xl text-lg text-muted-foreground">
               Análises, tendências e insights do mercado de crédito de carbono, 
