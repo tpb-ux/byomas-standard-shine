@@ -89,6 +89,12 @@ const Navbar = () => {
       icon: TrendingUp
     },
     { 
+      to: "/ranking-sustentabilidade", 
+      label: "Ranking de Sustentabilidade",
+      description: "As empresas mais sustentáveis do Brasil em um ranking interativo",
+      icon: Trophy
+    },
+    { 
       to: "/contato", 
       label: "Entre em Contato",
       description: "Fale com nossa equipe para soluções corporativas",

@@ -20,6 +20,14 @@ export interface Iniciativa {
   icon: LucideIcon;
 }
 
+export interface HistoricoMetrica {
+  ano: number;
+  co2Removido: number;
+  energiaRenovavel: number;
+  reducaoEmissoes: number;
+  investimentoSustentabilidade: number;
+}
+
 export interface CasoDetalhe {
   slug: string;
   empresa: string;
@@ -33,6 +41,7 @@ export interface CasoDetalhe {
   iniciativas: Iniciativa[];
   certificacoes: string[];
   website?: string;
+  historicoMetricas: HistoricoMetrica[];
 }
 
 export const casosDetalhe: Record<string, CasoDetalhe> = {
@@ -62,7 +71,15 @@ export const casosDetalhe: Record<string, CasoDetalhe> = {
       { titulo: "Logística Verde", descricao: "Frota de veículos elétricos e otimização de rotas de distribuição.", icon: TrendingUp }
     ],
     certificacoes: ["B Corp", "Carbono Neutro", "UEBT"],
-    website: "https://www.natura.com.br"
+    website: "https://www.natura.com.br",
+    historicoMetricas: [
+      { ano: 2018, co2Removido: 280, energiaRenovavel: 78, reducaoEmissoes: 15, investimentoSustentabilidade: 120 },
+      { ano: 2019, co2Removido: 320, energiaRenovavel: 82, reducaoEmissoes: 18, investimentoSustentabilidade: 145 },
+      { ano: 2020, co2Removido: 380, energiaRenovavel: 88, reducaoEmissoes: 22, investimentoSustentabilidade: 180 },
+      { ano: 2021, co2Removido: 420, energiaRenovavel: 92, reducaoEmissoes: 26, investimentoSustentabilidade: 210 },
+      { ano: 2022, co2Removido: 460, energiaRenovavel: 96, reducaoEmissoes: 30, investimentoSustentabilidade: 250 },
+      { ano: 2023, co2Removido: 500, energiaRenovavel: 100, reducaoEmissoes: 33, investimentoSustentabilidade: 290 }
+    ]
   },
   suzano: {
     slug: "suzano",
@@ -90,7 +107,15 @@ export const casosDetalhe: Record<string, CasoDetalhe> = {
       { titulo: "Comunidades Florestais", descricao: "Programas sociais em comunidades vizinhas às operações.", icon: Globe }
     ],
     certificacoes: ["FSC", "PEFC", "ISO 14001"],
-    website: "https://www.suzano.com.br"
+    website: "https://www.suzano.com.br",
+    historicoMetricas: [
+      { ano: 2018, co2Removido: 8000, energiaRenovavel: 85, reducaoEmissoes: 10, investimentoSustentabilidade: 500 },
+      { ano: 2019, co2Removido: 10000, energiaRenovavel: 88, reducaoEmissoes: 15, investimentoSustentabilidade: 650 },
+      { ano: 2020, co2Removido: 11500, energiaRenovavel: 90, reducaoEmissoes: 20, investimentoSustentabilidade: 800 },
+      { ano: 2021, co2Removido: 13000, energiaRenovavel: 92, reducaoEmissoes: 25, investimentoSustentabilidade: 950 },
+      { ano: 2022, co2Removido: 14200, energiaRenovavel: 94, reducaoEmissoes: 30, investimentoSustentabilidade: 1100 },
+      { ano: 2023, co2Removido: 15000, energiaRenovavel: 96, reducaoEmissoes: 35, investimentoSustentabilidade: 1300 }
+    ]
   },
   ambev: {
     slug: "ambev",
@@ -118,7 +143,15 @@ export const casosDetalhe: Record<string, CasoDetalhe> = {
       { titulo: "VOA", descricao: "Programa de logística inteligente com veículos elétricos.", icon: TrendingUp }
     ],
     certificacoes: ["ISO 14001", "Water Stewardship", "CDP A List"],
-    website: "https://www.ambev.com.br"
+    website: "https://www.ambev.com.br",
+    historicoMetricas: [
+      { ano: 2018, co2Removido: 50, energiaRenovavel: 45, reducaoEmissoes: 5, investimentoSustentabilidade: 200 },
+      { ano: 2019, co2Removido: 80, energiaRenovavel: 55, reducaoEmissoes: 8, investimentoSustentabilidade: 280 },
+      { ano: 2020, co2Removido: 120, energiaRenovavel: 65, reducaoEmissoes: 12, investimentoSustentabilidade: 350 },
+      { ano: 2021, co2Removido: 180, energiaRenovavel: 75, reducaoEmissoes: 16, investimentoSustentabilidade: 420 },
+      { ano: 2022, co2Removido: 250, energiaRenovavel: 85, reducaoEmissoes: 19, investimentoSustentabilidade: 500 },
+      { ano: 2023, co2Removido: 320, energiaRenovavel: 92, reducaoEmissoes: 22, investimentoSustentabilidade: 580 }
+    ]
   },
   "latam-airlines": {
     slug: "latam-airlines",
@@ -146,7 +179,15 @@ export const casosDetalhe: Record<string, CasoDetalhe> = {
       { titulo: "Operações Eficientes", descricao: "Otimização de rotas e redução de peso nas aeronaves.", icon: TrendingUp }
     ],
     certificacoes: ["IATA Environmental Assessment", "ISO 14001"],
-    website: "https://www.latamairlines.com"
+    website: "https://www.latamairlines.com",
+    historicoMetricas: [
+      { ano: 2018, co2Removido: 1000, energiaRenovavel: 5, reducaoEmissoes: 10, investimentoSustentabilidade: 80 },
+      { ano: 2019, co2Removido: 1500, energiaRenovavel: 8, reducaoEmissoes: 14, investimentoSustentabilidade: 120 },
+      { ano: 2020, co2Removido: 2000, energiaRenovavel: 10, reducaoEmissoes: 18, investimentoSustentabilidade: 90 },
+      { ano: 2021, co2Removido: 3000, energiaRenovavel: 12, reducaoEmissoes: 22, investimentoSustentabilidade: 150 },
+      { ano: 2022, co2Removido: 4000, energiaRenovavel: 15, reducaoEmissoes: 26, investimentoSustentabilidade: 200 },
+      { ano: 2023, co2Removido: 5000, energiaRenovavel: 18, reducaoEmissoes: 30, investimentoSustentabilidade: 280 }
+    ]
   },
   magalu: {
     slug: "magalu",
@@ -174,7 +215,15 @@ export const casosDetalhe: Record<string, CasoDetalhe> = {
       { titulo: "Energia Solar", descricao: "Instalação de painéis solares nos centros de distribuição.", icon: Zap }
     ],
     certificacoes: ["B Corp", "ISO 14001"],
-    website: "https://www.magazineluiza.com.br"
+    website: "https://www.magazineluiza.com.br",
+    historicoMetricas: [
+      { ano: 2018, co2Removido: 10, energiaRenovavel: 20, reducaoEmissoes: 5, investimentoSustentabilidade: 30 },
+      { ano: 2019, co2Removido: 15, energiaRenovavel: 28, reducaoEmissoes: 8, investimentoSustentabilidade: 45 },
+      { ano: 2020, co2Removido: 25, energiaRenovavel: 38, reducaoEmissoes: 12, investimentoSustentabilidade: 65 },
+      { ano: 2021, co2Removido: 40, energiaRenovavel: 50, reducaoEmissoes: 16, investimentoSustentabilidade: 90 },
+      { ano: 2022, co2Removido: 60, energiaRenovavel: 65, reducaoEmissoes: 20, investimentoSustentabilidade: 120 },
+      { ano: 2023, co2Removido: 85, energiaRenovavel: 78, reducaoEmissoes: 25, investimentoSustentabilidade: 160 }
+    ]
   },
   raizen: {
     slug: "raizen",
@@ -202,7 +251,15 @@ export const casosDetalhe: Record<string, CasoDetalhe> = {
       { titulo: "Biometano", descricao: "Produção de gás renovável para transporte pesado.", icon: Factory }
     ],
     certificacoes: ["Bonsucro", "RenovaBio", "ISO 14001"],
-    website: "https://www.raizen.com.br"
+    website: "https://www.raizen.com.br",
+    historicoMetricas: [
+      { ano: 2018, co2Removido: 3000, energiaRenovavel: 92, reducaoEmissoes: 60, investimentoSustentabilidade: 400 },
+      { ano: 2019, co2Removido: 3800, energiaRenovavel: 94, reducaoEmissoes: 65, investimentoSustentabilidade: 520 },
+      { ano: 2020, co2Removido: 4500, energiaRenovavel: 95, reducaoEmissoes: 70, investimentoSustentabilidade: 600 },
+      { ano: 2021, co2Removido: 5500, energiaRenovavel: 96, reducaoEmissoes: 74, investimentoSustentabilidade: 750 },
+      { ano: 2022, co2Removido: 6500, energiaRenovavel: 97, reducaoEmissoes: 77, investimentoSustentabilidade: 900 },
+      { ano: 2023, co2Removido: 7500, energiaRenovavel: 98, reducaoEmissoes: 80, investimentoSustentabilidade: 1050 }
+    ]
   }
 };
 

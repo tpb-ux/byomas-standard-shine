@@ -51,6 +51,7 @@ const CarbonCalculator = lazy(() => import("./pages/CarbonCalculator"));
 const CertificacoesAmbientais = lazy(() => import("./pages/CertificacoesAmbientais"));
 const CasosDeSucesso = lazy(() => import("./pages/CasosDeSucesso"));
 const CasoSucessoDetalhe = lazy(() => import("./pages/CasoSucessoDetalhe"));
+const Ranking = lazy(() => import("./pages/Ranking"));
 
 // Educational pages
 const Education = lazy(() => import("./pages/education/Education"));
@@ -111,6 +112,7 @@ const App = () => {
                 <Route path="/certificacoes-ambientais" element={<CertificacoesAmbientais />} />
                 <Route path="/casos-de-sucesso" element={<CasosDeSucesso />} />
                 <Route path="/casos-de-sucesso/:slug" element={<CasoSucessoDetalhe />} />
+                <Route path="/ranking-sustentabilidade" element={<Ranking />} />
                 
                 {/* Educational routes */}
                 <Route path="/educacional" element={<Education />} />
