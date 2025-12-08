@@ -11,7 +11,7 @@ const Hero = () => {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
           backgroundImage: `url(${heroForest})`,
-          animation: 'kenburns 20s ease-in-out infinite alternate',
+          animation: 'kenburns 30s ease-in-out infinite alternate',
           willChange: 'transform',
         }}
         aria-hidden="true"
