@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
-import { TrendingUp, ArrowRight, Scale, X } from "lucide-react";
+import { TrendingUp, ArrowRight, Scale, X, Search } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import ScrollReveal from "@/components/ScrollReveal";
 import RelatedPages from "@/components/RelatedPages";
@@ -23,13 +24,21 @@ const RELATED_TAGS = ["sustentabilidade", "carbono-neutro", "empresas-verdes", "
 
 const CasosDeSucesso = () => {
   const [setorSelecionado, setSetorSelecionado] = useState("Todos");
+  const [termoBusca, setTermoBusca] = useState("");
   const [empresasSelecionadas, setEmpresasSelecionadas] = useState<string[]>([]);
   const [mostrarComparacao, setMostrarComparacao] = useState(false);
   const { data: articles, isLoading } = useBlogArticles();
   
-  const casosFiltrados = setorSelecionado === "Todos" 
-    ? casosSucesso 
-    : casosSucesso.filter(caso => caso.setor === setorSelecionado);
+  // Filtro combinado: setor + busca por texto
+  const casosFiltrados = casosSucesso.filter(caso => {
+    const matchSetor = setorSelecionado === "Todos" || caso.setor === setorSelecionado;
+    const searchLower = termoBusca.toLowerCase();
+    const matchBusca = !termoBusca || 
+      caso.empresa.toLowerCase().includes(searchLower) ||
+      caso.descricao.toLowerCase().includes(searchLower) ||
+      caso.destaque.toLowerCase().includes(searchLower);
+    return matchSetor && matchBusca;
+  });
   
   const relatedArticles = articles?.filter(article => 
     article.tags?.some(tag => RELATED_TAGS.includes(tag.slug))
@@ -100,26 +109,76 @@ const CasosDeSucesso = () => {
           </div>
         </section>
 
-        {/* Filtro por Setor */}
+        {/* Filtros: Busca + Setor */}
         <section className="py-8 border-b">
           <div className="container mx-auto px-6">
             <ScrollReveal>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm text-muted-foreground">Filtrar por setor:</span>
-                {SETORES.map((setor) => (
-                  <motion.div key={setor} whileTap={{ scale: 0.95 }}>
-                    <Badge
-                      variant={setorSelecionado === setor ? "default" : "outline"}
-                      className={`cursor-pointer transition-all duration-200 ${
-                        setorSelecionado === setor ? "shadow-md" : "hover:bg-primary/10"
-                      }`}
-                      onClick={() => setSetorSelecionado(setor)}
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                {/* Campo de Busca */}
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Buscar empresa..."
+                    value={termoBusca}
+                    onChange={(e) => setTermoBusca(e.target.value)}
+                    className="pl-9 pr-9"
+                  />
+                  {termoBusca && (
+                    <button
+                      onClick={() => setTermoBusca("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 hover:text-foreground text-muted-foreground"
                     >
-                      {setor}
-                    </Badge>
-                  </motion.div>
-                ))}
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Separador */}
+                <div className="hidden md:block h-6 w-px bg-border" />
+                
+                {/* Filtros de Setor */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-sm text-muted-foreground">Filtrar por setor:</span>
+                  {SETORES.map((setor) => (
+                    <motion.div key={setor} whileTap={{ scale: 0.95 }}>
+                      <Badge
+                        variant={setorSelecionado === setor ? "default" : "outline"}
+                        className={`cursor-pointer transition-all duration-200 ${
+                          setorSelecionado === setor ? "shadow-md" : "hover:bg-primary/10"
+                        }`}
+                        onClick={() => setSetorSelecionado(setor)}
+                      >
+                        {setor}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
+              
+              {/* Contador de resultados */}
+              {(termoBusca || setorSelecionado !== "Todos") && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 flex items-center gap-2"
+                >
+                  <Badge variant="secondary" className="text-xs">
+                    {casosFiltrados.length} {casosFiltrados.length === 1 ? "resultado" : "resultados"}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setTermoBusca("");
+                      setSetorSelecionado("Todos");
+                    }}
+                    className="text-xs h-auto py-1"
+                  >
+                    Limpar filtros
+                  </Button>
+                </motion.div>
+              )}
             </ScrollReveal>
           </div>
         </section>
@@ -203,13 +262,21 @@ const CasosDeSucesso = () => {
                   exit={{ opacity: 0, y: -20 }}
                   className="text-center py-12"
                 >
-                  <p className="text-muted-foreground">Nenhum caso encontrado para o setor selecionado.</p>
+                  <Search className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <p className="text-muted-foreground">
+                    {termoBusca 
+                      ? `Nenhuma empresa encontrada para "${termoBusca}"`
+                      : "Nenhum caso encontrado para o setor selecionado."}
+                  </p>
                   <Button 
                     variant="outline" 
                     className="mt-4"
-                    onClick={() => setSetorSelecionado("Todos")}
+                    onClick={() => {
+                      setTermoBusca("");
+                      setSetorSelecionado("Todos");
+                    }}
                   >
-                    Ver todos os casos
+                    Limpar filtros
                   </Button>
                 </motion.div>
               )}
