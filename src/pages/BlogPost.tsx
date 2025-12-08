@@ -8,6 +8,9 @@ import BlogSidebar from "@/components/BlogSidebar";
 import RelatedPages from "@/components/RelatedPages";
 import InArticleLinks from "@/components/InArticleLinks";
 import TableOfContents from "@/components/TableOfContents";
+import ArticleCTA from "@/components/ArticleCTA";
+import DirectAnswer from "@/components/DirectAnswer";
+import LongTailKeywords from "@/components/LongTailKeywords";
 import { SEOHead, ArticleSchema, FAQSchema } from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -125,6 +128,29 @@ const BlogPost = () => {
     }
     
     return items;
+  }, [article.content]);
+
+  // Process content to insert CTAs at strategic positions
+  const processedContent = useMemo(() => {
+    if (!article.content) return { beforeMiddle: article.content, afterMiddle: "" };
+    
+    // Find all H2 positions
+    const h2Regex = /<h2[^>]*>/gi;
+    const h2Matches = [...article.content.matchAll(h2Regex)];
+    
+    if (h2Matches.length < 2) {
+      return { beforeMiddle: article.content, afterMiddle: "" };
+    }
+    
+    // Split content at the middle H2
+    const middleIndex = Math.floor(h2Matches.length / 2);
+    const middleH2 = h2Matches[middleIndex];
+    const splitPosition = middleH2.index || 0;
+    
+    return {
+      beforeMiddle: article.content.substring(0, splitPosition),
+      afterMiddle: article.content.substring(splitPosition),
+    };
   }, [article.content]);
 
   return (
@@ -251,6 +277,14 @@ const BlogPost = () => {
                 </ScrollReveal>
               )}
 
+              {/* Direct Answer - SEO 2025 Snippet Optimization */}
+              {article.direct_answer && (
+                <ScrollReveal>
+                  <DirectAnswer answer={article.direct_answer} />
+                </ScrollReveal>
+              )}
+
+              {/* Content Part 1 - Before Middle CTA */}
               <ScrollReveal>
                 <article
                   className="prose prose-lg max-w-none
@@ -264,9 +298,34 @@ const BlogPost = () => {
                     prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                     prose-blockquote:border-l-primary prose-blockquote:text-foreground/80
                     prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
+                  dangerouslySetInnerHTML={{ __html: processedContent.beforeMiddle }}
                 />
               </ScrollReveal>
+
+              {/* CTA After First H2 */}
+              <ArticleCTA articleId={article.id} position="after_h2" className="my-8" />
+
+              {/* Content Part 2 - After Middle CTA */}
+              {processedContent.afterMiddle && (
+                <ScrollReveal>
+                  <article
+                    className="prose prose-lg max-w-none
+                      prose-headings:text-foreground prose-headings:font-light prose-headings:tracking-kinexys
+                      prose-h2:text-3xl prose-h2:mt-10 prose-h2:mb-4
+                      prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:font-normal
+                      prose-p:text-foreground/90 prose-p:my-6
+                      prose-li:text-foreground/90
+                      prose-strong:text-foreground
+                      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+                      prose-blockquote:border-l-primary prose-blockquote:text-foreground/80
+                      prose-code:text-primary prose-code:bg-muted/50 prose-code:px-1 prose-code:rounded"
+                    dangerouslySetInnerHTML={{ __html: processedContent.afterMiddle }}
+                  />
+                </ScrollReveal>
+              )}
+
+              {/* CTA Middle */}
+              <ArticleCTA articleId={article.id} position="middle" className="my-8" />
 
               {/* FAQ Section */}
               {hasFaqs && (
@@ -337,6 +396,16 @@ const BlogPost = () => {
                       </div>
                     </div>
                   </aside>
+                </ScrollReveal>
+              )}
+
+              {/* CTA End */}
+              <ArticleCTA articleId={article.id} position="end" className="my-8" />
+
+              {/* Long Tail Keywords - SEO 2025 */}
+              {article.long_tail_keywords && article.long_tail_keywords.length > 0 && (
+                <ScrollReveal>
+                  <LongTailKeywords keywords={article.long_tail_keywords} />
                 </ScrollReveal>
               )}
 

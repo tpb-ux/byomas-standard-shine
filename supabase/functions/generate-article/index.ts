@@ -20,6 +20,10 @@ interface GeneratedArticle {
   featuredImageAlt: string;
   suggestedTags: string[];
   suggestedFaqs: Array<{ question: string; answer: string }>;
+  // New SEO 2025 fields
+  longTailKeywords: string[];
+  directAnswer: string;
+  geotags: string[];
 }
 
 // Helper function to find matching tags based on content
@@ -307,21 +311,43 @@ serve(async (req) => {
 
     const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
 
-Sua tarefa é criar um artigo completo e ALTAMENTE otimizado para SEO (score 85+) para o blog "Amazonia Research".
+Sua tarefa é criar um artigo completo e ALTAMENTE otimizado para SEO (score 85+) para o blog "Byoma Research".
 
 REGRAS DE SEO OBRIGATÓRIAS PARA SCORE 85+:
 1. Título (H1): máximo 60 caracteres, INCLUIR palavra-chave principal no início
-2. Meta description: máximo 155 caracteres (ideal 140-155), incluir palavra-chave naturalmente
-3. Meta title: máximo 60 caracteres (ideal 50-60), incluir palavra-chave
+2. Meta description: 140-155 caracteres, incluir palavra-chave naturalmente
+3. Meta title: 50-60 caracteres, incluir palavra-chave
 4. Estrutura: usar MÍNIMO 4 H2 e 3 H3 para organizar o conteúdo
-5. Densidade de keyword: 1.5-2.5% (repetir keyword naturalmente 15-25 vezes em 1200 palavras)
-6. Conteúdo: MÍNIMO 1200 palavras, ideal 1500+ palavras
+5. Densidade de keyword: 0.8-1.3% (repetir keyword naturalmente)
+6. Conteúdo: MÍNIMO 850 palavras, máximo 2500 palavras, ideal 1200-2000 palavras
 7. Links internos: sugerir 5 links para artigos existentes (se disponíveis)
 8. Links externos: sugerir 5 links para fontes confiáveis (.gov, .org, publicações renomadas)
 9. Incluir: listas com bullets, dados estatísticos, exemplos práticos
 10. Cada seção H2 deve ter pelo menos 150 palavras
-11. FAQs: GERAR 5 perguntas frequentes relevantes sobre o tema para Rich Snippets
+11. FAQs: GERAR 5-7 perguntas frequentes relevantes sobre o tema para Rich Snippets
 12. Tags: SUGERIR 3-5 tags relevantes da lista de tags disponíveis
+
+NOVOS CAMPOS SEO 2025 OBRIGATÓRIOS:
+
+13. LONG-TAIL KEYWORDS (palavras-chave de cauda longa):
+    - Gere 2-4 frases de busca completas relacionadas ao tema
+    - Cada cauda longa deve ter 4-7 palavras
+    - Devem responder perguntas específicas dos usuários
+    - Incluir pelo menos uma em um H2 do artigo
+    Exemplos: 
+    - "como investir em crédito de carbono no brasil 2025"
+    - "melhores empresas de tokenização ambiental"
+
+14. DIRECT ANSWER (resposta direta para Position Zero):
+    - Escreva uma resposta objetiva de 50-80 palavras
+    - Deve responder diretamente à pergunta implícita no título
+    - Otimizada para Featured Snippet do Google
+    - Incluir dados numéricos quando possível
+    - Não usar primeira pessoa
+
+15. GEOTAGS (quando relevante):
+    - Incluir quando o tema tiver relevância geográfica
+    - Exemplos: "Brasil", "Amazônia", "São Paulo", "América Latina"
 
 ARTIGOS EXISTENTES PARA LINKS INTERNOS:
 ${existingArticlesList}
@@ -346,15 +372,20 @@ FORMATO DE RESPOSTA (JSON):
   "suggestedExternalLinks": [{"anchor": "texto âncora", "url": "https://...", "domain": "dominio.com"}],
   "featuredImageAlt": "Descrição da imagem com keyword para acessibilidade",
   "suggestedTags": ["Tag1", "Tag2", "Tag3"],
-  "suggestedFaqs": [{"question": "Pergunta relevante sobre o tema?", "answer": "Resposta completa e informativa com 50-100 palavras."}]
+  "suggestedFaqs": [{"question": "Pergunta relevante sobre o tema?", "answer": "Resposta completa e informativa com 50-100 palavras."}],
+  "longTailKeywords": ["como funciona crédito de carbono para empresas", "melhores investimentos verdes 2025"],
+  "directAnswer": "O mercado de crédito de carbono movimentou R$ 2 bilhões em 2024, representando crescimento de 40% em relação ao ano anterior. Empresas brasileiras lideram a emissão de créditos na América Latina.",
+  "geotags": ["Brasil", "Amazônia", "América Latina"]
 }
 
 IMPORTANTE: 
 - Retorne APENAS o JSON, sem markdown ou texto adicional
-- O conteúdo DEVE ter no mínimo 1200 palavras para atingir score 85+
-- Repita a keyword de forma natural ao longo do texto para densidade de 1.5-2.5%
-- GERE EXATAMENTE 5 FAQs relevantes e informativas sobre o tema
-- SUGIRA 3-5 TAGS da lista de tags disponíveis que sejam mais relevantes para o artigo`;
+- O conteúdo DEVE ter entre 850-2500 palavras para atingir score 85+
+- Densidade de keyword entre 0.8-1.3%
+- GERE EXATAMENTE 5-7 FAQs relevantes e informativas
+- GERE 2-4 LONG-TAIL KEYWORDS relevantes
+- GERE UMA DIRECT ANSWER concisa e informativa (50-80 palavras)
+- SUGIRA GEOTAGS quando o tema tiver relevância geográfica`;
 
     // Build user prompt based on mode
     let userPrompt: string;
@@ -475,6 +506,9 @@ URL ORIGINAL: ${newsData.original_url}`;
             reading_time: article.readingTime,
             featured_image_alt: article.featuredImageAlt,
             suggested_faqs: article.suggestedFaqs || [],
+            long_tail_keywords: article.longTailKeywords || [],
+            direct_answer: article.directAnswer || "",
+            geotags: article.geotags || [],
           }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -515,6 +549,10 @@ URL ORIGINAL: ${newsData.original_url}`;
           main_keyword: article.mainKeyword || keyword,
           reading_time: article.readingTime || 5,
           featured_image_alt: article.featuredImageAlt,
+          faqs: article.suggestedFaqs || [],
+          long_tail_keywords: article.longTailKeywords || [],
+          direct_answer: article.directAnswer || null,
+          geotags: article.geotags || [],
           status: "published",
           published_at: new Date().toISOString(),
           ai_generated: true,
@@ -627,6 +665,10 @@ URL ORIGINAL: ${newsData.original_url}`;
         main_keyword: article.mainKeyword,
         reading_time: article.readingTime || 5,
         featured_image_alt: article.featuredImageAlt,
+        faqs: article.suggestedFaqs || [],
+        long_tail_keywords: article.longTailKeywords || [],
+        direct_answer: article.directAnswer || null,
+        geotags: article.geotags || [],
         status: "draft",
         ai_generated: true,
         is_curated: true,

@@ -21,6 +21,10 @@ export interface Article {
   meta_description: string | null;
   main_keyword: string | null;
   faqs: FAQ[] | null;
+  // New SEO 2025 fields
+  long_tail_keywords: string[] | null;
+  direct_answer: string | null;
+  geotags: string[] | null;
   category: {
     id: string;
     name: string;
@@ -58,6 +62,9 @@ export const useBlogArticles = () => {
           meta_description,
           main_keyword,
           faqs,
+          long_tail_keywords,
+          direct_answer,
+          geotags,
           category:categories(id, name, slug, color),
           author:authors(id, name, avatar, bio, role)
         `)
@@ -110,6 +117,9 @@ export const useBlogArticle = (slug: string) => {
           meta_description,
           main_keyword,
           faqs,
+          long_tail_keywords,
+          direct_answer,
+          geotags,
           category:categories(id, name, slug, color),
           author:authors(id, name, avatar, bio, role)
         `)
