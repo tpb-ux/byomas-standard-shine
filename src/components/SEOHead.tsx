@@ -32,8 +32,9 @@ export const SEOHead = ({
   const fullUrl = url ? `${BASE_URL}${url}` : BASE_URL;
   const imageUrl = image || `${BASE_URL}/og-image.png`;
   
-  const truncatedDescription = description.length > 160 
-    ? description.substring(0, 157) + "..." 
+  // SEO 2025: Meta description ideal entre 140-155 caracteres
+  const truncatedDescription = description.length > 155 
+    ? description.substring(0, 152) + "..." 
     : description;
 
   return (
