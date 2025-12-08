@@ -6,23 +6,22 @@ import heroForest from "@/assets/hero-forest.jpg";
 const Hero = () => {
   return (
     <section className="relative min-h-screen w-full bg-background pt-20 overflow-hidden">
-      {/* Background image with parallax effect - Aerial forest view */}
+      {/* Background image with Ken Burns effect - Aerial forest view */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
           backgroundImage: `url(${heroForest})`,
-          transform: 'translateZ(0) scale(1.1)',
+          animation: 'kenburns 20s ease-in-out infinite alternate',
           willChange: 'transform',
-          backfaceVisibility: 'hidden'
         }}
         aria-hidden="true"
       />
       
-      {/* Overlay with dark blue transparency */}
+      {/* Overlay with dark blue transparency - 70% opacity */}
       <div 
         className="absolute inset-0"
         style={{ 
-          background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.85), hsla(220, 18%, 14%, 0.75))'
+          background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.70), hsla(220, 18%, 14%, 0.60))'
         }}
       />
       
