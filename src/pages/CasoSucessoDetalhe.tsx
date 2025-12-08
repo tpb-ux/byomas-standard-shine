@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  ArrowRight, ArrowLeft, Globe, ExternalLink, Award, Calendar
+  ArrowRight, ArrowLeft, Globe, ExternalLink, Award, Calendar, TrendingUp
 } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 import ScrollReveal from "@/components/ScrollReveal";
 import { SocialShareButtons } from "@/components/SocialShareButtons";
 import { casosDetalhe, casosSucesso } from "@/data/casosDetalhe";
+import { SustainabilityEvolutionChart } from "@/components/SustainabilityEvolutionChart";
 
 const CasoSucessoDetalhe = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -157,6 +158,26 @@ const CasoSucessoDetalhe = () => {
                   </Card>
                 ))}
               </div>
+            </ScrollReveal>
+          </div>
+        </section>
+
+        {/* Evolução das Métricas */}
+        <section className="py-16">
+          <div className="container mx-auto px-6">
+            <ScrollReveal>
+              <h2 className="text-2xl font-semibold mb-8 flex items-center gap-3">
+                <TrendingUp className="h-6 w-6 text-primary" />
+                Evolução das Métricas
+              </h2>
+              <SustainabilityEvolutionChart 
+                empresas={[{
+                  empresa: caso.empresa,
+                  cor: caso.cor,
+                  historico: caso.historicoMetricas
+                }]}
+                titulo={`Evolução de ${caso.empresa} (2018-2023)`}
+              />
             </ScrollReveal>
           </div>
         </section>
