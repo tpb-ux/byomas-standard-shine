@@ -176,3 +176,12 @@
   background: hsl(165 100% 42% / 0.3);
   color: hsl(0 0% 100%);
 }
+
+/* Dropdown hover slide animation */
+.dropdown-item-hover {
+  @apply transition-all duration-200 ease-out;
+}
+
+.dropdown-item-hover:hover {
+  @apply translate-x-2;
+}

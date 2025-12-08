@@ -48,6 +48,8 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Glossary = lazy(() => import("./pages/Glossary"));
 const GlossaryTerm = lazy(() => import("./pages/GlossaryTerm"));
 const CarbonCalculator = lazy(() => import("./pages/CarbonCalculator"));
+const CertificacoesAmbientais = lazy(() => import("./pages/CertificacoesAmbientais"));
+const CasosDeSucesso = lazy(() => import("./pages/CasosDeSucesso"));
 
 // Educational pages
 const Education = lazy(() => import("./pages/education/Education"));
@@ -105,6 +107,8 @@ const App = () => {
                 <Route path="/glossario" element={<Glossary />} />
                 <Route path="/glossario/:slug" element={<GlossaryTerm />} />
                 <Route path="/calculadora-carbono" element={<CarbonCalculator />} />
+                <Route path="/certificacoes-ambientais" element={<CertificacoesAmbientais />} />
+                <Route path="/casos-de-sucesso" element={<CasosDeSucesso />} />
                 
                 {/* Educational routes */}
                 <Route path="/educacional" element={<Education />} />
