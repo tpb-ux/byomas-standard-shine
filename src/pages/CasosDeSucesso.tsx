@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -10,9 +11,11 @@ import Breadcrumb from "@/components/Breadcrumb";
 import ScrollReveal from "@/components/ScrollReveal";
 import RelatedPages from "@/components/RelatedPages";
 import { useBlogArticles } from "@/hooks/useBlogArticles";
+import { SocialShareButtons } from "@/components/SocialShareButtons";
 
 const casosSucesso = [
   {
+    slug: "natura",
     empresa: "Natura",
     setor: "Cosméticos",
     icon: Leaf,
@@ -26,6 +29,7 @@ const casosSucesso = [
     cor: "bg-green-500/10 border-green-500/20"
   },
   {
+    slug: "suzano",
     empresa: "Suzano",
     setor: "Papel e Celulose",
     icon: Factory,
@@ -39,6 +43,7 @@ const casosSucesso = [
     cor: "bg-emerald-500/10 border-emerald-500/20"
   },
   {
+    slug: "ambev",
     empresa: "Ambev",
     setor: "Bebidas",
     icon: Building2,
@@ -52,6 +57,7 @@ const casosSucesso = [
     cor: "bg-blue-500/10 border-blue-500/20"
   },
   {
+    slug: "latam-airlines",
     empresa: "LATAM Airlines",
     setor: "Aviação",
     icon: Plane,
@@ -65,6 +71,7 @@ const casosSucesso = [
     cor: "bg-sky-500/10 border-sky-500/20"
   },
   {
+    slug: "magalu",
     empresa: "Magalu",
     setor: "Varejo",
     icon: ShoppingBag,
@@ -78,6 +85,7 @@ const casosSucesso = [
     cor: "bg-purple-500/10 border-purple-500/20"
   },
   {
+    slug: "raizen",
     empresa: "Raízen",
     setor: "Energia",
     icon: Zap,
@@ -92,12 +100,17 @@ const casosSucesso = [
   }
 ];
 
+const SETORES = ["Todos", "Cosméticos", "Papel e Celulose", "Bebidas", "Aviação", "Varejo", "Energia"];
 const RELATED_TAGS = ["sustentabilidade", "carbono-neutro", "empresas-verdes", "esg", "economia-circular"];
 
 const CasosDeSucesso = () => {
+  const [setorSelecionado, setSetorSelecionado] = useState("Todos");
   const { data: articles, isLoading } = useBlogArticles();
   
-  // Filtrar artigos que tenham tags relacionadas a casos de sucesso/sustentabilidade
+  const casosFiltrados = setorSelecionado === "Todos" 
+    ? casosSucesso 
+    : casosSucesso.filter(caso => caso.setor === setorSelecionado);
+  
   const relatedArticles = articles?.filter(article => 
     article.tags?.some(tag => RELATED_TAGS.includes(tag.slug))
   ).slice(0, 4) || [];
@@ -133,10 +146,43 @@ const CasosDeSucesso = () => {
                 <h1 className="text-4xl md:text-5xl font-light text-foreground mb-6">
                   Casos de <span className="text-primary">Sucesso</span>
                 </h1>
-                <p className="text-lg text-muted-foreground leading-relaxed">
+                <p className="text-lg text-muted-foreground leading-relaxed mb-6">
                   Empresas brasileiras que estão liderando a transformação sustentável 
                   e provando que é possível lucrar enquanto se protege o planeta.
                 </p>
+                
+                {/* Social Share */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <p className="text-sm text-muted-foreground">Compartilhe:</p>
+                  <SocialShareButtons
+                    url={`${window.location.origin}/casos-de-sucesso`}
+                    title="Casos de Sucesso em Sustentabilidade - Empresas Brasileiras"
+                    description="Conheça empresas brasileiras que são referência em sustentabilidade"
+                    hashtags={["Sustentabilidade", "ESG", "EmpresasVerdes"]}
+                    compact
+                  />
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </section>
+
+        {/* Filtro por Setor */}
+        <section className="py-8 border-b">
+          <div className="container mx-auto px-6">
+            <ScrollReveal>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-muted-foreground">Filtrar por setor:</span>
+                {SETORES.map((setor) => (
+                  <Badge
+                    key={setor}
+                    variant={setorSelecionado === setor ? "default" : "outline"}
+                    className="cursor-pointer hover:bg-primary/10 transition-colors"
+                    onClick={() => setSetorSelecionado(setor)}
+                  >
+                    {setor}
+                  </Badge>
+                ))}
               </div>
             </ScrollReveal>
           </div>
@@ -146,41 +192,60 @@ const CasosDeSucesso = () => {
         <section className="py-16">
           <div className="container mx-auto px-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {casosSucesso.map((caso, index) => (
+              {casosFiltrados.map((caso, index) => (
                 <ScrollReveal key={caso.empresa} delay={index * 0.1}>
-                  <Card className={`group hover:border-primary/30 transition-all duration-300 h-full ${caso.cor}`}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="p-3 rounded-lg bg-background/50">
-                          <caso.icon className="h-6 w-6 text-primary" />
+                  <Link to={`/casos-de-sucesso/${caso.slug}`}>
+                    <Card className={`group hover:border-primary/30 transition-all duration-300 h-full cursor-pointer ${caso.cor}`}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="p-3 rounded-lg bg-background/50">
+                            <caso.icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {caso.setor}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {caso.setor}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-xl mt-4">{caso.empresa}</CardTitle>
-                      <p className="text-sm font-medium text-primary">{caso.destaque}</p>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {caso.descricao}
-                      </p>
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-foreground">Resultados:</p>
-                        <ul className="space-y-1">
-                          {caso.resultados.map((resultado) => (
-                            <li key={resultado} className="flex items-start gap-2 text-xs text-muted-foreground">
-                              <ArrowRight className="h-3 w-3 text-primary mt-0.5 shrink-0" />
-                              {resultado}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <CardTitle className="text-xl mt-4 group-hover:text-primary transition-colors">{caso.empresa}</CardTitle>
+                        <p className="text-sm font-medium text-primary">{caso.destaque}</p>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {caso.descricao}
+                        </p>
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-foreground">Resultados:</p>
+                          <ul className="space-y-1">
+                            {caso.resultados.map((resultado) => (
+                              <li key={resultado} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <ArrowRight className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                                {resultado}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="pt-2 flex items-center text-sm text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                          Ver detalhes completos
+                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </ScrollReveal>
               ))}
             </div>
+            
+            {casosFiltrados.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Nenhum caso encontrado para o setor selecionado.</p>
+                <Button 
+                  variant="outline" 
+                  className="mt-4"
+                  onClick={() => setSetorSelecionado("Todos")}
+                >
+                  Ver todos os casos
+                </Button>
+              </div>
+            )}
           </div>
         </section>
 
