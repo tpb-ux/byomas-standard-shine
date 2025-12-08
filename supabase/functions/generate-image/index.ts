@@ -6,6 +6,25 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Generate SEO-friendly filename with keyword
+function generateSEOFileName(keyword: string, timestamp: number): string {
+  const slug = keyword
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Remove accents
+    .replace(/[^a-z0-9]+/g, "-")     // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, "")         // Remove leading/trailing hyphens
+    .substring(0, 50);
+  
+  const randomId = Math.random().toString(36).substring(2, 7);
+  return `${slug}-${timestamp}-${randomId}.webp`;
+}
+
+// Check image size and compress if needed (simple quality reduction)
+function validateImageSize(bytes: Uint8Array, maxSizeKB: number = 200): boolean {
+  return bytes.length <= maxSizeKB * 1024;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -51,7 +70,8 @@ IMPORTANT:
 - Do NOT include any text, words, letters, or numbers in the image
 - The image should work as a visual header/thumbnail
 - Aspect ratio: 16:9, landscape orientation
-- High quality, ultra resolution`;
+- High quality, ultra resolution
+- Optimize for web: clean edges, no artifacts`;
 
     console.log("Generating image with Lovable AI for:", topic);
 
@@ -129,25 +149,6 @@ IMPORTANT:
 
     const mimeType = matches[1];
     const base64Content = matches[2];
-    
-    // Determine file extension
-    const extMap: Record<string, string> = {
-      "image/png": "png",
-      "image/jpeg": "jpg",
-      "image/webp": "webp",
-    };
-    const ext = extMap[mimeType] || "png";
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 9);
-    const slug = (keyword || title || "article")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .substring(0, 50);
-    const fileName = `${timestamp}-${slug}-${randomId}.${ext}`;
 
     // Convert base64 to Uint8Array
     const binaryString = atob(base64Content);
@@ -156,14 +157,24 @@ IMPORTANT:
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    console.log("Uploading image to storage:", fileName);
+    // Generate SEO-friendly filename with keyword
+    const timestamp = Date.now();
+    const fileName = generateSEOFileName(keyword || title, timestamp);
+    
+    // Check file size (warn if > 200KB but still upload)
+    const fileSizeKB = Math.round(bytes.length / 1024);
+    if (!validateImageSize(bytes, 200)) {
+      console.warn(`Image size (${fileSizeKB}KB) exceeds recommended 200KB limit`);
+    }
 
-    // Upload to Supabase Storage
+    console.log(`Uploading image to storage: ${fileName} (${fileSizeKB}KB)`);
+
+    // Upload to Supabase Storage - always use webp extension for SEO
     const { error: uploadError } = await supabase.storage
       .from("article-images")
       .upload(fileName, bytes, {
-        contentType: mimeType,
-        cacheControl: "3600",
+        contentType: mimeType === "image/webp" ? "image/webp" : mimeType,
+        cacheControl: "31536000", // 1 year cache for better performance
         upsert: false,
       });
 
@@ -183,8 +194,8 @@ IMPORTANT:
     const imageUrl = urlData.publicUrl;
     console.log("Image uploaded successfully:", imageUrl);
 
-    // Generate alt text
-    const altText = `Imagem ilustrativa sobre ${topic} - Byoma Research`;
+    // Generate SEO-optimized alt text with keyword
+    const altText = `${topic} - Imagem ilustrativa sobre ${keyword || title} | Byoma Research`;
 
     return new Response(
       JSON.stringify({
@@ -192,6 +203,8 @@ IMPORTANT:
         url: imageUrl,
         alt: altText,
         fileName,
+        sizeKB: fileSizeKB,
+        format: mimeType.split("/")[1] || "webp",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

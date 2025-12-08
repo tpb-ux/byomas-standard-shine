@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      article_ctas: {
+        Row: {
+          article_id: string | null
+          background_color: string | null
+          button_link: string
+          button_text: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          position: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          background_color?: string | null
+          button_link: string
+          button_text?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          position?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          background_color?: string | null
+          button_link?: string
+          button_text?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          position?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_ctas_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       article_tags: {
         Row: {
           article_id: string
@@ -51,13 +104,16 @@ export type Database = {
           category_id: string | null
           content: string
           created_at: string | null
+          direct_answer: string | null
           engagement_score: number | null
           excerpt: string | null
           faqs: Json | null
           featured_image: string | null
           featured_image_alt: string | null
+          geotags: string[] | null
           id: string
           is_curated: boolean | null
+          long_tail_keywords: string[] | null
           main_keyword: string | null
           meta_description: string | null
           meta_title: string | null
@@ -78,13 +134,16 @@ export type Database = {
           category_id?: string | null
           content: string
           created_at?: string | null
+          direct_answer?: string | null
           engagement_score?: number | null
           excerpt?: string | null
           faqs?: Json | null
           featured_image?: string | null
           featured_image_alt?: string | null
+          geotags?: string[] | null
           id?: string
           is_curated?: boolean | null
+          long_tail_keywords?: string[] | null
           main_keyword?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -105,13 +164,16 @@ export type Database = {
           category_id?: string | null
           content?: string
           created_at?: string | null
+          direct_answer?: string | null
           engagement_score?: number | null
           excerpt?: string | null
           faqs?: Json | null
           featured_image?: string | null
           featured_image_alt?: string | null
+          geotags?: string[] | null
           id?: string
           is_curated?: boolean | null
+          long_tail_keywords?: string[] | null
           main_keyword?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -474,6 +536,51 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      cta_clicks: {
+        Row: {
+          article_id: string | null
+          clicked_at: string | null
+          cta_id: string | null
+          id: string
+          referrer: string | null
+          session_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          clicked_at?: string | null
+          cta_id?: string | null
+          id?: string
+          referrer?: string | null
+          session_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          clicked_at?: string | null
+          cta_id?: string | null
+          id?: string
+          referrer?: string | null
+          session_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cta_clicks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cta_clicks_cta_id_fkey"
+            columns: ["cta_id"]
+            isOneToOne: false
+            referencedRelation: "article_ctas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       curated_news: {
         Row: {
