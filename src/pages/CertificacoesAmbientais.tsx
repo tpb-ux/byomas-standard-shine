@@ -10,6 +10,7 @@ import Breadcrumb from "@/components/Breadcrumb";
 import ScrollReveal from "@/components/ScrollReveal";
 import RelatedPages from "@/components/RelatedPages";
 import { useBlogArticles } from "@/hooks/useBlogArticles";
+import { SocialShareButtons } from "@/components/SocialShareButtons";
 
 const certificacoes = [
   {
@@ -67,7 +68,6 @@ const RELATED_TAGS = ["certificacoes", "iso-14001", "leed", "b-corp", "esg", "su
 const CertificacoesAmbientais = () => {
   const { data: articles, isLoading } = useBlogArticles();
   
-  // Filtrar artigos que tenham tags relacionadas a certificações
   const relatedArticles = articles?.filter(article => 
     article.tags?.some(tag => RELATED_TAGS.includes(tag.slug))
   ).slice(0, 4) || [];
@@ -103,10 +103,22 @@ const CertificacoesAmbientais = () => {
                 <h1 className="text-4xl md:text-5xl font-light text-foreground mb-6">
                   Certificações <span className="text-primary">Ambientais</span>
                 </h1>
-                <p className="text-lg text-muted-foreground leading-relaxed">
+                <p className="text-lg text-muted-foreground leading-relaxed mb-6">
                   Descubra as principais certificações e selos ambientais que podem transformar 
                   a sustentabilidade da sua empresa em vantagem competitiva.
                 </p>
+                
+                {/* Social Share */}
+                <div className="flex flex-wrap items-center gap-4">
+                  <p className="text-sm text-muted-foreground">Compartilhe este guia:</p>
+                  <SocialShareButtons
+                    url={`${window.location.origin}/certificacoes-ambientais`}
+                    title="Guia Completo de Certificações Ambientais para Empresas"
+                    description="Conheça ISO 14001, LEED, B Corp, FSC e outras certificações"
+                    hashtags={["Sustentabilidade", "ESG", "CertificacoesAmbientais"]}
+                    compact
+                  />
+                </div>
               </div>
             </ScrollReveal>
           </div>
