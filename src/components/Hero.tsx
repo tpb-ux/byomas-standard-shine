@@ -2,35 +2,24 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroForest from "@/assets/hero-forest.jpg";
-
 const Hero = () => {
-  return (
-    <section className="relative min-h-screen w-full bg-background pt-20 overflow-hidden">
+  return <section className="relative min-h-screen w-full bg-background pt-20 overflow-hidden">
       {/* Background image with Ken Burns effect - Aerial forest view */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url(${heroForest})`,
-          animation: 'kenburns 30s ease-in-out infinite alternate',
-          willChange: 'transform',
-        }}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
+      backgroundImage: `url(${heroForest})`,
+      animation: 'kenburns 30s ease-in-out infinite alternate',
+      willChange: 'transform'
+    }} aria-hidden="true" />
       
       {/* Overlay with dark blue transparency - 70% opacity */}
-      <div 
-        className="absolute inset-0"
-        style={{ 
-          background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.70), hsla(220, 18%, 14%, 0.60))'
-        }}
-      />
+      <div className="absolute inset-0" style={{
+      background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.70), hsla(220, 18%, 14%, 0.60))'
+    }} />
       
       <div className="relative z-10 flex min-h-screen items-center">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl">
-            <p className="mb-6 text-sm font-medium uppercase tracking-widest text-primary">
-              BYOMA RESEARCH
-            </p>
+            <p className="mb-6 text-sm font-medium uppercase tracking-widest text-primary">ESG DATA ANALYTICS</p>
             <h1 className="mb-8 text-4xl font-bold leading-tight md:text-5xl lg:text-6xl">
               <span className="text-foreground">Libere o poder do conhecimento da </span>
               <span className="text-primary">Amazonia</span>
@@ -58,15 +47,9 @@ const Hero = () => {
       </div>
 
       {/* Gradient transition to next section */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10"
-        style={{
-          background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
-        }}
-        aria-hidden="true"
-      />
-    </section>
-  );
+      <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10" style={{
+      background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
+    }} aria-hidden="true" />
+    </section>;
 };
-
 export default Hero;
