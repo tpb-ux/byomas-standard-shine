@@ -35,6 +35,54 @@ const BlogPost = () => {
     article?.id || ""
   );
 
+  // Extract headings from content for Table of Contents - MUST be before early returns
+  const tocItems = useMemo(() => {
+    if (!article?.content) return [];
+    
+    const headingRegex = /<h([2-3])[^>]*(?:id="([^"]*)")?[^>]*>(.*?)<\/h\1>/gi;
+    const items: { id: string; title: string; level: number }[] = [];
+    let match;
+    let counter = 0;
+    
+    while ((match = headingRegex.exec(article.content)) !== null) {
+      const level = parseInt(match[1]);
+      const existingId = match[2];
+      const titleHtml = match[3];
+      // Remove HTML tags from title
+      const title = titleHtml.replace(/<[^>]*>/g, '').trim();
+      const id = existingId || `heading-${counter++}`;
+      
+      if (title) {
+        items.push({ id, title, level });
+      }
+    }
+    
+    return items;
+  }, [article?.content]);
+
+  // Process content to insert CTAs at strategic positions - MUST be before early returns
+  const processedContent = useMemo(() => {
+    if (!article?.content) return { beforeMiddle: "", afterMiddle: "" };
+    
+    // Find all H2 positions
+    const h2Regex = /<h2[^>]*>/gi;
+    const h2Matches = [...article.content.matchAll(h2Regex)];
+    
+    if (h2Matches.length < 2) {
+      return { beforeMiddle: article.content, afterMiddle: "" };
+    }
+    
+    // Split content at the middle H2
+    const middleIndex = Math.floor(h2Matches.length / 2);
+    const middleH2 = h2Matches[middleIndex];
+    const splitPosition = middleH2.index || 0;
+    
+    return {
+      beforeMiddle: article.content.substring(0, splitPosition),
+      afterMiddle: article.content.substring(splitPosition),
+    };
+  }, [article?.content]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -104,54 +152,6 @@ const BlogPost = () => {
 
   // Check if article has FAQs
   const hasFaqs = article.faqs && article.faqs.length > 0;
-
-  // Extract headings from content for Table of Contents
-  const tocItems = useMemo(() => {
-    if (!article.content) return [];
-    
-    const headingRegex = /<h([2-3])[^>]*(?:id="([^"]*)")?[^>]*>(.*?)<\/h\1>/gi;
-    const items: { id: string; title: string; level: number }[] = [];
-    let match;
-    let counter = 0;
-    
-    while ((match = headingRegex.exec(article.content)) !== null) {
-      const level = parseInt(match[1]);
-      const existingId = match[2];
-      const titleHtml = match[3];
-      // Remove HTML tags from title
-      const title = titleHtml.replace(/<[^>]*>/g, '').trim();
-      const id = existingId || `heading-${counter++}`;
-      
-      if (title) {
-        items.push({ id, title, level });
-      }
-    }
-    
-    return items;
-  }, [article.content]);
-
-  // Process content to insert CTAs at strategic positions
-  const processedContent = useMemo(() => {
-    if (!article.content) return { beforeMiddle: article.content, afterMiddle: "" };
-    
-    // Find all H2 positions
-    const h2Regex = /<h2[^>]*>/gi;
-    const h2Matches = [...article.content.matchAll(h2Regex)];
-    
-    if (h2Matches.length < 2) {
-      return { beforeMiddle: article.content, afterMiddle: "" };
-    }
-    
-    // Split content at the middle H2
-    const middleIndex = Math.floor(h2Matches.length / 2);
-    const middleH2 = h2Matches[middleIndex];
-    const splitPosition = middleH2.index || 0;
-    
-    return {
-      beforeMiddle: article.content.substring(0, splitPosition),
-      afterMiddle: article.content.substring(splitPosition),
-    };
-  }, [article.content]);
 
   return (
     <div className="min-h-screen flex flex-col">
