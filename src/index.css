@@ -39,6 +39,21 @@
   }
 }
 
+@keyframes scroll-indicator {
+  0%, 100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateY(8px);
+  }
+}
+
+.animate-scroll-indicator {
+  animation: scroll-indicator 2s ease-in-out infinite;
+}
+
 .particle-leaf {
   background: hsl(165 100% 42% / 0.8);
   border-radius: 50% 0 50% 0;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroForest from "@/assets/hero-forest.jpg";
 import FloatingParticles from "./FloatingParticles";
@@ -69,6 +69,21 @@ const Hero = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div 
+        className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 transition-opacity duration-300"
+        style={{ opacity: Math.max(0, 1 - scrollY / 100) }}
+      >
+        <button 
+          onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+          className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+          aria-label="Rolar para baixo"
+        >
+          <span className="text-xs uppercase tracking-widest font-medium">Scroll</span>
+          <ChevronDown className="h-6 w-6 animate-scroll-indicator" />
+        </button>
       </div>
 
       {/* Gradient transition to next section */}
