@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroForest from "@/assets/hero-forest.jpg";
+import FloatingParticles from "./FloatingParticles";
 
 const Hero = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -36,6 +37,9 @@ const Hero = () => {
       <div className="absolute inset-0" style={{
         background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.70), hsla(220, 18%, 14%, 0.60))'
       }} />
+      
+      {/* Floating particles - leaves and glows */}
+      <FloatingParticles />
       
       <div className="relative z-10 flex min-h-screen items-center">
         <div className="container mx-auto px-6">
