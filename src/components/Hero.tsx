@@ -1,20 +1,41 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroForest from "@/assets/hero-forest.jpg";
+
 const Hero = () => {
-  return <section className="relative min-h-screen w-full bg-background pt-20 overflow-hidden">
-      {/* Background image with Ken Burns effect - Aerial forest view */}
-      <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
-      backgroundImage: `url(${heroForest})`,
-      animation: 'kenburns 30s ease-in-out infinite alternate',
-      willChange: 'transform'
-    }} aria-hidden="true" />
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const parallaxOffset = scrollY * 0.3;
+
+  return (
+    <section className="relative min-h-screen w-full bg-background pt-20 overflow-hidden">
+      {/* Background image with Ken Burns + Parallax effect */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+        style={{
+          backgroundImage: `url(${heroForest})`,
+          animation: 'kenburns 30s ease-in-out infinite alternate',
+          transform: `translateY(${parallaxOffset}px) scale(1.1)`,
+          willChange: 'transform'
+        }} 
+        aria-hidden="true" 
+      />
       
       {/* Overlay with dark blue transparency - 70% opacity */}
       <div className="absolute inset-0" style={{
-      background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.70), hsla(220, 18%, 14%, 0.60))'
-    }} />
+        background: 'linear-gradient(135deg, hsla(220, 18%, 12%, 0.70), hsla(220, 18%, 14%, 0.60))'
+      }} />
       
       <div className="relative z-10 flex min-h-screen items-center">
         <div className="container mx-auto px-6">
@@ -48,8 +69,10 @@ const Hero = () => {
 
       {/* Gradient transition to next section */}
       <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none z-10" style={{
-      background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
-    }} aria-hidden="true" />
-    </section>;
+        background: 'linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)'
+      }} aria-hidden="true" />
+    </section>
+  );
 };
+
 export default Hero;
