@@ -195,6 +195,12 @@ export function AppSidebar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/perfil" className="flex items-center">
+                  <User className="h-4 w-4 mr-2" />
+                  Meu Perfil
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair

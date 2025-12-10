@@ -52,6 +52,7 @@ const CertificacoesAmbientais = lazy(() => import("./pages/CertificacoesAmbienta
 const CasosDeSucesso = lazy(() => import("./pages/CasosDeSucesso"));
 const CasoSucessoDetalhe = lazy(() => import("./pages/CasoSucessoDetalhe"));
 const Ranking = lazy(() => import("./pages/Ranking"));
+const Profile = lazy(() => import("./pages/Profile"));
 
 // Educational pages
 const Education = lazy(() => import("./pages/education/Education"));
@@ -123,6 +124,7 @@ const App = () => {
                 <Route path="/educacional/certificado/:code" element={<EducationCertificate />} />
                 <Route path="/educacional/ranking" element={<EducationLeaderboard />} />
                 <Route path="/minha-conta" element={<StudentDashboard />} />
+                <Route path="/perfil" element={<Profile />} />
                 
                 {/* Auth routes */}
                 <Route path="/auth" element={<Auth />} />

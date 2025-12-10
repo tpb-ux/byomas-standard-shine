@@ -192,9 +192,10 @@ export default function ArticleEditor() {
         .from("articles")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error("Artigo não encontrado");
 
       form.reset({
         title: data.title,

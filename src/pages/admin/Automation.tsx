@@ -267,7 +267,7 @@ export default function Automation() {
         .eq("status", "published")
         .order("published_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       // Check for articles without images today
       const startOfToday = startOfDay(now).toISOString();

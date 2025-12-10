@@ -128,10 +128,10 @@ export function useCourse(slug: string) {
         .select("*")
         .eq("slug", slug)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      return data as Course;
+      return data as Course | null;
     },
     enabled: !!slug,
   });
@@ -183,10 +183,10 @@ export function useModule(courseId: string | undefined, moduleSlug: string) {
         .select("*")
         .eq("course_id", courseId!)
         .eq("slug", moduleSlug)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      return data as CourseModule;
+      return data as CourseModule | null;
     },
     enabled: !!courseId && !!moduleSlug,
   });
@@ -220,10 +220,10 @@ export function useLesson(moduleId: string | undefined, lessonSlug: string) {
         .select("*")
         .eq("module_id", moduleId!)
         .eq("slug", lessonSlug)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
-      return data as ModuleLesson;
+      return data as ModuleLesson | null;
     },
     enabled: !!moduleId && !!lessonSlug,
   });
@@ -238,9 +238,10 @@ export function useModuleQuiz(moduleId: string | undefined) {
         .from("module_quizzes")
         .select("*")
         .eq("module_id", moduleId!)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) return null;
       return {
         ...data,
         questions: data.questions as unknown as QuizQuestion[]
@@ -421,7 +422,7 @@ export function useCertificate(code: string) {
           courses:course_id (title, description)
         `)
         .eq("certificate_code", code)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       return data;
@@ -496,9 +497,9 @@ export function useStudentPoints(userId: string | undefined) {
         .from("student_points")
         .select("*")
         .eq("user_id", userId!)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== "PGRST116") throw error;
+      if (error) throw error;
       return data as StudentPoints | null;
     },
     enabled: !!userId,
@@ -588,7 +589,7 @@ export function useUpdatePoints() {
         .from("student_points")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         // Update existing

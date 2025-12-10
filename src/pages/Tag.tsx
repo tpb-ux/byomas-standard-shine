@@ -31,10 +31,10 @@ const TagPage = () => {
         .from("tags")
         .select("id, name, slug")
         .eq("slug", slug)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as TagData;
+      return data as TagData | null;
     },
     enabled: !!slug,
   });
