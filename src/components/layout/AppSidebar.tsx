@@ -45,7 +45,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -54,7 +53,6 @@ import { useAuth } from "@/hooks/useAuth";
 const publicNavItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Blog", url: "/blog", icon: FileText },
-  { title: "Projetos", url: "/projetos", icon: FolderTree },
   { title: "Sobre", url: "/sobre", icon: User },
   { title: "Contato", url: "/contato", icon: Mail },
 ];
@@ -197,13 +195,6 @@ export function AppSidebar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/profile" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Perfil
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
