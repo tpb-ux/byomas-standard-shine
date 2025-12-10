@@ -40,7 +40,7 @@ export default function ArticleSEO() {
           external_links:external_links(id, anchor_text, url, domain)
         `)
         .eq("id", articleId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;

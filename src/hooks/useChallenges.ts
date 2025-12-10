@@ -103,7 +103,7 @@ export function useUpdateChallengeProgress() {
           .select('*')
           .eq('user_id', userId)
           .eq('challenge_id', challenge.id)
-          .single();
+          .maybeSingle();
 
         if (existing) {
           // Update existing progress
@@ -182,7 +182,7 @@ export function useClaimChallengeReward() {
         .from('student_points')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (existingPoints) {
         await supabase

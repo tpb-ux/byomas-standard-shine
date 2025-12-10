@@ -39,10 +39,10 @@ const TopicPage = () => {
         `)
         .eq("slug", slug)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as TopicCluster;
+      return data as TopicCluster | null;
     },
     enabled: !!slug,
   });

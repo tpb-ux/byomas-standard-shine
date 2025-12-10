@@ -80,7 +80,7 @@ export function useBadgeSystem() {
           .from("student_points")
           .select("*")
           .eq("user_id", userId)
-          .single();
+          .maybeSingle();
         stats = fetchedStats;
         log("Fetched stats from DB", fetchedStats);
       } else {
@@ -202,7 +202,7 @@ export function useBadgeSystem() {
           .from("student_points")
           .select("total_points")
           .eq("user_id", userId)
-          .single();
+          .maybeSingle();
 
         const newTotalPoints = (currentPoints?.total_points || 0) + totalPointsEarned;
         const newLevel = Math.floor(newTotalPoints / 500) + 1;
@@ -250,7 +250,7 @@ export function useBadgeSystem() {
         .from("student_points")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         // Merge updates with existing values
@@ -325,7 +325,7 @@ export function useBadgeSystem() {
         .select("*")
         .eq("requirement_type", "perfect_score")
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (findError) {
         log("No perfect score badge found or error", findError.message);
@@ -344,7 +344,7 @@ export function useBadgeSystem() {
         .select("id")
         .eq("user_id", userId)
         .eq("badge_id", perfectBadge.id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         log("User already has perfect score badge");

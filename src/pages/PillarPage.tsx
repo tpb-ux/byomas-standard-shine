@@ -70,10 +70,10 @@ const PillarPageComponent = () => {
         `)
         .eq("slug", slug)
         .eq("status", "published")
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
-      return data as PillarPage;
+      return data as PillarPage | null;
     },
     enabled: !!slug,
   });

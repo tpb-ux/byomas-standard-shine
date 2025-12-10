@@ -32,7 +32,7 @@ const GlossaryTerm = () => {
         .from("glossary_terms")
         .select("*")
         .eq("slug", slug)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },

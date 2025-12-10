@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
           .select("id")
           .eq("source_article_id", sourceArticle.id)
           .eq("target_article_id", targetArticle.id)
-          .single();
+          .maybeSingle();
 
         if (existingLink) continue;
 
