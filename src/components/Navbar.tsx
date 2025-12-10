@@ -331,7 +331,7 @@ const Navbar = () => {
             <SheetContent side="right" className="w-[300px] bg-background border-border overflow-y-auto">
               <div className="flex flex-col gap-4 mt-8">
                 <Link to="/" className="flex items-center space-x-1 mb-4 group transition-all duration-300 hover:drop-shadow-[0_0_12px_hsl(var(--primary)/0.5)]" onClick={() => setIsOpen(false)}>
-                  <span className="text-xl font-bold text-primary transition-colors duration-300 group-hover:text-primary/80">AMAZONIA</span>
+                  <span className="text-xl font-bold text-primary italic transition-colors duration-300 group-hover:text-primary/80">AMAZONIA</span>
                   <span className="text-xl font-bold text-foreground italic bg-primary/20 px-1.5 py-0.5 rounded transition-all duration-300 group-hover:bg-primary/30 group-hover:shadow-[0_0_8px_hsl(var(--primary)/0.4)]">RESEARCH</span>
                 </Link>
                 
