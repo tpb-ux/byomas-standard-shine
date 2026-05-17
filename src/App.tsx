@@ -40,7 +40,6 @@ const AdminSubscribers = lazy(() => import("./pages/admin/Subscribers"));
 const AdminMessages = lazy(() => import("./pages/admin/Messages"));
 const AdminTopicClusters = lazy(() => import("./pages/admin/TopicClustersAdmin"));
 const AdminPillarPages = lazy(() => import("./pages/admin/PillarPagesAdmin"));
-const AdminGenerateArticle = lazy(() => import("./pages/admin/GenerateArticle"));
 const AdminTags = lazy(() => import("./pages/admin/Tags"));
 const AdminEducation = lazy(() => import("./pages/admin/EducationAdmin"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
