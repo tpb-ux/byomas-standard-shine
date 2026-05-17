@@ -59,8 +59,8 @@ interface TestResult {
   article?: {
     title: string;
     slug: string;
-    imageGenerated: boolean;
     imageUrl: string | null;
+    status?: string;
   };
   error?: string;
 }
@@ -1135,14 +1135,8 @@ export default function Automation() {
                             className="w-full h-48 object-cover rounded-lg"
                           />
                           <div className="flex items-center gap-2">
-                            <Badge variant={testResult.article.imageGenerated ? "default" : "secondary"}>
-                              {testResult.article.imageGenerated ? "Imagem IA" : "Imagem Fallback"}
-                            </Badge>
-                            {testResult.article.imageGenerated ? (
-                              <span className="text-xs text-primary">✓ Geração de IA funcionando</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Fallback aplicado</span>
-                            )}
+                            <Badge variant="secondary">Imagem Fallback</Badge>
+                            <span className="text-xs text-muted-foreground">Sem IA — fallback aplicado</span>
                           </div>
                         </div>
                       )}

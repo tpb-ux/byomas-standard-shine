@@ -368,145 +368,16 @@ export default function ArticleEditor() {
   };
 
   const generateImageWithAI = async () => {
-    const title = form.getValues("title");
-    const keyword = form.getValues("main_keyword");
-
-    if (!title && !keyword) {
-      toast.error("Defina um título ou palavra-chave primeiro");
-      return;
-    }
-
-    setIsGeneratingImage(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-image", {
-        body: { title, keyword },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        form.setValue("featured_image", data.url);
-        form.setValue("featured_image_alt", data.alt || `Imagem sobre ${keyword || title}`);
-        toast.success("Imagem gerada com sucesso!");
-      } else {
-        throw new Error("Nenhuma imagem retornada");
-      }
-    } catch (error: any) {
-      console.error("Error generating image:", error);
-      toast.error(error.message || "Erro ao gerar imagem");
-    } finally {
-      setIsGeneratingImage(false);
-    }
+    toast.info("Geração de imagem por IA foi removida. Faça upload manual da imagem destacada.");
   };
 
   const generateWithAI = async () => {
-    const keyword = form.getValues("main_keyword");
-    if (!keyword) {
-      toast.error("Defina uma palavra-chave principal primeiro");
-      return;
-    }
-
-    generationTimersRef.current.forEach(timer => clearTimeout(timer));
-    generationTimersRef.current = [];
-
-    setIsGenerating(true);
-    setGenerationStep('analyzing');
-
-    const timer1 = setTimeout(() => setGenerationStep('generating'), 2000);
-    const timer2 = setTimeout(() => setGenerationStep('optimizing'), 5000);
-    generationTimersRef.current.push(timer1, timer2);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-article", {
-        body: { keyword, type: "full" },
-      });
-
-      if (error) throw error;
-
-      generationTimersRef.current.forEach(timer => clearTimeout(timer));
-      setGenerationStep('complete');
-
-      if (data) {
-        form.setValue("title", data.title || form.getValues("title"));
-        form.setValue("slug", generateSlug(data.title || form.getValues("title")));
-        form.setValue("excerpt", data.excerpt || form.getValues("excerpt"));
-        form.setValue("content", data.content || form.getValues("content"));
-        form.setValue("meta_title", data.meta_title || "");
-        form.setValue("meta_description", data.meta_description || "");
-
-        analyzeSeo(data.content, keyword);
-        toast.success("Conteúdo gerado com sucesso!");
-      }
-
-      setTimeout(() => {
-        setGenerationStep('idle');
-        setIsGenerating(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Error generating content:", error);
-      toast.error("Erro ao gerar conteúdo. Tente novamente.");
-      generationTimersRef.current.forEach(timer => clearTimeout(timer));
-      setGenerationStep('idle');
-      setIsGenerating(false);
-    }
+    toast.info("Geração de conteúdo por IA foi removida do editor. Escreva o artigo manualmente.");
   };
 
   const regenerateSection = async (section: RegeneratingSection) => {
-    const keyword = form.getValues("main_keyword");
-    if (!keyword) {
-      toast.error("Defina uma palavra-chave principal primeiro");
-      return;
-    }
-
-    setRegeneratingSection(section);
-
-    try {
-      const context = {
-        title: form.getValues("title"),
-        content: form.getValues("content"),
-        excerpt: form.getValues("excerpt"),
-      };
-
-      const { data, error } = await supabase.functions.invoke("generate-article", {
-        body: { keyword, section, context },
-      });
-
-      if (error) throw error;
-
-      if (data) {
-        switch (section) {
-          case 'title':
-            if (data.title) {
-              form.setValue("title", data.title);
-              form.setValue("slug", generateSlug(data.title));
-            }
-            break;
-          case 'excerpt':
-            if (data.excerpt) {
-              form.setValue("excerpt", data.excerpt);
-            }
-            break;
-          case 'content':
-            if (data.content) {
-              form.setValue("content", data.content);
-              analyzeSeo(data.content, keyword);
-            }
-            break;
-          case 'meta':
-            if (data.meta_title) form.setValue("meta_title", data.meta_title);
-            if (data.meta_description) form.setValue("meta_description", data.meta_description);
-            break;
-        }
-
-        toast.success(`${sectionLabels[section]} regenerado com sucesso!`);
-      }
-    } catch (error) {
-      console.error("Error regenerating section:", error);
-      toast.error("Erro ao regenerar. Tente novamente.");
-    } finally {
-      setRegeneratingSection('none');
-    }
+    toast.info("Regeneração com IA foi removida. Edite a seção manualmente.");
+    setRegeneratingSection('none');
   };
 
   const isRegenerating = regeneratingSection !== 'none';
