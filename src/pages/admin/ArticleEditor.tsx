@@ -122,7 +122,7 @@ export default function ArticleEditor() {
   const [allTags, setAllTags] = useState<ArticleTag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
-  const generationTimersRef = useRef<NodeJS.Timeout[]>([]);
+  const generationTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
