@@ -6,18 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface GeneratedArticle {
-  title: string;
-  slug: string;
-  metaTitle: string;
-  metaDescription: string;
-  excerpt: string;
-  content: string;
-  mainKeyword: string;
-  readingTime: number;
-  featuredImageAlt: string;
-}
-
 interface AutomationSettings {
   articles_per_execution: number;
   daily_target: number;
@@ -25,7 +13,6 @@ interface AutomationSettings {
   trending_boost_enabled: boolean;
 }
 
-// Default fallback images (Unsplash with free license)
 const DEFAULT_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1200&h=630&fit=crop",
   "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=1200&h=630&fit=crop",
@@ -37,6 +24,12 @@ const DEFAULT_FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&h=630&fit=crop",
 ];
 
+const STOPWORDS = new Set([
+  "a","o","e","de","da","do","das","dos","em","no","na","nos","nas","um","uma","uns","umas",
+  "para","por","com","sem","sob","sobre","ao","aos","à","às","que","se","ou","mas","como",
+  "the","a","an","of","in","on","for","to","and","or","but","with","by","as","is","are","be","this","that"
+]);
+
 function generateSlug(title: string): string {
   return title
     .toLowerCase()
@@ -47,521 +40,271 @@ function generateSlug(title: string): string {
     .substring(0, 100);
 }
 
-async function getSettings(supabase: any): Promise<AutomationSettings> {
-  const { data } = await supabase
-    .from("automation_settings")
-    .select("key, value");
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
 
+function extractiveSummary(text: string, maxSentences = 4): string {
+  const clean = stripHtml(text);
+  const sentences = clean.split(/(?<=[.!?])\s+/).filter(s => s.length > 30);
+  if (sentences.length === 0) return clean.substring(0, 280);
+  return sentences.slice(0, maxSentences).join(" ").substring(0, 600);
+}
+
+function extractKeywords(text: string, n = 8): string[] {
+  const words = stripHtml(text)
+    .toLowerCase()
+    .replace(/[^a-záàâãéêíóôõúç0-9\s]/gi, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !STOPWORDS.has(w));
+  const freq = new Map<string, number>();
+  for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+  return [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(e => e[0]);
+}
+
+function estimateReadingTime(text: string): number {
+  const words = stripHtml(text).split(/\s+/).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
+function buildEthicalArticleContent(
+  originalTitle: string,
+  originalDescription: string,
+  sourceName: string,
+  sourceUrl: string,
+  originalUrl: string,
+  publishedDate: string
+): { excerpt: string; content: string; metaDescription: string } {
+  const summary = extractiveSummary(originalDescription || originalTitle, 5);
+  const shortSummary = extractiveSummary(originalDescription || originalTitle, 2);
+
+  const content = [
+    `<p><strong>Resumo:</strong> ${summary}</p>`,
+    `<h2>O que aconteceu</h2>`,
+    `<p>${summary}</p>`,
+    `<h2>Fonte original</h2>`,
+    `<p>Esta notícia foi originalmente publicada por <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer nofollow">${sourceName}</a>. Acesse a matéria completa em <a href="${originalUrl}" target="_blank" rel="noopener noreferrer nofollow canonical">${originalUrl}</a>.</p>`,
+    `<h2>Por que importa</h2>`,
+    `<p>O acompanhamento desta pauta integra a cobertura editorial da Amazonia Research sobre mercado de carbono, finanças sustentáveis e economia regenerativa. Continue acompanhando nossas atualizações para análises aprofundadas.</p>`,
+    `<p><em>Publicado originalmente em ${publishedDate} por ${sourceName}.</em></p>`,
+  ].join("\n");
+
+  const metaDescription = shortSummary.length > 0
+    ? shortSummary.substring(0, 155)
+    : `${originalTitle.substring(0, 120)} - cobertura Amazonia Research.`;
+
+  return {
+    excerpt: shortSummary.substring(0, 280),
+    content,
+    metaDescription,
+  };
+}
+
+async function getSettings(supabase: any): Promise<AutomationSettings> {
+  const { data } = await supabase.from("automation_settings").select("key, value");
   const settings: AutomationSettings = {
     articles_per_execution: 3,
     daily_target: 15,
     image_fallback_enabled: true,
     trending_boost_enabled: true,
   };
-
   if (data) {
     for (const item of data) {
       const value = typeof item.value === "string" ? item.value : JSON.stringify(item.value);
       switch (item.key) {
-        case "articles_per_execution":
-          settings.articles_per_execution = parseInt(value, 10) || 3;
-          break;
-        case "daily_target":
-          settings.daily_target = parseInt(value, 10) || 15;
-          break;
-        case "image_fallback_enabled":
-          settings.image_fallback_enabled = value === "true" || value === true;
-          break;
-        case "trending_boost_enabled":
-          settings.trending_boost_enabled = value === "true" || value === true;
-          break;
+        case "articles_per_execution": settings.articles_per_execution = parseInt(value, 10) || 3; break;
+        case "daily_target": settings.daily_target = parseInt(value, 10) || 15; break;
+        case "image_fallback_enabled": settings.image_fallback_enabled = value === "true" || value === true; break;
+        case "trending_boost_enabled": settings.trending_boost_enabled = value === "true" || value === true; break;
       }
     }
   }
-
   return settings;
 }
 
 async function getFallbackImage(supabase: any, keyword: string): Promise<string> {
   try {
-    // Try to get a category-specific fallback image
-    const categoryMap: Record<string, string> = {
-      "carbono": "carbon",
-      "carbon": "carbon",
-      "floresta": "forest",
-      "forest": "forest",
-      "energia": "energy",
-      "energy": "energy",
-      "solar": "energy",
-      "eólica": "wind",
-      "wind": "wind",
-      "cidade": "urban",
-      "urban": "urban",
-      "finance": "finance",
-      "financ": "finance",
-      "investimento": "finance",
+    const map: Record<string, string> = {
+      carbono: "carbon", carbon: "carbon", floresta: "forest", forest: "forest",
+      energia: "energy", energy: "energy", solar: "energy", "eólica": "wind",
+      wind: "wind", cidade: "urban", urban: "urban", finance: "finance",
+      financ: "finance", investimento: "finance",
     };
-
     let category = "general";
-    const lowerKeyword = keyword.toLowerCase();
-    for (const [term, cat] of Object.entries(categoryMap)) {
-      if (lowerKeyword.includes(term)) {
-        category = cat;
-        break;
-      }
+    const lk = keyword.toLowerCase();
+    for (const [term, cat] of Object.entries(map)) {
+      if (lk.includes(term)) { category = cat; break; }
     }
-
-    // Try to get from database
-    const { data: fallbackImages } = await supabase
+    const { data } = await supabase
       .from("fallback_images")
       .select("url")
       .eq("category", category)
       .order("usage_count", { ascending: true })
       .limit(1);
-
-    if (fallbackImages && fallbackImages.length > 0) {
-      // Update usage count
-      await supabase.rpc("increment_usage", { image_url: fallbackImages[0].url }).catch(() => {});
-      return fallbackImages[0].url;
-    }
-
-    // Try general category
-    const { data: generalImages } = await supabase
+    if (data && data.length) return data[0].url;
+    const { data: g } = await supabase
       .from("fallback_images")
       .select("url")
       .eq("category", "general")
       .order("usage_count", { ascending: true })
       .limit(1);
-
-    if (generalImages && generalImages.length > 0) {
-      return generalImages[0].url;
-    }
-  } catch (error) {
-    console.log("Error fetching fallback from DB, using defaults:", error);
+    if (g && g.length) return g[0].url;
+  } catch (e) {
+    console.log("fallback image error:", e);
   }
-
-  // Return random default fallback
   return DEFAULT_FALLBACK_IMAGES[Math.floor(Math.random() * DEFAULT_FALLBACK_IMAGES.length)];
 }
 
-async function generateImage(keyword: string, title: string, apiKey: string): Promise<{ base64: string; contentType: string } | null> {
-  try {
-    console.log(`Generating image for: ${keyword}`);
-    
-    const prompt = `Create a professional, modern blog header image for an article about: "${keyword}". 
-    Context: ${title}
-    Style: Corporate sustainability, green finance, eco-friendly technology, carbon credits market.
-    Visual elements: Abstract nature patterns, digital circuits merging with leaves, sustainable city skylines, or renewable energy visualizations.
-    Colors: Teal (#14b8a6), charcoal gray (#36454F), white accents, subtle green gradients.
-    Mood: Professional, trustworthy, innovative, environmentally conscious.
-    No text overlay. High quality, 16:9 aspect ratio, suitable for blog header.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Image generation failed:", response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-    if (!imageUrl || !imageUrl.startsWith("data:image")) {
-      console.error("No valid image in response");
-      return null;
-    }
-
-    // Parse base64 data URL
-    const matches = imageUrl.match(/^data:(.+);base64,(.+)$/);
-    if (!matches) {
-      console.error("Invalid image data URL format");
-      return null;
-    }
-
-    return {
-      contentType: matches[1],
-      base64: matches[2],
-    };
-  } catch (error) {
-    console.error("Error generating image:", error);
-    return null;
-  }
-}
-
-async function uploadImageToStorage(
-  supabase: any,
-  imageData: { base64: string; contentType: string },
-  articleSlug: string
-): Promise<string | null> {
-  try {
-    // Convert base64 to Uint8Array
-    const binaryString = atob(imageData.base64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-
-    const extension = imageData.contentType.split("/")[1] || "png";
-    const fileName = `${articleSlug}-${Date.now()}.${extension}`;
-
-    const { data, error } = await supabase.storage
-      .from("article-images")
-      .upload(fileName, bytes, {
-        contentType: imageData.contentType,
-        upsert: false,
-      });
-
-    if (error) {
-      console.error("Storage upload error:", error);
-      return null;
-    }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("article-images")
-      .getPublicUrl(fileName);
-
-    console.log(`Image uploaded: ${urlData.publicUrl}`);
-    return urlData.publicUrl;
-  } catch (error) {
-    console.error("Error uploading image:", error);
-    return null;
-  }
-}
-
-async function getArticleImage(
-  supabase: any,
-  keyword: string,
-  title: string,
-  slug: string,
-  apiKey: string,
-  fallbackEnabled: boolean
-): Promise<{ url: string | null; isGenerated: boolean }> {
-  // 1. Try to generate with AI
-  const imageData = await generateImage(keyword, title, apiKey);
-  
-  if (imageData) {
-    const uploadedUrl = await uploadImageToStorage(supabase, imageData, slug);
-    if (uploadedUrl) {
-      return { url: uploadedUrl, isGenerated: true };
-    }
-  }
-
-  // 2. If AI failed and fallback is enabled, use fallback
-  if (fallbackEnabled) {
-    console.log("AI image failed, using fallback image");
-    const fallbackUrl = await getFallbackImage(supabase, keyword);
-    return { url: fallbackUrl, isGenerated: false };
-  }
-
-  return { url: null, isGenerated: false };
-}
-
-async function generateArticleContent(
-  newsItem: { original_title: string; original_content: string | null; original_url: string; news_sources?: { name: string; url: string } | null },
-  existingArticlesList: string,
-  apiKey: string
-): Promise<GeneratedArticle | null> {
-const systemPrompt = `Você é um especialista em SEO e jornalismo especializado em mercado de crédito de carbono, sustentabilidade, ESG, finanças verdes, tokenização e economia regenerativa (ReFi).
-
-Sua tarefa é criar um artigo completo e otimizado para SEO para o blog "Amazonia Research".
-
-REGRAS DE SEO OBRIGATÓRIAS:
-1. Título (H1): máximo 60 caracteres, incluir palavra-chave principal
-2. Meta description: máximo 155 caracteres, incluir palavra-chave naturalmente
-3. Estrutura: usar H2 e H3 para organizar o conteúdo
-4. Densidade de keyword: 1-2% (natural, sem keyword stuffing)
-5. Conteúdo: mínimo 800 palavras, máximo 1500 palavras
-6. Links internos: sugerir 5 links para artigos existentes (se disponíveis)
-7. Links externos: sugerir 5 links para fontes confiáveis (domínios .gov, .org, grandes publicações)
-
-ARTIGOS EXISTENTES PARA LINKS INTERNOS:
-${existingArticlesList}
-
-FORMATO DE RESPOSTA (JSON):
-{
-  "title": "Título otimizado H1",
-  "slug": "slug-do-artigo",
-  "metaTitle": "Meta título para SEO (max 60 chars)",
-  "metaDescription": "Meta description para SEO (max 155 chars)",
-  "excerpt": "Resumo atrativo (max 300 chars)",
-  "content": "<h2>Subtítulo</h2><p>Conteúdo...</p>...",
-  "mainKeyword": "palavra-chave principal",
-  "readingTime": 5,
-  "featuredImageAlt": "Descrição da imagem para acessibilidade"
-}
-
-IMPORTANTE: Retorne APENAS o JSON, sem markdown ou texto adicional.`;
-
-  const userPrompt = `Transforme esta notícia em um artigo SEO-otimizado:
-
-TÍTULO ORIGINAL: ${newsItem.original_title}
-
-CONTEÚDO/DESCRIÇÃO: ${newsItem.original_content || "Sem conteúdo adicional disponível"}
-
-FONTE: ${newsItem.news_sources?.name || "Fonte não especificada"} (${newsItem.news_sources?.url || ""})
-
-URL ORIGINAL: ${newsItem.original_url}`;
-
-  try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      console.error("Article generation failed:", response.status);
-      return null;
-    }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-
-    if (!content) {
-      console.error("No content in AI response");
-      return null;
-    }
-
-    const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-    return JSON.parse(cleanContent);
-  } catch (error) {
-    console.error("Error generating article:", error);
-    return null;
-  }
-}
-
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get automation settings
     const settings = await getSettings(supabase);
-    console.log("Automation settings:", settings);
 
-    // Parse request body for optional parameters
     let articlesToPublish = settings.articles_per_execution;
-    let isTestMode = false;
-    
+    let publishStatus: "draft" | "published" = "draft";
     try {
       const body = await req.json();
       if (body.count) articlesToPublish = Math.min(body.count, 10);
-      if (body.test) isTestMode = true;
-    } catch {
-      // No body or invalid JSON, use defaults
-    }
+      if (body.publish === true) publishStatus = "published";
+    } catch { /* no body */ }
 
-    console.log(`Auto-publish starting: targeting ${articlesToPublish} articles${isTestMode ? " (TEST MODE)" : ""}`);
+    console.log(`Auto-promote starting: targeting ${articlesToPublish} items as ${publishStatus}`);
 
-    // 1. Get unprocessed news with highest engagement potential
+    // Get top-scored unprocessed news
     let query = supabase
       .from("curated_news")
-      .select(`
-        *,
-        news_sources (name, url)
-      `)
+      .select(`*, news_sources (name, url)`)
       .eq("processed", false)
       .order("engagement_potential", { ascending: false })
       .limit(articlesToPublish);
 
-    // If trending boost is enabled, filter for higher engagement items
     if (settings.trending_boost_enabled) {
       query = query.gte("engagement_potential", 50);
     }
 
-    const { data: newsItems, error: newsError } = await query;
-
-    if (newsError) {
-      console.error("Error fetching news:", newsError);
-      return new Response(
-        JSON.stringify({ error: "Failed to fetch news items" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // If no high-engagement news and trending boost is on, get any available
-    let finalNewsItems = newsItems || [];
-    if (finalNewsItems.length === 0 && settings.trending_boost_enabled) {
+    let { data: newsItems } = await query;
+    if ((!newsItems || newsItems.length === 0) && settings.trending_boost_enabled) {
       const { data: anyNews } = await supabase
         .from("curated_news")
         .select(`*, news_sources (name, url)`)
         .eq("processed", false)
         .order("engagement_potential", { ascending: false })
         .limit(articlesToPublish);
-      finalNewsItems = anyNews || [];
+      newsItems = anyNews || [];
     }
 
-    if (!finalNewsItems || finalNewsItems.length === 0) {
-      console.log("No unprocessed news items available");
+    if (!newsItems || newsItems.length === 0) {
       return new Response(
         JSON.stringify({ message: "No news items to process", published: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`Found ${finalNewsItems.length} news items to process`);
-
-    // 2. Get existing articles for internal linking
-    const { data: existingArticles } = await supabase
-      .from("articles")
-      .select("id, title, slug")
-      .eq("status", "published")
-      .limit(20);
-
-    const existingArticlesList = existingArticles?.map(a => `- "${a.title}" (slug: ${a.slug})`).join("\n") || "Nenhum artigo publicado ainda.";
-
-    // 3. Get AI author
-    const { data: aiAuthor } = await supabase
+    const { data: defaultAuthor } = await supabase
       .from("authors")
       .select("id")
-      .eq("is_ai", true)
-      .single();
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
 
-    const publishedArticles: Array<{ slug: string; title: string; imageGenerated: boolean; imageUrl: string | null }> = [];
+    const results: any[] = [];
     const errors: string[] = [];
 
-    // 4. Process each news item
-    for (const newsItem of finalNewsItems) {
+    for (const newsItem of newsItems) {
       try {
-        console.log(`Processing: ${newsItem.original_title}`);
+        const sourceName = newsItem.news_sources?.name || newsItem.source_name || "Fonte original";
+        const sourceUrl = newsItem.news_sources?.url || newsItem.original_url;
+        const publishedDate = new Date().toLocaleDateString("pt-BR");
 
-        // Generate article content
-        const article = await generateArticleContent(newsItem, existingArticlesList, LOVABLE_API_KEY);
-        
-        if (!article) {
-          errors.push(`Failed to generate article for: ${newsItem.original_title}`);
-          continue;
-        }
+        const { excerpt, content, metaDescription } = buildEthicalArticleContent(
+          newsItem.original_title,
+          newsItem.original_content || "",
+          sourceName,
+          sourceUrl,
+          newsItem.original_url,
+          publishedDate
+        );
 
-        // Generate unique slug
-        const baseSlug = article.slug || generateSlug(article.title);
+        const keywords = extractKeywords(`${newsItem.original_title} ${newsItem.original_content || ""}`);
+        const mainKeyword = keywords[0] || newsItem.original_title.split(" ").slice(0, 3).join(" ");
+
+        const baseSlug = generateSlug(newsItem.original_title);
         let finalSlug = baseSlug;
-        let slugCounter = 1;
-
+        let counter = 1;
         while (true) {
           const { data: existingSlug } = await supabase
             .from("articles")
             .select("id")
             .eq("slug", finalSlug)
-            .single();
-
+            .maybeSingle();
           if (!existingSlug) break;
-          finalSlug = `${baseSlug}-${slugCounter}`;
-          slugCounter++;
+          finalSlug = `${baseSlug}-${counter++}`;
         }
 
-        // Get image (with fallback support)
-        const imageResult = await getArticleImage(
-          supabase,
-          article.mainKeyword,
-          article.title,
-          finalSlug,
-          LOVABLE_API_KEY,
-          settings.image_fallback_enabled
-        );
+        const imageUrl = settings.image_fallback_enabled
+          ? await getFallbackImage(supabase, mainKeyword)
+          : null;
 
-        // Insert article as published
+        const title = newsItem.original_title.substring(0, 120);
+        const metaTitle = title.substring(0, 60);
+
         const { data: newArticle, error: articleError } = await supabase
           .from("articles")
           .insert({
-            title: article.title,
+            title,
             slug: finalSlug,
-            meta_title: article.metaTitle,
-            meta_description: article.metaDescription,
-            excerpt: article.excerpt,
-            content: article.content,
-            main_keyword: article.mainKeyword,
-            reading_time: article.readingTime || 5,
-            featured_image: imageResult.url,
-            featured_image_alt: article.featuredImageAlt,
-            status: "published",
-            published_at: new Date().toISOString(),
-            ai_generated: true,
+            meta_title: metaTitle,
+            meta_description: metaDescription,
+            excerpt,
+            content,
+            main_keyword: mainKeyword,
+            reading_time: estimateReadingTime(content),
+            featured_image: imageUrl,
+            featured_image_alt: `${title} — Amazonia Research`,
+            status: publishStatus,
+            published_at: publishStatus === "published" ? new Date().toISOString() : null,
+            ai_generated: false,
             is_curated: true,
-            author_id: aiAuthor?.id,
+            author_id: defaultAuthor?.id ?? null,
             source_url: newsItem.original_url,
-            source_name: newsItem.news_sources?.name,
+            source_name: sourceName,
           })
           .select()
           .single();
 
         if (articleError) {
-          console.error("Error inserting article:", articleError);
-          errors.push(`Failed to save article: ${article.title}`);
+          errors.push(`Failed to insert: ${newsItem.original_title} — ${articleError.message}`);
           continue;
         }
 
-        // Mark news as processed
         await supabase
           .from("curated_news")
           .update({ processed: true, article_id: newArticle.id })
           .eq("id", newsItem.id);
 
-        publishedArticles.push({
+        results.push({
           slug: newArticle.slug,
           title: newArticle.title,
-          imageGenerated: imageResult.isGenerated,
-          imageUrl: imageResult.url,
+          status: publishStatus,
+          imageUrl,
         });
-        console.log(`Published: ${newArticle.title} (${newArticle.slug}) - Image: ${imageResult.isGenerated ? "AI Generated" : "Fallback"}`);
-
-        // Small delay between articles to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      } catch (error) {
-        console.error(`Error processing news ${newsItem.id}:`, error);
-        errors.push(`Error processing: ${newsItem.original_title}`);
+      } catch (e: any) {
+        errors.push(`Error processing ${newsItem.id}: ${e.message}`);
       }
     }
-
-    // 5. Log automation run
-    console.log(`Auto-publish complete: ${publishedArticles.length} published, ${errors.length} errors`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        published: publishedArticles.length,
-        articles: publishedArticles,
-        settings: {
-          fallbackEnabled: settings.image_fallback_enabled,
-          trendingBoostEnabled: settings.trending_boost_enabled,
-        },
-        errors: errors.length > 0 ? errors : undefined,
+        published: results.length,
+        status: publishStatus,
+        articles: results,
+        errors: errors.length ? errors : undefined,
         timestamp: new Date().toISOString(),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -569,10 +312,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Auto-publish error:", error);
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      }),
+      JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
