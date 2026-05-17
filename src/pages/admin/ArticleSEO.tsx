@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -6,9 +5,7 @@ import {
   ExternalLink, 
   Edit, 
   Download, 
-  Sparkles,
-  Loader2,
-  RefreshCw
+  Loader2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import SEOScoreCard from "@/components/admin/seo/SEOScoreCard";
 import SEOChecklist from "@/components/admin/seo/SEOChecklist";
-import AISuggestions from "@/components/admin/seo/AISuggestions";
 import CompetitorAnalysis from "@/components/admin/seo/CompetitorAnalysis";
 import ContentStructure from "@/components/admin/seo/ContentStructure";
 import ArticleSearchConsole from "@/components/admin/seo/ArticleSearchConsole";
@@ -24,7 +20,6 @@ import ArticleSearchConsole from "@/components/admin/seo/ArticleSearchConsole";
 export default function ArticleSEO() {
   const { articleId } = useParams();
   const navigate = useNavigate();
-  const [isOptimizing, setIsOptimizing] = useState(false);
 
   const { data: article, isLoading, refetch } = useQuery({
     queryKey: ["article-seo", articleId],
@@ -62,44 +57,6 @@ export default function ArticleSEO() {
     },
     enabled: !!articleId,
   });
-
-  const handleOptimizeWithAI = async () => {
-    setIsOptimizing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("analyze-seo-article", {
-        body: { 
-          articleId, 
-          action: "optimize",
-          content: article?.content,
-          title: article?.title,
-          keyword: article?.main_keyword
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.optimizedContent) {
-        const { error: updateError } = await supabase
-          .from("articles")
-          .update({
-            content: data.optimizedContent,
-            meta_title: data.optimizedMetaTitle || article?.meta_title,
-            meta_description: data.optimizedMetaDescription || article?.meta_description,
-          })
-          .eq("id", articleId);
-
-        if (updateError) throw updateError;
-
-        toast.success("Artigo otimizado com sucesso!");
-        refetch();
-      }
-    } catch (error) {
-      console.error("Error optimizing:", error);
-      toast.error("Erro ao otimizar artigo");
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
 
   const handleExportPDF = () => {
     toast.info("Exportação de PDF será implementada em breve");
@@ -184,18 +141,6 @@ export default function ArticleSEO() {
             <Download className="h-4 w-4 mr-2" />
             Exportar PDF
           </Button>
-          <Button
-            size="sm"
-            onClick={handleOptimizeWithAI}
-            disabled={isOptimizing}
-          >
-            {isOptimizing ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
-            )}
-            Otimizar com IA
-          </Button>
         </div>
       </div>
 
@@ -209,7 +154,6 @@ export default function ArticleSEO() {
       <Tabs defaultValue="checklist" className="space-y-4">
         <TabsList className="bg-card border border-border flex-wrap">
           <TabsTrigger value="checklist">Checklist SEO</TabsTrigger>
-          <TabsTrigger value="suggestions">Sugestões IA</TabsTrigger>
           <TabsTrigger value="competitors">Comparativo</TabsTrigger>
           <TabsTrigger value="structure">Estrutura</TabsTrigger>
           <TabsTrigger value="search-console">Search Console</TabsTrigger>
@@ -221,13 +165,6 @@ export default function ArticleSEO() {
             seoMetrics={seoMetrics}
             internalLinks={article.internal_links || []}
             externalLinks={article.external_links || []}
-          />
-        </TabsContent>
-
-        <TabsContent value="suggestions">
-          <AISuggestions 
-            article={article}
-            onApplySuggestion={refetch}
           />
         </TabsContent>
 

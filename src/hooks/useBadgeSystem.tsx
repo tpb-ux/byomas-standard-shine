@@ -254,7 +254,7 @@ export function useBadgeSystem() {
 
       if (existing) {
         // Merge updates with existing values
-        const mergedUpdates: Record<string, number | string | null> = {
+        const mergedUpdates: Record<string, any> = {
           ...updates,
           updated_at: new Date().toISOString(),
         };
@@ -278,7 +278,7 @@ export function useBadgeSystem() {
 
         const { data, error } = await supabase
           .from("student_points")
-          .update(mergedUpdates)
+          .update(mergedUpdates as any)
           .eq("user_id", userId)
           .select()
           .single();

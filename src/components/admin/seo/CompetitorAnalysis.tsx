@@ -37,30 +37,7 @@ export default function CompetitorAnalysis({ article }: CompetitorAnalysisProps)
   const [isLoading, setIsLoading] = useState(false);
 
   const analyzeCompetitors = async () => {
-    setIsLoading(true);
-    try {
-      const { data: result, error } = await supabase.functions.invoke("analyze-seo-article", {
-        body: {
-          articleId: article.id,
-          action: "competitors",
-          content: article.content,
-          title: article.title,
-          keyword: article.main_keyword,
-        },
-      });
-
-      if (error) throw error;
-
-      if (result?.competitorData) {
-        setData(result.competitorData);
-        toast.success("Análise competitiva gerada!");
-      }
-    } catch (error) {
-      console.error("Error analyzing competitors:", error);
-      toast.error("Erro ao analisar concorrentes");
-    } finally {
-      setIsLoading(false);
-    }
+    toast.info("Análise competitiva por IA foi removida. Use a integração com Search Console para dados reais de SERP.");
   };
 
   const getComparisonIcon = (yours: number, average: number) => {

@@ -194,37 +194,7 @@ export default function AdminDashboard() {
   }, [user]);
 
   const handleFixMissingImages = async () => {
-    setIsFixingImages(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("fix-missing-images", {
-        body: { limit: 10 },
-      });
-
-      if (error) throw error;
-
-      if (data?.success) {
-        toast.success(`${data.fixed} imagens geradas com sucesso!`, {
-          description: data.failed?.length > 0 
-            ? `${data.failed.length} falharam` 
-            : undefined,
-        });
-        
-        // Update stats
-        if (stats) {
-          setStats({
-            ...stats,
-            articlesWithoutImages: Math.max(0, stats.articlesWithoutImages - data.fixed),
-          });
-        }
-      } else {
-        throw new Error(data?.error || "Erro desconhecido");
-      }
-    } catch (error: any) {
-      console.error("Error fixing images:", error);
-      toast.error(error.message || "Erro ao gerar imagens");
-    } finally {
-      setIsFixingImages(false);
-    }
+    toast.info("Geração de imagens por IA foi removida. Atribua imagens manualmente nos artigos sem capa.");
   };
 
   if (authLoading || isLoading) {

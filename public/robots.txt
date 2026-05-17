@@ -26,4 +26,4 @@ Disallow: /admin/*
 Disallow: /auth
 
 # Sitemap
-Sitemap: https://byomaresearch.com/sitemap.xml
+Sitemap: https://amazonia.news/sitemap.xml
