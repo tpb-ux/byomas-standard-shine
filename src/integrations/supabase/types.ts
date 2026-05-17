@@ -870,6 +870,7 @@ export type Database = {
           last_fetched_at: string | null
           name: string
           rss_feed: string | null
+          trust_score: number
           url: string
         }
         Insert: {
@@ -880,6 +881,7 @@ export type Database = {
           last_fetched_at?: string | null
           name: string
           rss_feed?: string | null
+          trust_score?: number
           url: string
         }
         Update: {
@@ -890,6 +892,7 @@ export type Database = {
           last_fetched_at?: string | null
           name?: string
           rss_feed?: string | null
+          trust_score?: number
           url?: string
         }
         Relationships: []
