@@ -4,11 +4,9 @@ import {
   Newspaper,
   Search,
   RefreshCw,
-  Sparkles,
+  FilePlus,
   ExternalLink,
-  FileText,
   Loader2,
-  Check,
   X,
   TrendingUp,
 } from "lucide-react";
@@ -109,32 +107,24 @@ export default function AdminCurator() {
     }
   };
 
-  const generateArticle = async (newsItem: CuratedNews) => {
+  const promoteToDraft = async (newsItem: CuratedNews) => {
     setIsGenerating(newsItem.id);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-article", {
-        body: {
-          type: "from_news",
-          newsId: newsItem.id,
-          title: newsItem.original_title,
-          content: newsItem.original_content,
-          sourceUrl: newsItem.original_url,
-        },
+      // Server-side: create a draft article from this news item (no AI).
+      const { data, error } = await supabase.functions.invoke("auto-publish-articles", {
+        body: { count: 1, publish: false, newsId: newsItem.id },
       });
-
       if (error) throw error;
-
-      // Mark as processed
-      await supabase
-        .from("curated_news")
-        .update({ processed: true, article_id: data?.articleId })
-        .eq("id", newsItem.id);
-
-      toast.success("Artigo gerado com sucesso!");
-      navigate(`/admin/articles/${data?.articleId}`);
+      const articleSlug = data?.articles?.[0]?.slug;
+      toast.success("Rascunho criado a partir da notícia");
+      if (articleSlug) {
+        // Navigate to articles list — editor opens by id, slug is enough for confirmation
+        navigate("/admin/articles");
+      }
+      await fetchNews();
     } catch (error) {
-      console.error("Error generating article:", error);
-      toast.error("Erro ao gerar artigo");
+      console.error("Error promoting news:", error);
+      toast.error("Erro ao promover notícia para rascunho");
     } finally {
       setIsGenerating(null);
     }
@@ -298,15 +288,15 @@ export default function AdminCurator() {
                 <div className="flex items-center gap-2">
                   <Button
                     className="flex-1"
-                    onClick={() => generateArticle(item)}
+                    onClick={() => promoteToDraft(item)}
                     disabled={isGenerating === item.id}
                   >
                     {isGenerating === item.id ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      <Sparkles className="mr-2 h-4 w-4" />
+                      <FilePlus className="mr-2 h-4 w-4" />
                     )}
-                    Gerar Artigo
+                    Promover a Rascunho
                   </Button>
                   <Button
                     variant="outline"

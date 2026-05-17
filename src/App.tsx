@@ -140,11 +140,6 @@ const App = () => {
                     <AppLayout><AdminArticles /></AppLayout>
                   </ProtectedRoute>
                 } />
-                <Route path="/admin/generate" element={
-                  <ProtectedRoute requiredRole="editor">
-                    <AppLayout><AdminGenerateArticle /></AppLayout>
-                  </ProtectedRoute>
-                } />
                 <Route path="/admin/articles/new" element={
                   <ProtectedRoute requiredRole="editor">
                     <AppLayout><AdminArticleEditor /></AppLayout>
