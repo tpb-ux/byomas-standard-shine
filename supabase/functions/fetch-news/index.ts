@@ -59,7 +59,7 @@ async function parseRSS(url: string): Promise<RSSItem[]> {
   try {
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AmazoniaResearchBot/2.0; +https://amazonia.news/bot)",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
         "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
       },
     });
