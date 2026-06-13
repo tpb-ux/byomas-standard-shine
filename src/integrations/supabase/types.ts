@@ -633,6 +633,41 @@ export type Database = {
           },
         ]
       }
+      editorial_actions: {
+        Row: {
+          action: string
+          article_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          article_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          article_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "editorial_actions_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_links: {
         Row: {
           anchor_text: string
