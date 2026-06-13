@@ -26,4 +26,6 @@ Disallow: /admin/*
 Disallow: /auth
 
 # Sitemap
-Sitemap: https://amazonia.news/sitemap.xml
+Sitemap: https://amazonia.estrato.com.br/sitemap-index.xml
+Sitemap: https://amazonia.estrato.com.br/sitemap.xml
+Sitemap: https://amazonia.estrato.com.br/sitemap-news.xml
