@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Users,
   GraduationCap,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -59,7 +60,8 @@ const publicNavItems = [
 const adminNavItems = [
   { title: "Dashboard", url: "/admin", icon: BarChart3 },
   { title: "Artigos", url: "/admin/articles", icon: FileText },
-  { title: "Curadoria", url: "/admin/curator", icon: Newspaper },
+  { title: "Curadoria RSS", url: "/admin/curator", icon: Newspaper },
+  { title: "Fila de Curadoria", url: "/admin/queue", icon: Inbox },
   { title: "Automação", url: "/admin/automation", icon: Zap },
   { title: "Educacional", url: "/admin/education", icon: GraduationCap },
   { title: "Topic Clusters", url: "/admin/topics", icon: FolderTree },

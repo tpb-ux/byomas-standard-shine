@@ -28,6 +28,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminArticles = lazy(() => import("./pages/admin/Articles"));
 const AdminArticleEditor = lazy(() => import("./pages/admin/ArticleEditor"));
 const AdminCurator = lazy(() => import("./pages/admin/Curator"));
+const AdminCurationQueue = lazy(() => import("./pages/admin/CurationQueue"));
 const AdminAutomation = lazy(() => import("./pages/admin/Automation"));
 const AdminCategories = lazy(() => import("./pages/admin/Categories"));
 const AdminSources = lazy(() => import("./pages/admin/Sources"));
@@ -153,6 +154,11 @@ const App = () => {
                 <Route path="/admin/curator" element={
                   <ProtectedRoute requiredRole="editor">
                     <AppLayout><AdminCurator /></AppLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/queue" element={
+                  <ProtectedRoute requiredRole="editor">
+                    <AppLayout><AdminCurationQueue /></AppLayout>
                   </ProtectedRoute>
                 } />
                 <Route path="/admin/automation" element={
