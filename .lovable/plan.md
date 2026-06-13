@@ -1,74 +1,87 @@
-## Adicionar `sitemap-news.xml` e `/feed.xml`
+## Fila de Curadoria — Revisão, Aprovação e Publicação de Rascunhos
+
+### Objetivo
+Tela dedicada para o editor revisar rascunhos gerados pelo pipeline determinístico (RSS → `auto-publish-articles`), aprovar/rejeitar/publicar em lote, com filtros e histórico auditável das ações.
 
 ### Estado atual
-- Existe `generate-sitemap` (edge function) com `BASE_URL` hard-coded incorreto (`byomaresearch.com`).
-- Não existe sitemap específico para Google News nem feed RSS público.
-- `robots.txt` referencia apenas `https://amazonia.news/sitemap.xml`.
-- Domínio canônico atual: `https://amazonia.estrato.com.br` (memória de SEO).
+- `auto-publish-articles` cria artigos em `articles` com `status='draft'` (ou `published` se `publish=true`), `is_curated=false`, `ai_generated=false`.
+- Tela `Curator.tsx` só lida com `curated_news` (notícias RSS brutas).
+- `Articles.tsx` lista todos os artigos sem foco em rascunhos automáticos.
+- Não há histórico de ações editoriais.
 
 ### Entregáveis
 
-**1. Edge function `generate-news-sitemap`** → servida em `/sitemap-news.xml`
-- Spec Google News: artigos publicados nas **últimas 48h**, máx 1.000 entradas.
-- Namespace `xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"`.
-- Por artigo: `<loc>`, `<news:publication>` (name + language `pt`), `<news:publication_date>`, `<news:title>`, `<news:keywords>` (do `main_keyword` + `long_tail_keywords`), `<news:genres>` se aplicável.
-- Headers: `Content-Type: application/xml; charset=utf-8`, `Cache-Control: public, max-age=300`.
-
-**2. Edge function `generate-rss-feed`** → servida em `/feed.xml`
-- RSS 2.0 + namespaces `atom`, `content`, `media`.
-- Últimos 50 artigos publicados (sem paginação — RSS readers consomem o feed inteiro; paginação RSS é uso de nicho).
-- Por item: `<title>`, `<link>` canônico, `<guid isPermaLink="true">`, `<pubDate>` (RFC 822), `<description>` (excerpt), `<content:encoded>` (HTML do artigo), `<category>` (categoria + tags), `<media:content>` (featured_image), `<author>` (fallback "Redação Amazonia Research").
-- `<atom:link rel="self">` apontando para `/feed.xml` e `<lastBuildDate>`.
-
-**3. Atualizar `generate-sitemap` existente**
-- Trocar `BASE_URL` para `https://amazonia.estrato.com.br`.
-- Adicionar entradas para `/topico/:slug`, `/tag/:slug`, `/glossario/:slug`, `/guia/:slug`, `/autores/:slug` (se existir tabela), além das estáticas que já lista.
-- Adicionar **sitemap index** (`/sitemap-index.xml`) referenciando `sitemap.xml` + `sitemap-news.xml` — boa prática quando há múltiplos sitemaps.
-
-**4. Roteamento via Vite middleware / redirect**
-URLs públicas precisam ser amigáveis (`/sitemap-news.xml`, `/feed.xml`, `/sitemap.xml`, `/sitemap-index.xml`). Como o app é SPA estática Vite, a forma mais simples e robusta é criar **stubs em `public/`** que façam `<meta http-equiv="refresh">` para a edge function. Porém crawlers preferem 200/XML direto.
-
-**Recomendação:** criar arquivos JS pequenos no `public/` não resolve. Em vez disso, propor uma das duas opções abaixo — escolher 1.
-
-| Opção | Como funciona | Prós | Contras |
-|---|---|---|---|
-| **A. Plugin Vite + `vite-plugin-html`/middleware** que durante `vite dev` e `vite build` chama a edge function e grava `public/sitemap-news.xml` / `public/feed.xml` antes do build | Servido como arquivo estático, 200 OK, sem latência | Conteúdo "congela" no build; precisa rebuild + republish para atualizar | Sem custo extra de execução |
-| **B. Servir via edge function + redirect/rewrite no host** (Lovable hosting tem SPA fallback, mas suporta `_redirects` style? — não suporta atualmente) | Sempre fresco | Implementação simples na edge | Lovable hosting não roteia `/sitemap-news.xml` para edge function diretamente |
-
-→ **Vou propor a Opção A** (gerador estático em build) **combinada com cron horário que reescreve via deploy ou um endpoint público da edge function**. Mais realista para o setup atual: criar scripts `scripts/generate-news-sitemap.ts` e `scripts/generate-feed.ts` que rodam em `predev`/`prebuild` (consultam o banco com a anon key) e gravam em `public/`. Para frescor entre builds, o cron horário existente faz `POST` à edge function que regrava os arquivos via Supabase Storage público — mas isso muda a URL para `storage/v1/object/public/...`, o que não atende à UX desejada.
-
-→ **Solução pragmática final**: scripts `predev`/`prebuild` que geram os arquivos em `public/` no momento do build. Para frescor diário, o pipeline de publish do usuário cuida (1 clique em "Publicar" regrava). Para o Google News (janela 48h), apontar via `robots.txt` mesmo assim — o crawler revisita.
-
-**5. Atualizar `public/robots.txt`**
-- Trocar `Sitemap:` para `https://amazonia.estrato.com.br/sitemap-index.xml`.
-- Adicionar `Sitemap: https://amazonia.estrato.com.br/sitemap-news.xml`.
-
-**6. Adicionar link `<link rel="alternate" type="application/rss+xml">`** em `index.html` apontando para `/feed.xml`.
-
-### Arquivos novos/alterados
+**1. Nova tabela `editorial_actions` (auditoria)**
 ```
-scripts/generate-sitemap.ts          (novo — substitui edge function como fonte de verdade)
-scripts/generate-news-sitemap.ts     (novo)
-scripts/generate-feed.ts             (novo)
-public/sitemap.xml                   (regenerado)
-public/sitemap-news.xml              (novo, gerado)
-public/sitemap-index.xml             (novo, gerado)
-public/feed.xml                      (novo, gerado)
-public/robots.txt                    (atualizado)
-index.html                           (adicionar <link rel="alternate">)
-package.json                         (predev/prebuild hooks)
+id uuid pk
+article_id uuid fk → articles(id) on delete cascade
+user_id uuid fk → auth.users(id)
+action text  -- 'approved' | 'rejected' | 'published' | 'unpublished' | 'edited' | 'reverted_to_draft'
+notes text
+created_at timestamptz default now()
 ```
+- RLS: SELECT/INSERT para `authenticated` com role `admin` ou `editor` (via `has_role`).
+- GRANTs padrão + `service_role`.
+- Índice em `(article_id, created_at desc)`.
 
-A edge function `generate-sitemap` é mantida só como API auxiliar (admin pode invocar para preview), mas a verdade fica nos arquivos estáticos.
+**2. Nova rota `/admin/queue` → `src/pages/admin/CurationQueue.tsx`**
+- Listagem em tabela com colunas: título, fonte (`source_name`), categoria, palavra-chave principal, SEO score (join `seo_metrics`), criado em, status, ações.
+- **Filtros (topbar):**
+  - Status: rascunhos automáticos | rascunhos editados | publicados últimas 24h | rejeitados
+  - Categoria (select)
+  - Fonte (select de `source_name` distintos)
+  - Busca por título
+  - Período (date range: hoje, 7d, 30d, custom)
+  - Toggle "só com SEO score < 60" (precisa revisão)
+- **Ações por linha:**
+  - Pré-visualizar (Sheet lateral com excerpt + meta + featured_image + conteúdo HTML rolável)
+  - Editar (link → `/admin/articles/:id`)
+  - Aprovar (mantém draft mas marca `is_curated=true` — sinaliza "revisado humano")
+  - Publicar (`status='published'`, `published_at=now()`, dispara `process-article-tags` + `auto-internal-linking` via supabase.functions.invoke)
+  - Rejeitar (`status='archived'` — adicionar valor ao enum se necessário; ou hard delete com confirmação)
+  - Reverter para rascunho (em publicados)
+- **Ações em lote:** checkbox por linha + barra inferior com "Aprovar selecionados" / "Publicar selecionados" / "Rejeitar selecionados".
+- Toda ação grava linha em `editorial_actions` com `action`, `notes` opcional e `user_id = auth.uid()`.
+
+**3. Aba "Histórico" dentro da mesma página**
+- Tabela com últimas 200 ações: data, usuário (join `profiles.full_name`), ação, artigo (link), notas.
+- Filtro por usuário, ação, período.
+
+**4. Sidebar (`AppSidebar.tsx`)**
+- Novo item "Fila de Curadoria" com ícone `Inbox`, posicionado logo abaixo de "Curadoria RSS" (`/admin/curator`).
+- Badge com contagem de rascunhos pendentes (query `count(*) where status='draft' and is_curated=false`).
+
+**5. Rotas (`App.tsx`)**
+- Adicionar `/admin/queue` protegido por `ProtectedRoute` com roles `admin`/`editor`.
+
+### Arquivos
+```
+supabase/migrations/<ts>_editorial_actions.sql   (novo — tabela + RLS + GRANTs)
+src/pages/admin/CurationQueue.tsx                (novo — página principal)
+src/components/admin/queue/QueueFilters.tsx      (novo)
+src/components/admin/queue/QueueRow.tsx          (novo)
+src/components/admin/queue/ArticlePreviewSheet.tsx (novo)
+src/components/admin/queue/BulkActionsBar.tsx    (novo)
+src/components/admin/queue/ActionHistoryTab.tsx  (novo)
+src/hooks/useCurationQueue.ts                    (novo — React Query: lista, mutate aprovar/publicar/rejeitar)
+src/hooks/useEditorialActions.ts                 (novo — log + leitura de histórico)
+src/components/layout/AppSidebar.tsx             (editar — adicionar item)
+src/App.tsx                                      (editar — rota)
+```
 
 ### Critérios de aceite
-- `curl https://amazonia.estrato.com.br/sitemap-news.xml` → 200, XML válido, só artigos < 48h.
-- `curl https://amazonia.estrato.com.br/feed.xml` → 200, RSS 2.0 válido (passa em https://validator.w3.org/feed/).
-- `sitemap-index.xml` lista os 2 sitemaps.
-- `robots.txt` aponta para o index correto.
-- Google Search Console "Inspect URL" reconhece o sitemap-news ao submeter.
+- Editor abre `/admin/queue` e vê todos os rascunhos automáticos pendentes.
+- Filtros funcionam combinados; URL reflete filtros (`?status=draft&source=...`) para deep-link.
+- Aprovar 1 rascunho marca `is_curated=true` e cria linha em `editorial_actions`.
+- Publicar dispara `status='published'` + `process-article-tags` + `auto-internal-linking` e grava histórico.
+- Ações em lote operam transacionalmente (uma falha não derruba o lote — relatório de sucesso/erro).
+- Aba Histórico mostra a ação executada com timestamp e usuário correto.
+- Sidebar mostra badge com contagem pendente, atualizada via React Query polling 60s.
+- Sem uso de IA em nenhum ponto.
 
-### Pergunta para você antes de implementar
-Confirmo o domínio canônico **`https://amazonia.estrato.com.br`**? Se preferir `https://amazonia.news` ou `https://estratoamazonia.lovable.app`, ajusto.
+### Perguntas antes de implementar
+1. Rejeitar deve fazer **hard delete** do artigo ou marcar como `archived` (preservando para auditoria)? Recomendo `archived`.
+2. Permitir notas obrigatórias ao rejeitar? Recomendo opcional, mas com placeholder sugerindo justificativa.
+3. Confirmar que **apenas `admin` e `editor`** acessam essa fila (não `authenticated` genérico)?
 
 Aprovar para implementar?
