@@ -67,7 +67,7 @@ export const useBlogArticles = () => {
           direct_answer,
           geotags,
           category:categories(id, name, slug, color),
-          author:authors(id, name, avatar, bio, role)
+          author:authors(id, slug, name, avatar, bio, role)
         `)
         .eq("status", "published")
         .order("published_at", { ascending: false });
@@ -122,7 +122,7 @@ export const useBlogArticle = (slug: string) => {
           direct_answer,
           geotags,
           category:categories(id, name, slug, color),
-          author:authors(id, name, avatar, bio, role)
+          author:authors(id, slug, name, avatar, bio, role)
         `)
         .eq("slug", slug)
         .eq("status", "published")
