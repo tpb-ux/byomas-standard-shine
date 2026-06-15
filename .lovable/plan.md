@@ -1,87 +1,101 @@
-## Fila de Curadoria — Revisão, Aprovação e Publicação de Rascunhos
+## Páginas E-E-A-T — `/equipe-editorial` e `/autores/:slug`
 
 ### Objetivo
-Tela dedicada para o editor revisar rascunhos gerados pelo pipeline determinístico (RSS → `auto-publish-articles`), aprovar/rejeitar/publicar em lote, com filtros e histórico auditável das ações.
+Fortalecer sinais de **Experience, Expertise, Authoritativeness, Trustworthiness** (Google Helpful Content + Quality Rater Guidelines) com páginas dedicadas à equipe e a cada autor, com conteúdo estruturado, schema.org `Person`/`NewsMediaOrganization` e links internos sólidos para os artigos.
 
 ### Estado atual
-- `auto-publish-articles` cria artigos em `articles` com `status='draft'` (ou `published` se `publish=true`), `is_curated=false`, `ai_generated=false`.
-- Tela `Curator.tsx` só lida com `curated_news` (notícias RSS brutas).
-- `Articles.tsx` lista todos os artigos sem foco em rascunhos automáticos.
-- Não há histórico de ações editoriais.
+- Tabela `authors` tem: `id, name, bio, avatar, role, is_ai`. **Sem slug**, sem credenciais, sem links sociais, sem expertise.
+- `BlogPost.tsx` exibe autor inline mas sem link para página do autor.
+- Não existe `/equipe-editorial` nem `/autores/:slug`.
+- Sitemap já reserva entrada para `/autores/:slug` (mas tabela atualmente não tem slug).
 
 ### Entregáveis
 
-**1. Nova tabela `editorial_actions` (auditoria)**
+**1. Migração — enriquecer `authors`**
+Adicionar colunas (todas opcionais exceto `slug`):
 ```
-id uuid pk
-article_id uuid fk → articles(id) on delete cascade
-user_id uuid fk → auth.users(id)
-action text  -- 'approved' | 'rejected' | 'published' | 'unpublished' | 'edited' | 'reverted_to_draft'
-notes text
-created_at timestamptz default now()
+slug              text unique not null   -- gerar a partir de name
+title             text                   -- "Editor-chefe", "Analista sênior"
+credentials       text                   -- "PhD Economia Ambiental — USP"
+expertise         text[]                 -- ["Crédito de Carbono", "Tokenização", "ReFi"]
+years_experience  integer
+linkedin_url      text
+twitter_url       text
+email_public      text
+website_url       text
+location          text
+seo_meta_title       text
+seo_meta_description text
+published_articles_count integer default 0   -- denormalizado, atualizado por trigger ou refresh manual
 ```
-- RLS: SELECT/INSERT para `authenticated` com role `admin` ou `editor` (via `has_role`).
-- GRANTs padrão + `service_role`.
-- Índice em `(article_id, created_at desc)`.
+- Backfill `slug` para autores existentes (`lower(regexp_replace(name,'[^a-zA-Z0-9]+','-','g'))`).
+- Ajustar políticas RLS (manter SELECT público; UPDATE só admin).
 
-**2. Nova rota `/admin/queue` → `src/pages/admin/CurationQueue.tsx`**
-- Listagem em tabela com colunas: título, fonte (`source_name`), categoria, palavra-chave principal, SEO score (join `seo_metrics`), criado em, status, ações.
-- **Filtros (topbar):**
-  - Status: rascunhos automáticos | rascunhos editados | publicados últimas 24h | rejeitados
-  - Categoria (select)
-  - Fonte (select de `source_name` distintos)
-  - Busca por título
-  - Período (date range: hoje, 7d, 30d, custom)
-  - Toggle "só com SEO score < 60" (precisa revisão)
-- **Ações por linha:**
-  - Pré-visualizar (Sheet lateral com excerpt + meta + featured_image + conteúdo HTML rolável)
-  - Editar (link → `/admin/articles/:id`)
-  - Aprovar (mantém draft mas marca `is_curated=true` — sinaliza "revisado humano")
-  - Publicar (`status='published'`, `published_at=now()`, dispara `process-article-tags` + `auto-internal-linking` via supabase.functions.invoke)
-  - Rejeitar (`status='archived'` — adicionar valor ao enum se necessário; ou hard delete com confirmação)
-  - Reverter para rascunho (em publicados)
-- **Ações em lote:** checkbox por linha + barra inferior com "Aprovar selecionados" / "Publicar selecionados" / "Rejeitar selecionados".
-- Toda ação grava linha em `editorial_actions` com `action`, `notes` opcional e `user_id = auth.uid()`.
+**2. Rotas (`src/App.tsx`)**
+- `/equipe-editorial` → `EditorialTeam.tsx` (público).
+- `/autores/:slug` → `AuthorProfile.tsx` (público).
 
-**3. Aba "Histórico" dentro da mesma página**
-- Tabela com últimas 200 ações: data, usuário (join `profiles.full_name`), ação, artigo (link), notas.
-- Filtro por usuário, ação, período.
+**3. `src/pages/EditorialTeam.tsx`** — `/equipe-editorial`
+- Hero: princípios editoriais (independência, sem IA na produção, fontes RSS auditáveis, processo de revisão humana).
+- Seção "Padrões editoriais": bullets + link para Política de Privacidade, Termos, página "Sobre".
+- Seção "Processo de curadoria": passos do pipeline determinístico (RSS → curadoria → revisão → publicação) com link para `/sobre`.
+- Grid de cards com todos os autores (`is_ai=false`): foto, nome, cargo, expertise (chips), CTA "Ver perfil" → `/autores/:slug`.
+- Seção "Correções e contato": como reportar erro factual → link `/contato`.
+- JSON-LD: `NewsMediaOrganization` + `ItemList` dos autores.
+- SEO: `<Helmet>` com title "Equipe Editorial — Amazonia Research", description, canonical `/equipe-editorial`, og:*.
 
-**4. Sidebar (`AppSidebar.tsx`)**
-- Novo item "Fila de Curadoria" com ícone `Inbox`, posicionado logo abaixo de "Curadoria RSS" (`/admin/curator`).
-- Badge com contagem de rascunhos pendentes (query `count(*) where status='draft' and is_curated=false`).
+**4. `src/pages/AuthorProfile.tsx`** — `/autores/:slug`
+- Header: avatar grande, nome, cargo, credenciais, anos de experiência, localização.
+- Bio completa.
+- Chips de expertise (cada um linka para `/tag/:slug` correspondente quando existir).
+- Links sociais (LinkedIn, Twitter, site pessoal, email) com `rel="me"` (sinal E-E-A-T).
+- Estatísticas: total de artigos publicados, categorias mais cobertas.
+- Seção "Artigos recentes" (top 12 do autor, ordenados por `published_at desc`) — cada card linka para `/blog/:slug`.
+- Seção "Tópicos que cobre" — top 5 categorias/tags do autor com links.
+- Breadcrumb: Home › Equipe Editorial › Nome do autor.
+- JSON-LD: `Person` (name, jobTitle, description, image, url, sameAs[]) + `BreadcrumbList`.
+- SEO: title `{name} — {role} | Amazonia Research`, description usa bio truncada, canonical `/autores/:slug`, og:*.
+- 404 (`NotFound`) se slug inexistente.
 
-**5. Rotas (`App.tsx`)**
-- Adicionar `/admin/queue` protegido por `ProtectedRoute` com roles `admin`/`editor`.
+**5. Linkagem interna nos artigos (`src/pages/BlogPost.tsx`)**
+- Tornar o nome do autor (no header e no rodapé "Sobre o autor") um `<Link to="/autores/${author.slug}">`.
+- Adicionar `rel="author"` no link do header.
+- Atualizar o JSON-LD do artigo (já existe via `SEOHead`?) para `author: { @type: "Person", name, url: "https://amazonia.estrato.com.br/autores/${slug}" }`.
+
+**6. Navegação e footer**
+- Footer: adicionar link "Equipe Editorial" na coluna "Sobre".
+- Navbar (desktop): adicionar item "Equipe" entre "Sobre" e "Contato".
+
+**7. Sitemap (`scripts/generate-sitemap.ts`)**
+- Já lista `/autores/:slug` — confirmar que agora puxa do `authors.slug` (não do `profiles`). Adicionar `/equipe-editorial`.
+
+**8. Admin — edição opcional**
+- Os campos novos aparecem automaticamente em qualquer formulário de autor existente? Hoje **não existe CRUD de autores no admin**. Sugiro um item futuro (não bloqueante): página `/admin/authors`. **Fora do escopo deste sprint** — manter edição via SQL/seed por ora.
 
 ### Arquivos
 ```
-supabase/migrations/<ts>_editorial_actions.sql   (novo — tabela + RLS + GRANTs)
-src/pages/admin/CurationQueue.tsx                (novo — página principal)
-src/components/admin/queue/QueueFilters.tsx      (novo)
-src/components/admin/queue/QueueRow.tsx          (novo)
-src/components/admin/queue/ArticlePreviewSheet.tsx (novo)
-src/components/admin/queue/BulkActionsBar.tsx    (novo)
-src/components/admin/queue/ActionHistoryTab.tsx  (novo)
-src/hooks/useCurationQueue.ts                    (novo — React Query: lista, mutate aprovar/publicar/rejeitar)
-src/hooks/useEditorialActions.ts                 (novo — log + leitura de histórico)
-src/components/layout/AppSidebar.tsx             (editar — adicionar item)
-src/App.tsx                                      (editar — rota)
+supabase/migrations/<ts>_authors_eeat.sql        (migração)
+src/pages/EditorialTeam.tsx                       (novo)
+src/pages/AuthorProfile.tsx                       (novo)
+src/App.tsx                                       (rotas)
+src/components/Navbar.tsx                         (link "Equipe")
+src/components/Footer.tsx                         (link "Equipe Editorial")
+src/pages/BlogPost.tsx                            (nome do autor vira link + rel="author")
+scripts/generate-sitemap.ts                       (incluir /equipe-editorial; usar authors.slug)
 ```
 
 ### Critérios de aceite
-- Editor abre `/admin/queue` e vê todos os rascunhos automáticos pendentes.
-- Filtros funcionam combinados; URL reflete filtros (`?status=draft&source=...`) para deep-link.
-- Aprovar 1 rascunho marca `is_curated=true` e cria linha em `editorial_actions`.
-- Publicar dispara `status='published'` + `process-article-tags` + `auto-internal-linking` e grava histórico.
-- Ações em lote operam transacionalmente (uma falha não derruba o lote — relatório de sucesso/erro).
-- Aba Histórico mostra a ação executada com timestamp e usuário correto.
-- Sidebar mostra badge com contagem pendente, atualizada via React Query polling 60s.
-- Sem uso de IA em nenhum ponto.
+- `/equipe-editorial` retorna 200 com lista de autores reais, cards linkando para perfis.
+- `/autores/:slug` carrega bio, expertise, links sociais e top 12 artigos do autor; gera JSON-LD `Person` válido.
+- Sem-slug retorna NotFound.
+- Nome do autor no `BlogPost` agora linka para `/autores/:slug` com `rel="author"`.
+- Sitemap inclui `/equipe-editorial` + todos `/autores/:slug` ativos.
+- Lighthouse SEO ≥ 95 nas duas páginas.
+- Validador Rich Results do Google reconhece `Person` e `NewsMediaOrganization`.
 
 ### Perguntas antes de implementar
-1. Rejeitar deve fazer **hard delete** do artigo ou marcar como `archived` (preservando para auditoria)? Recomendo `archived`.
-2. Permitir notas obrigatórias ao rejeitar? Recomendo opcional, mas com placeholder sugerindo justificativa.
-3. Confirmar que **apenas `admin` e `editor`** acessam essa fila (não `authenticated` genérico)?
+1. Já existe lista oficial de autores (nomes reais, fotos, bios) para popular, ou devo apenas usar os autores que já estão na tabela `authors` e deixar campos novos em branco para o admin preencher depois?
+2. Confirmar que **não** quer CRUD de autores no admin agora (fica como próximo sprint)?
+3. Quer que eu inclua link "Equipe Editorial" no Navbar **e** Footer, ou só Footer?
 
 Aprovar para implementar?
