@@ -220,7 +220,17 @@ const BlogPost = () => {
               {article.author && (
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{article.author.name}</span>
+                  {article.author.slug ? (
+                    <Link
+                      to={`/autores/${article.author.slug}`}
+                      rel="author"
+                      className="hover:text-primary transition-colors"
+                    >
+                      {article.author.name}
+                    </Link>
+                  ) : (
+                    <span>{article.author.name}</span>
+                  )}
                 </div>
               )}
               {formattedDate && (
@@ -381,7 +391,17 @@ const BlogPost = () => {
                       )}
                       <div>
                         <p className="font-semibold text-foreground mb-1">
-                          {article.author.name}
+                          {article.author.slug ? (
+                            <Link
+                              to={`/autores/${article.author.slug}`}
+                              rel="author"
+                              className="hover:text-primary transition-colors"
+                            >
+                              {article.author.name}
+                            </Link>
+                          ) : (
+                            article.author.name
+                          )}
                         </p>
                         {article.author.role && (
                           <p className="text-sm text-muted-foreground mb-1">
