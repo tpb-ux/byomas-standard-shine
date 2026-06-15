@@ -33,6 +33,7 @@ export interface Article {
   } | null;
   author: {
     id: string;
+    slug: string | null;
     name: string;
     avatar: string | null;
     bio: string | null;
