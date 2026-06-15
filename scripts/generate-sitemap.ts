@@ -42,6 +42,7 @@ async function main() {
     { path: "/educacional/ranking", changefreq: "weekly", priority: "0.6", lastmod: today },
     { path: "/sobre", changefreq: "monthly", priority: "0.5", lastmod: today },
     { path: "/contato", changefreq: "monthly", priority: "0.5", lastmod: today },
+    { path: "/equipe-editorial", changefreq: "monthly", priority: "0.6", lastmod: today },
     { path: "/privacidade", changefreq: "yearly", priority: "0.3", lastmod: today },
     { path: "/termos", changefreq: "yearly", priority: "0.3", lastmod: today },
   ];
@@ -53,6 +54,7 @@ async function main() {
     { data: tags },
     { data: topics },
     { data: categories },
+    { data: authors },
   ] = await Promise.all([
     supabase
       .from("articles")
@@ -65,6 +67,7 @@ async function main() {
     supabase.from("tags").select("slug, created_at"),
     supabase.from("topic_clusters").select("slug, updated_at").eq("is_active", true),
     supabase.from("categories").select("slug, created_at"),
+    supabase.from("authors").select("slug, updated_at").eq("is_ai", false),
   ]);
 
   const dynamic: Entry[] = [
@@ -104,6 +107,14 @@ async function main() {
       changefreq: "weekly" as const,
       priority: "0.5",
     })),
+    ...(authors ?? [])
+      .filter((a) => !!a.slug)
+      .map((a) => ({
+        path: `/autores/${a.slug}`,
+        lastmod: a.updated_at ?? today,
+        changefreq: "monthly" as const,
+        priority: "0.5",
+      })),
   ];
 
   const all = [...staticEntries, ...dynamic].map(toUrl).join("\n");

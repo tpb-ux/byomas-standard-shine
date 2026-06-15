@@ -53,6 +53,8 @@ const CasosDeSucesso = lazy(() => import("./pages/CasosDeSucesso"));
 const CasoSucessoDetalhe = lazy(() => import("./pages/CasoSucessoDetalhe"));
 const Ranking = lazy(() => import("./pages/Ranking"));
 const Profile = lazy(() => import("./pages/Profile"));
+const EditorialTeam = lazy(() => import("./pages/EditorialTeam"));
+const AuthorProfile = lazy(() => import("./pages/AuthorProfile"));
 
 // Educational pages
 const Education = lazy(() => import("./pages/education/Education"));
@@ -92,6 +94,8 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/sobre" element={<About />} />
                 <Route path="/contato" element={<Contact />} />
+                <Route path="/equipe-editorial" element={<EditorialTeam />} />
+                <Route path="/autores/:slug" element={<AuthorProfile />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/guias" element={<Guides />} />
