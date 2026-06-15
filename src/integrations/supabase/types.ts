@@ -256,31 +256,70 @@ export type Database = {
           avatar: string | null
           bio: string | null
           created_at: string | null
+          credentials: string | null
+          email_public: string | null
+          expertise: string[] | null
           id: string
           is_ai: boolean | null
+          linkedin_url: string | null
+          location: string | null
           name: string
+          published_articles_count: number
           role: string | null
+          seo_meta_description: string | null
+          seo_meta_title: string | null
+          slug: string
+          title: string | null
+          twitter_url: string | null
           updated_at: string | null
+          website_url: string | null
+          years_experience: number | null
         }
         Insert: {
           avatar?: string | null
           bio?: string | null
           created_at?: string | null
+          credentials?: string | null
+          email_public?: string | null
+          expertise?: string[] | null
           id?: string
           is_ai?: boolean | null
+          linkedin_url?: string | null
+          location?: string | null
           name: string
+          published_articles_count?: number
           role?: string | null
+          seo_meta_description?: string | null
+          seo_meta_title?: string | null
+          slug: string
+          title?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
+          website_url?: string | null
+          years_experience?: number | null
         }
         Update: {
           avatar?: string | null
           bio?: string | null
           created_at?: string | null
+          credentials?: string | null
+          email_public?: string | null
+          expertise?: string[] | null
           id?: string
           is_ai?: boolean | null
+          linkedin_url?: string | null
+          location?: string | null
           name?: string
+          published_articles_count?: number
           role?: string | null
+          seo_meta_description?: string | null
+          seo_meta_title?: string | null
+          slug?: string
+          title?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
+          website_url?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }
