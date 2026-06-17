@@ -158,10 +158,15 @@ async function getFallbackImage(supabase: any, keyword: string): Promise<string>
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const correlationId = crypto.randomUUID();
+  const t0 = Date.now();
+  const logs: any[] = [];
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    logs.push({ stage: "publisher", level: "info", event: "run.start", message: "auto-publish started", metadata: {}, correlation_id: correlationId });
 
     const settings = await getSettings(supabase);
 
@@ -199,8 +204,14 @@ serve(async (req) => {
     }
 
     if (!newsItems || newsItems.length === 0) {
+      logs.push({ stage: "publisher", level: "info", event: "run.empty", message: "Nenhum item para processar", metadata: {}, correlation_id: correlationId, duration_ms: Date.now() - t0 });
+      await supabase.from("pipeline_logs").insert(logs);
+      await supabase.from("pipeline_metrics").insert([
+        { stage: "publisher", event: "run", items_in: 0, items_ok: 0, items_failed: 0, items_skipped: 0, duration_ms: Date.now() - t0, correlation_id: correlationId },
+        { stage: "cron", event: "heartbeat", source_name: "auto-publish-articles", items_in: 0, items_ok: 1, items_failed: 0, items_skipped: 0, duration_ms: Date.now() - t0, correlation_id: correlationId },
+      ]);
       return new Response(
-        JSON.stringify({ message: "No news items to process", published: 0 }),
+        JSON.stringify({ message: "No news items to process", published: 0, correlationId }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -279,6 +290,7 @@ serve(async (req) => {
 
         if (articleError) {
           errors.push(`Failed to insert: ${newsItem.original_title} — ${articleError.message}`);
+          logs.push({ stage: "publisher", level: "error", event: "article.insert_failed", message: articleError.message, metadata: { newsItemId: newsItem.id, title: newsItem.original_title }, correlation_id: correlationId });
           continue;
         }
 
@@ -293,9 +305,28 @@ serve(async (req) => {
           status: publishStatus,
           imageUrl,
         });
+        logs.push({ stage: "publisher", level: "info", event: "article.created", message: `Artigo criado: ${newArticle.slug}`, metadata: { articleId: newArticle.id, status: publishStatus }, correlation_id: correlationId });
       } catch (e: any) {
         errors.push(`Error processing ${newsItem.id}: ${e.message}`);
+        logs.push({ stage: "publisher", level: "error", event: "item.exception", message: e.message, metadata: { newsItemId: newsItem.id, stack: e.stack }, correlation_id: correlationId });
       }
+    }
+
+    const totalDur = Date.now() - t0;
+    const allFailed = newsItems.length > 0 && results.length === 0;
+    logs.push({ stage: "publisher", level: allFailed ? "error" : "info", event: "run.done", message: `Publicados: ${results.length}/${newsItems.length}`, metadata: { published: results.length, errors: errors.length }, correlation_id: correlationId, duration_ms: totalDur });
+    await supabase.from("pipeline_logs").insert(logs).then(({ error }) => { if (error) console.error("pipeline_logs insert error", error); });
+    await supabase.from("pipeline_metrics").insert([
+      { stage: "publisher", event: "run", items_in: newsItems.length, items_ok: results.length, items_failed: errors.length, items_skipped: 0, duration_ms: totalDur, correlation_id: correlationId },
+      { stage: "cron", event: "heartbeat", source_name: "auto-publish-articles", items_in: 0, items_ok: 1, items_failed: 0, items_skipped: 0, duration_ms: totalDur, correlation_id: correlationId },
+    ]);
+    if (allFailed) {
+      await supabase.from("pipeline_alerts").upsert({
+        severity: "critical", stage: "publisher",
+        title: "Publicador: 100% de falhas na execução",
+        details: { attempted: newsItems.length, errors: errors.slice(0, 5), correlationId },
+        dedupe_key: "publisher.all_failed",
+      }, { onConflict: "dedupe_key", ignoreDuplicates: true });
     }
 
     return new Response(
@@ -305,12 +336,22 @@ serve(async (req) => {
         status: publishStatus,
         articles: results,
         errors: errors.length ? errors : undefined,
+        correlationId,
         timestamp: new Date().toISOString(),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Auto-publish error:", error);
+    try {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const msg = error instanceof Error ? error.message : String(error);
+      await supabase.from("pipeline_logs").insert([{ stage: "publisher", level: "error", event: "run.crash", message: msg, metadata: { stack: error instanceof Error ? error.stack : null }, correlation_id: correlationId, duration_ms: Date.now() - t0 }]);
+      await supabase.from("pipeline_alerts").upsert({
+        severity: "critical", stage: "publisher", title: "auto-publish crashou",
+        details: { error: msg, correlationId }, dedupe_key: "publisher.crash",
+      }, { onConflict: "dedupe_key", ignoreDuplicates: true });
+    } catch (_) { /* swallow */ }
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
