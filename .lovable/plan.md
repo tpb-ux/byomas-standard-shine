@@ -1,101 +1,81 @@
-## Páginas E-E-A-T — `/equipe-editorial` e `/autores/:slug`
+# Observabilidade do Pipeline Determinístico
 
-### Objetivo
-Fortalecer sinais de **Experience, Expertise, Authoritativeness, Trustworthiness** (Google Helpful Content + Quality Rater Guidelines) com páginas dedicadas à equipe e a cada autor, com conteúdo estruturado, schema.org `Person`/`NewsMediaOrganization` e links internos sólidos para os artigos.
+Adicionar logs estruturados, métricas por fonte/estágio e alertas para falhas no cron, parser RSS e publicador.
 
-### Estado atual
-- Tabela `authors` tem: `id, name, bio, avatar, role, is_ai`. **Sem slug**, sem credenciais, sem links sociais, sem expertise.
-- `BlogPost.tsx` exibe autor inline mas sem link para página do autor.
-- Não existe `/equipe-editorial` nem `/autores/:slug`.
-- Sitemap já reserva entrada para `/autores/:slug` (mas tabela atualmente não tem slug).
+## 1. Schema (migração)
 
-### Entregáveis
+**Tabela `pipeline_logs`** (logs estruturados append-only)
+- `id`, `created_at`, `stage` (`cron`|`fetch`|`parser`|`curator`|`publisher`), `source_id` (fk → news_sources, nullable), `source_name`, `level` (`info`|`warn`|`error`), `event` (string curto), `message`, `metadata` jsonb, `duration_ms` int, `correlation_id` uuid.
+- Índices: `(stage, created_at desc)`, `(level, created_at desc)`, `(source_id, created_at desc)`, `(correlation_id)`.
+- RLS: SELECT só admin; INSERT só service_role.
 
-**1. Migração — enriquecer `authors`**
-Adicionar colunas (todas opcionais exceto `slug`):
-```
-slug              text unique not null   -- gerar a partir de name
-title             text                   -- "Editor-chefe", "Analista sênior"
-credentials       text                   -- "PhD Economia Ambiental — USP"
-expertise         text[]                 -- ["Crédito de Carbono", "Tokenização", "ReFi"]
-years_experience  integer
-linkedin_url      text
-twitter_url       text
-email_public      text
-website_url       text
-location          text
-seo_meta_title       text
-seo_meta_description text
-published_articles_count integer default 0   -- denormalizado, atualizado por trigger ou refresh manual
-```
-- Backfill `slug` para autores existentes (`lower(regexp_replace(name,'[^a-zA-Z0-9]+','-','g'))`).
-- Ajustar políticas RLS (manter SELECT público; UPDATE só admin).
+**Tabela `pipeline_metrics`** (contadores agregados por execução)
+- `id`, `created_at`, `stage`, `source_id`, `source_name`, `items_in`, `items_ok`, `items_failed`, `items_skipped`, `duration_ms`, `correlation_id`.
+- Índices: `(stage, created_at desc)`, `(source_id, created_at desc)`.
+- RLS: SELECT admin; INSERT service_role.
 
-**2. Rotas (`src/App.tsx`)**
-- `/equipe-editorial` → `EditorialTeam.tsx` (público).
-- `/autores/:slug` → `AuthorProfile.tsx` (público).
+**Tabela `pipeline_alerts`** (alertas disparados, deduplicáveis)
+- `id`, `created_at`, `severity` (`warning`|`critical`), `stage`, `source_id`, `title`, `details` jsonb, `resolved_at`, `dedupe_key` (unique parcial onde `resolved_at is null`), `notified_email_at`.
+- RLS: SELECT/UPDATE admin; INSERT service_role.
 
-**3. `src/pages/EditorialTeam.tsx`** — `/equipe-editorial`
-- Hero: princípios editoriais (independência, sem IA na produção, fontes RSS auditáveis, processo de revisão humana).
-- Seção "Padrões editoriais": bullets + link para Política de Privacidade, Termos, página "Sobre".
-- Seção "Processo de curadoria": passos do pipeline determinístico (RSS → curadoria → revisão → publicação) com link para `/sobre`.
-- Grid de cards com todos os autores (`is_ai=false`): foto, nome, cargo, expertise (chips), CTA "Ver perfil" → `/autores/:slug`.
-- Seção "Correções e contato": como reportar erro factual → link `/contato`.
-- JSON-LD: `NewsMediaOrganization` + `ItemList` dos autores.
-- SEO: `<Helmet>` com title "Equipe Editorial — Amazonia Research", description, canonical `/equipe-editorial`, og:*.
+GRANTs padrão para `authenticated` (admin via policies) e `service_role`.
 
-**4. `src/pages/AuthorProfile.tsx`** — `/autores/:slug`
-- Header: avatar grande, nome, cargo, credenciais, anos de experiência, localização.
-- Bio completa.
-- Chips de expertise (cada um linka para `/tag/:slug` correspondente quando existir).
-- Links sociais (LinkedIn, Twitter, site pessoal, email) com `rel="me"` (sinal E-E-A-T).
-- Estatísticas: total de artigos publicados, categorias mais cobertas.
-- Seção "Artigos recentes" (top 12 do autor, ordenados por `published_at desc`) — cada card linka para `/blog/:slug`.
-- Seção "Tópicos que cobre" — top 5 categorias/tags do autor com links.
-- Breadcrumb: Home › Equipe Editorial › Nome do autor.
-- JSON-LD: `Person` (name, jobTitle, description, image, url, sameAs[]) + `BreadcrumbList`.
-- SEO: title `{name} — {role} | Amazonia Research`, description usa bio truncada, canonical `/autores/:slug`, og:*.
-- 404 (`NotFound`) se slug inexistente.
+## 2. Helper compartilhado de logger
 
-**5. Linkagem interna nos artigos (`src/pages/BlogPost.tsx`)**
-- Tornar o nome do autor (no header e no rodapé "Sobre o autor") um `<Link to="/autores/${author.slug}">`.
-- Adicionar `rel="author"` no link do header.
-- Atualizar o JSON-LD do artigo (já existe via `SEOHead`?) para `author: { @type: "Person", name, url: "https://amazonia.estrato.com.br/autores/${slug}" }`.
+Criar `supabase/functions/_shared/logger.ts` (utilitário inline, sem deploy próprio) reutilizado por `fetch-news`, `auto-publish-articles`, `process-article-tags`, `process-external-links`, `auto-internal-linking`, `generate-sitemap`:
 
-**6. Navegação e footer**
-- Footer: adicionar link "Equipe Editorial" na coluna "Sobre".
-- Navbar (desktop): adicionar item "Equipe" entre "Sobre" e "Contato".
+- `createLogger({ stage, correlationId })` → `{ info, warn, error, metric, flush }`.
+- Buffera logs e faz `insert` em batch no fim da execução (uma chamada por tabela).
+- Sempre loga: stage, source, event, duration, metadata estruturada (status HTTP, contagens, erro com stack).
+- `metric()` grava linha em `pipeline_metrics` (items_in/ok/failed/skipped por fonte).
+- `triggerAlert({ severity, dedupeKey, title, details })` insere em `pipeline_alerts` (upsert pelo dedupe_key quando aberto).
 
-**7. Sitemap (`scripts/generate-sitemap.ts`)**
-- Já lista `/autores/:slug` — confirmar que agora puxa do `authors.slug` (não do `profiles`). Adicionar `/equipe-editorial`.
+## 3. Instrumentação das edge functions
 
-**8. Admin — edição opcional**
-- Os campos novos aparecem automaticamente em qualquer formulário de autor existente? Hoje **não existe CRUD de autores no admin**. Sugiro um item futuro (não bloqueante): página `/admin/authors`. **Fora do escopo deste sprint** — manter edição via SQL/seed por ora.
+- **`fetch-news`**: logar início/fim por fonte, status HTTP, itens parseados/aceitos/duplicados/erros de parser. Alerta `critical` quando uma fonte falha N execuções seguidas (N=3) e `warning` quando 0 itens novos em 24 h.
+- **`auto-publish-articles`**: logar candidatos, publicados, erros de geração/validação. Alerta `critical` quando 100 % de falhas na execução; `warning` quando fila > limiar configurável.
+- **Cron heartbeat**: cada job grava 1 linha `metric` (stage=`cron`, event=`heartbeat`). Edge function nova `pipeline-health-check` (agendada a cada 15 min) verifica se há heartbeat de `fetch-news` nos últimos 15 min e de `auto-publish-articles` nos últimos 60 min — se não houver, dispara alerta `critical` e envia e-mail via Resend.
 
-### Arquivos
-```
-supabase/migrations/<ts>_authors_eeat.sql        (migração)
-src/pages/EditorialTeam.tsx                       (novo)
-src/pages/AuthorProfile.tsx                       (novo)
-src/App.tsx                                       (rotas)
-src/components/Navbar.tsx                         (link "Equipe")
-src/components/Footer.tsx                         (link "Equipe Editorial")
-src/pages/BlogPost.tsx                            (nome do autor vira link + rel="author")
-scripts/generate-sitemap.ts                       (incluir /equipe-editorial; usar authors.slug)
+## 4. Alertas por e-mail
+
+- Reaproveitar `RESEND_API_KEY` já configurada.
+- Nova função `pipeline-alert-dispatcher` (chamada pelo health-check e por trigger Postgres `AFTER INSERT ON pipeline_alerts` via `pg_net`): envia 1 e-mail por alerta novo (não-resolved) e marca `notified_email_at`. Destinatário lido de `site_settings` (nova chave `alerts_email`).
+- Dedupe: não reenvia enquanto alerta com mesmo `dedupe_key` continuar aberto.
+
+## 5. UI admin
+
+Nova página **`/admin/observabilidade`** (link no `AppSidebar` em "Administração"):
+
+- **KPIs do topo**: taxa de sucesso 24 h por estágio (fetch / parser / publisher), itens processados, alertas abertos.
+- **Tabela "Saúde por fonte"**: para cada `news_sources` ativa — última execução, sucesso/erro/skipped 24 h e 7 d, tempo médio, status (verde/amarelo/vermelho).
+- **Gráfico de séries** (Recharts) com sucesso vs erro por hora (últimas 24 h).
+- **Lista de alertas** abertos (severity, stage, fonte, título, detalhes JSON, botão "Resolver").
+- **Visualizador de logs** com filtros: stage, level, source, correlation_id, intervalo; paginação.
+- Realtime (`supabase.channel`) em `pipeline_alerts` para badge de contagem no sidebar.
+
+## 6. Cron novo
+
+```sql
+SELECT cron.schedule(
+  'pipeline-health-check-15min', '*/15 * * * *',
+  $$ SELECT net.http_post(url:='…/functions/v1/pipeline-health-check', …) $$
+);
 ```
 
-### Critérios de aceite
-- `/equipe-editorial` retorna 200 com lista de autores reais, cards linkando para perfis.
-- `/autores/:slug` carrega bio, expertise, links sociais e top 12 artigos do autor; gera JSON-LD `Person` válido.
-- Sem-slug retorna NotFound.
-- Nome do autor no `BlogPost` agora linka para `/autores/:slug` com `rel="author"`.
-- Sitemap inclui `/equipe-editorial` + todos `/autores/:slug` ativos.
-- Lighthouse SEO ≥ 95 nas duas páginas.
-- Validador Rich Results do Google reconhece `Person` e `NewsMediaOrganization`.
+## Detalhes técnicos
 
-### Perguntas antes de implementar
-1. Já existe lista oficial de autores (nomes reais, fotos, bios) para popular, ou devo apenas usar os autores que já estão na tabela `authors` e deixar campos novos em branco para o admin preencher depois?
-2. Confirmar que **não** quer CRUD de autores no admin agora (fica como próximo sprint)?
-3. Quer que eu inclua link "Equipe Editorial" no Navbar **e** Footer, ou só Footer?
+- Sem nenhum uso de IA — mantém a constraint "No AI" do projeto.
+- Todas as queries Supabase em hooks usam `.maybeSingle()` onde aplicável.
+- Logger nunca lança: erros de insert vão para `console.error` para não quebrar o pipeline observado.
+- Retenção: cron diário `DELETE FROM pipeline_logs WHERE created_at < now() - interval '30 days'` (e 90 dias para `pipeline_metrics`).
+- Tokens visuais: cards usam `bg-primary/20` translúcido para destaques (memória de identidade visual).
 
-Aprovar para implementar?
+## Arquivos a criar/editar
+
+- Migração: tabelas + GRANTs + RLS + cron novo + job de retenção.
+- `supabase/functions/_shared/logger.ts` (novo).
+- `supabase/functions/pipeline-health-check/index.ts` (novo).
+- `supabase/functions/pipeline-alert-dispatcher/index.ts` (novo).
+- Instrumentar `fetch-news`, `auto-publish-articles`, `process-article-tags`, `process-external-links`, `auto-internal-linking`.
+- `src/pages/admin/Observability.tsx` (novo) + hooks `useObservability.ts`.
+- `src/App.tsx`, `src/components/layout/AppSidebar.tsx` (rota + link + badge realtime).
