@@ -21,6 +21,7 @@ import {
   Users,
   GraduationCap,
   Inbox,
+  ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -73,6 +74,7 @@ const adminNavItems = [
   { title: "Fontes", url: "/admin/sources", icon: Search },
   { title: "Newsletter", url: "/admin/subscribers", icon: Users },
   { title: "Mensagens", url: "/admin/messages", icon: MessageSquare },
+  { title: "Observabilidade", url: "/admin/observabilidade", icon: ShieldAlert },
   { title: "Config. do Site", url: "/admin/site-settings", icon: Settings },
   { title: "Configurações", url: "/admin/settings", icon: Settings },
 ];
