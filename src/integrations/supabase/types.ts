@@ -1076,6 +1076,165 @@ export type Database = {
           },
         ]
       }
+      pipeline_alerts: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          details: Json
+          id: string
+          notified_email_at: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source_id: string | null
+          source_name: string | null
+          stage: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          details?: Json
+          id?: string
+          notified_email_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          source_id?: string | null
+          source_name?: string | null
+          stage: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          details?: Json
+          id?: string
+          notified_email_at?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source_id?: string | null
+          source_name?: string | null
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_alerts_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_logs: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          duration_ms: number | null
+          event: string
+          id: string
+          level: string
+          message: string | null
+          metadata: Json
+          source_id: string | null
+          source_name: string | null
+          stage: string
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          event: string
+          id?: string
+          level: string
+          message?: string | null
+          metadata?: Json
+          source_id?: string | null
+          source_name?: string | null
+          stage: string
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          event?: string
+          id?: string
+          level?: string
+          message?: string | null
+          metadata?: Json
+          source_id?: string | null
+          source_name?: string | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_logs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_metrics: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          duration_ms: number | null
+          event: string
+          id: string
+          items_failed: number
+          items_in: number
+          items_ok: number
+          items_skipped: number
+          source_id: string | null
+          source_name: string | null
+          stage: string
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          event?: string
+          id?: string
+          items_failed?: number
+          items_in?: number
+          items_ok?: number
+          items_skipped?: number
+          source_id?: string | null
+          source_name?: string | null
+          stage: string
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          event?: string
+          id?: string
+          items_failed?: number
+          items_in?: number
+          items_ok?: number
+          items_skipped?: number
+          source_id?: string | null
+          source_name?: string | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_metrics_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "news_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1690,6 +1849,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_pipeline_observability: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
