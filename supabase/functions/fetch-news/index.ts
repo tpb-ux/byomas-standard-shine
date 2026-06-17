@@ -186,10 +186,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const correlationId = crypto.randomUUID();
+  const t0 = Date.now();
+  const logs: any[] = [];
+  const metrics: any[] = [];
+  const log = (level: "info" | "warn" | "error", event: string, message: string, metadata: Record<string, any> = {}, source?: { id?: string; name?: string }, duration_ms?: number) => {
+    logs.push({
+      stage: "fetch",
+      level,
+      event,
+      message,
+      metadata,
+      source_id: source?.id ?? null,
+      source_name: source?.name ?? null,
+      duration_ms: duration_ms ?? null,
+      correlation_id: correlationId,
+    });
+  };
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    log("info", "run.start", "fetch-news started", { correlationId });
 
     const recentKeywords = await getRecentKeywords(supabase);
     console.log(`Found ${recentKeywords.length} recent keywords for novelty check`);
@@ -210,7 +229,12 @@ serve(async (req) => {
     for (const source of sources || []) {
       if (!source.rss_feed) continue;
       console.log(`Fetching ${source.name}: ${source.rss_feed}`);
+      const sourceT0 = Date.now();
       const items = await parseRSS(source.rss_feed);
+      const parserOk = items.length > 0;
+      if (!parserOk) {
+        log("warn", "parser.empty", `Nenhum item parseado para ${source.name}`, { url: source.rss_feed }, source);
+      }
 
       // Build batch payload — relies on unique index + ON CONFLICT DO NOTHING
       const rows = items.map((item) => {
@@ -235,6 +259,7 @@ serve(async (req) => {
         };
       });
 
+      let insertedCount = 0;
       if (rows.length > 0) {
         // upsert with ignore-duplicates strategy on original_url
         const { data: inserted, error: insertError } = await supabase
@@ -243,8 +268,19 @@ serve(async (req) => {
           .select("id");
         if (insertError) {
           console.error(`Insert error for ${source.name}:`, insertError.message);
+          log("error", "insert.failed", `Erro ao inserir curated_news para ${source.name}`, { error: insertError.message }, source);
+          await supabase.from("pipeline_alerts").upsert({
+            severity: "critical",
+            stage: "fetch",
+            source_id: source.id,
+            source_name: source.name,
+            title: `Falha ao inserir notícias de ${source.name}`,
+            details: { error: insertError.message, correlationId },
+            dedupe_key: `fetch.insert_failed:${source.id}`,
+          }, { onConflict: "dedupe_key", ignoreDuplicates: true });
         } else {
-          totalNew += inserted?.length || 0;
+          insertedCount = inserted?.length || 0;
+          totalNew += insertedCount;
         }
       }
 
@@ -252,9 +288,40 @@ serve(async (req) => {
         .from("news_sources")
         .update({ last_fetched_at: new Date().toISOString() })
         .eq("id", source.id);
+
+      const sourceDur = Date.now() - sourceT0;
+      metrics.push({
+        stage: "fetch",
+        source_id: source.id,
+        source_name: source.name,
+        event: "source.run",
+        items_in: items.length,
+        items_ok: insertedCount,
+        items_failed: parserOk ? 0 : 1,
+        items_skipped: Math.max(0, items.length - insertedCount),
+        duration_ms: sourceDur,
+        correlation_id: correlationId,
+      });
+      log("info", "source.done", `${source.name}: ${insertedCount} novas / ${items.length} parseadas`, { insertedCount, parsed: items.length }, source, sourceDur);
     }
 
     console.log(`Fetch complete: ${totalNew} new / ${totalFetched} total (${totalTrending} trending)`);
+    const totalDur = Date.now() - t0;
+    metrics.push({
+      stage: "fetch",
+      event: "run",
+      items_in: totalFetched,
+      items_ok: totalNew,
+      items_failed: 0,
+      items_skipped: Math.max(0, totalFetched - totalNew),
+      duration_ms: totalDur,
+      correlation_id: correlationId,
+    });
+    metrics.push({ stage: "cron", event: "heartbeat", items_in: 0, items_ok: 1, items_failed: 0, items_skipped: 0, duration_ms: totalDur, correlation_id: correlationId, source_name: "fetch-news" });
+    log("info", "run.done", `Fetch complete: ${totalNew} novas / ${totalFetched} total (${totalTrending} trending)`, { totalFetched, totalNew, totalTrending }, undefined, totalDur);
+
+    if (logs.length) await supabase.from("pipeline_logs").insert(logs).then(({ error }) => { if (error) console.error("pipeline_logs insert error", error); });
+    if (metrics.length) await supabase.from("pipeline_metrics").insert(metrics).then(({ error }) => { if (error) console.error("pipeline_metrics insert error", error); });
 
     return new Response(
       JSON.stringify({
@@ -262,12 +329,22 @@ serve(async (req) => {
         totalFetched,
         totalNew,
         totalTrending,
+        correlationId,
         message: `${totalNew} novas notícias de ${sources?.length || 0} fontes (${totalTrending} trending)`,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
     console.error("Error in fetch-news:", error);
+    try {
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const msg = error instanceof Error ? error.message : String(error);
+      await supabase.from("pipeline_logs").insert([{ stage: "fetch", level: "error", event: "run.crash", message: msg, metadata: { stack: error instanceof Error ? error.stack : null }, correlation_id: correlationId, duration_ms: Date.now() - t0 }]);
+      await supabase.from("pipeline_alerts").upsert({
+        severity: "critical", stage: "fetch", title: "fetch-news crashou",
+        details: { error: msg, correlationId }, dedupe_key: "fetch.crash",
+      }, { onConflict: "dedupe_key", ignoreDuplicates: true });
+    } catch (_) { /* swallow */ }
     return new Response(
       JSON.stringify({ success: false, error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
